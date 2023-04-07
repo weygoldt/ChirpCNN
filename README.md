@@ -17,7 +17,8 @@ Let's try to improve chirp detection with deep learning.
 ## To do 
 
 - [x] Create a synthetic dataset 
-- [ ] Add more variation to the dataset
 - [ ] Build a classifier
+- [ ] Add more variation to the dataset
+- [ ] Retrain and test the classifier
 - [ ] Implement window-sliding on actual data 
 - [ ] Output validation on real data
