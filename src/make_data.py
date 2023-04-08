@@ -4,6 +4,7 @@ import os
 from itertools import product
 import shutil
 
+import cv2
 from tqdm import tqdm
 from IPython import embed
 from thunderfish.powerspectrum import spectrogram, decibel
@@ -13,6 +14,7 @@ import matplotlib.patches as patches
 import argparse 
 
 from simulations.fish_signal import chirps, wavefish_eods
+from utils.datahandling import resize_image
 
 chirp_path = "../data/chirps/"
 nochirp_path = "../data/nochirps/"
@@ -34,8 +36,11 @@ kurtosis = (0.8, 1.2)
 contrast = (0.01, 0.05)
 
 # define spectrogram ROI padding around chirp
-time_pad = 0.1 # seconds before and after chirp, symetric
+time_pad = 0.12 # seconds before and after chirp, symetric
 freq_pad = (100, 300) # freq above and below chirp, unsymetric
+
+# define transformation params before saving 
+imgsize = 128
 
 def make_chirps(path, debug = False):
 
@@ -111,9 +116,12 @@ def make_chirps(path, debug = False):
         # crop spec to the region of interest
         spec = fullspec[(freqs > yroi[0]) & (freqs < yroi[1]), :]
         spec = spec[:, (spectime > xroi[0]) & (spectime < xroi[1])]
-
-        # normalize the spectrogram
+    
+        # normalize the spectrogram between 0 and 1
         spec = (spec - np.min(spec)) / (np.max(spec) - np.min(spec))
+
+        # pad the spectrogram symetrically to 128x128
+        spec = resize_image(spec, imgsize)
 
         # save the chirps
         np.save(chirp_path + str(iter), spec)
@@ -132,7 +140,14 @@ def make_chirps(path, debug = False):
                 extent = [spectime[0], spectime[-1], freqs[0], freqs[-1]], 
                 interpolation = 'none', 
         )
-        rect = patches.Rectangle((xroi[0], yroi[0]), 0.2, 400, linewidth=1, edgecolor='r', facecolor='none')
+        rect = patches.Rectangle(
+                (xroi[0], yroi[0]), 
+                xroi[1]-xroi[0], 
+                yroi[1]-yroi[0], 
+                linewidth=1, 
+                edgecolor='r', 
+                facecolor='none'
+        )
         axs[2].add_patch(rect)
         axs[2].set_ylim(*ylims)
         plt.show()
@@ -194,6 +209,9 @@ def make_nochirps(path, dataset_size, debug = False):
 
         # normalize the spectrogram
         spec = (spec - np.min(spec)) / (np.max(spec) - np.min(spec))
+
+        # resize the spectrogram
+        spec = resize_image(spec, imgsize)
 
         # save the nochirp traces
         np.save(path + str(iter), spec)
