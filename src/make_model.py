@@ -59,6 +59,7 @@ def main():
     print(f"Classes: {classes}")
     print(f"Labels: {np.arange(len(classes))}")
     # viz(train_loader, classes, save=True, path='../assets/dataset.png')
+    # exit()
 
     model = ChirpCNN().to(device)
     criterion = nn.CrossEntropyLoss()
