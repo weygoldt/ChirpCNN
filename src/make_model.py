@@ -55,7 +55,7 @@ def viz(dataloader, classes, save=False, path="dataset.png"):
 def main(save):
 
     # Initialize dataset and set up dataloaders
-    dataset = SpectrogramDataset(conf.dataroot)
+    dataset = SpectrogramDataset(conf.dataroot_training)
     classes = dataset.class_labels 
     train_size = int(conf.train_size * len(dataset))
     test_size = len(dataset) - train_size

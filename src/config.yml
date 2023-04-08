@@ -1,7 +1,5 @@
-# SYNTHETIC DATASET ------
-
-# File system setup
-dataroot: "../data"
+# SYNTHETIC TRAINING DATASET ------
+dataroot_training: "../training_data"
 
 # Simulated fish EOD 
 samplerate: 20000
@@ -34,3 +32,15 @@ learning_rate: 0.001
 train_size: 0.8
 save_dir: "models/ChirpCNN.pt"
 plot_dir: "../assets"
+
+# RECORDING SIMULATION ------
+dataroot_testing: "../testing_data"
+simulation_duration_rec: 60
+num_fish: 3
+num_chirps: 30
+num_rises: 10
+rise_sizes: [10, 100]
+rise_rise_taus: [0.5, 1.5]
+rise_decay_taus: [5, 15]
+frequency_track_samplerate: 3
+

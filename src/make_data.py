@@ -413,7 +413,7 @@ def make_nochirps(path, dataset_size, debug = False):
 
 def interface():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--path", type=str, default=conf.dataroot)
+    parser.add_argument("--path", type=str, default=conf.dataroot_training)
     parser.add_argument("--debug", action="store_true")
     parser.add_argument("--wipe", action="store_true")
     args = parser.parse_args()
