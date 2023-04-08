@@ -23,7 +23,7 @@ In this project, I will build a simulated dataset using many chirp parameters an
 ## To do 
 
 - [x] Create a synthetic dataset 
-- [ ] Build a classifier
+- [x] Build a classifier
 - [ ] Add more variation to the dataset
 - [ ] Retrain and test the classifier
 - [ ] Implement window-sliding on actual data 
