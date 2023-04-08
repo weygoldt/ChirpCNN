@@ -135,7 +135,6 @@ def main():
     criterion = nn.CrossEntropyLoss()
     optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate)
 
-
     n_total_steps = len(train_loader)
     n_iterations = math.ceil(n_total_steps / batch_size)
     print(f'Number of steps per epoch: {n_total_steps}')
@@ -166,8 +165,8 @@ def main():
     with torch.no_grad():
         n_correct = 0
         n_samples = 0
-        n_class_correct = [0 for i in range(10)]
-        n_class_samples = [0 for i in range(10)]
+        n_class_correct = [0 for i in range(len(classes))]
+        n_class_samples = [0 for i in range(len(classes))]
 
         for spectrograms, labels in tqdm(test_loader, desc="Testing"):
             spectrograms = spectrograms.to(device)
@@ -189,13 +188,19 @@ def main():
                 if (label == pred):
                     n_class_correct[label] += 1
                 n_class_samples[label] += 1
+        
+        print(np.shape(n_class_correct))
+        print(np.shape(n_class_samples))
 
         acc = 100.0 * n_correct / n_samples
         print(f"Accuracy of the network: {acc} %")
 
-        for i in range(10):
+        for i in range(len(classes)):
             acc = 100.0 * n_class_correct[i] / n_class_samples[i]
             print(f"Accuracy of {classes[i]}: {acc} %")
+
+        embed()
+        exit()
 
 
 if __name__ == "__main__":
