@@ -1,6 +1,6 @@
 # ChirpCNN
 
-Let's try to improve chirp detection with deep learning.
+Some weakly electric fish produce chirps to communicate. Let's try to improve chirp detection with deep learning. 
 
 ## Approach
 
