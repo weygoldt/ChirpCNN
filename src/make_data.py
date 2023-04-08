@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import os
+import uuid
 from itertools import product
 import shutil
 
@@ -48,7 +49,7 @@ def make_chirps(path, debug = False):
     assert debug in [True, False], "Debug must be True or False"
 
     # define how many levels of each parameter to test
-    levels = 4
+    levels = 5
 
     # make the chirp parameter arrays
     eodfs = np.linspace(eodf[0], eodf[1], levels).tolist() 
@@ -124,7 +125,7 @@ def make_chirps(path, debug = False):
         spec = resize_image(spec, imgsize)
 
         # save the chirps
-        np.save(chirp_path + str(iter), spec)
+        np.save(chirp_path + str(uuid.uuid1()), spec)
 
         if not debug:
             continue
@@ -162,7 +163,6 @@ def make_chirps(path, debug = False):
 
         print(np.shape(spec))
         print(np.min(spec), np.max(spec))
-
 
     return total 
 
@@ -214,7 +214,7 @@ def make_nochirps(path, dataset_size, debug = False):
         spec = resize_image(spec, imgsize)
 
         # save the nochirp traces
-        np.save(path + str(iter), spec)
+        np.save(path + str(uuid.uuid1()), spec)
 
         if not debug:
             continue
