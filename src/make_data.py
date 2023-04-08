@@ -41,8 +41,9 @@ levels = 5 # CAREFUL! This increases the dataset size by a factor of nparams^5!
 
 # define spectrogram ROI padding around chirp
 time_pad = 0.12 # seconds before and after chirp, symetric
-freq_pad = (100, 300) # freq above and below chirp, unsymetric
+freq_pad = (-100, 300) # freq above and below chirp, unsymetric
 time_center_jitter = 0.01 # seconds to offset the center of the ROI
+freq_center_jitter = 10 # freq to offset the center of the ROI
 
 # define transformation params before saving 
 imgsize = 128
@@ -64,11 +65,16 @@ def make_chirps(path, debug = False):
     all_params = np.asarray(list(product(*all_params)))
 
     # jitter the center of the ROI
-    jitters = np.random.uniform(
+    time_jitters = np.random.uniform(
             -time_center_jitter,
             time_center_jitter, 
             size = len(all_params)
-    ).tolist()
+    )
+    freq_jitters = np.random.uniform(
+            -freq_center_jitter,
+            freq_center_jitter,
+            size = len(all_params)
+    )
 
     # pick some random ones to plot
     if debug:
@@ -119,9 +125,10 @@ def make_chirps(path, debug = False):
         fullspec = decibel(spec)
 
         # define the region of interest
-        time_center = chirp_times[0] + jitters[iter]
+        time_center = chirp_times[0] + time_jitters[iter]
         xroi = (time_center-time_pad, time_center+time_pad)
-        yroi = (params['eodf'] - freq_pad[0], params['eodf'] + freq_pad[1])
+        freq_center = params['eodf'] + freq_jitters[iter]
+        yroi = (freq_center + freq_pad[0], freq_center + freq_pad[1])
 
         # crop spec to the region of interest
         spec = fullspec[(freqs > yroi[0]) & (freqs < yroi[1]), :]
@@ -203,7 +210,20 @@ def make_shifted_chirps(path, debug = False):
             0.3,
             size = len(all_params) - len(jitters1)
     )
-    jitters = np.random.permutation(np.append(jitters1, jitters2))
+    time_jitters = np.random.permutation(np.append(jitters1, jitters2))
+    
+    jitters1 = np.random.uniform(
+            freq_pad[0]-50, 
+            freq_pad[0]-freq_center_jitter, 
+            size = int(len(all_params)/2)
+    )
+    jitters2 = np.random.uniform(
+            freq_pad[1] + freq_center_jitter,
+            freq_pad[1]+50,
+            size = len(all_params) - len(jitters1)
+    )
+    freq_jitters = np.random.permutation(np.append(jitters1, jitters2))
+
 
     # pick some random ones to plot
     if debug:
@@ -254,9 +274,10 @@ def make_shifted_chirps(path, debug = False):
         fullspec = decibel(spec)
 
         # define the region of interest
-        time_center = chirp_times[0] + jitters[iter]
+        time_center = chirp_times[0] + time_jitters[iter]
         xroi = (time_center-time_pad, time_center+time_pad)
-        yroi = (params['eodf'] - freq_pad[0], params['eodf'] + freq_pad[1])
+        freq_center = params['eodf'] + freq_jitters[iter]
+        yroi = (freq_center + freq_pad[0], freq_center + freq_pad[1])
 
         # crop spec to the region of interest
         spec = fullspec[(freqs > yroi[0]) & (freqs < yroi[1]), :]
@@ -345,7 +366,7 @@ def make_nochirps(path, dataset_size, debug = False):
 
         # define the region of interest
         xroi = (chirp_times[0]-time_pad, chirp_times[0]+time_pad)
-        yroi = (f - freq_pad[0], f + freq_pad[1])
+        yroi = (f + freq_pad[0], f + freq_pad[1])
 
         # crop spec to the region of interest
         spec = fullspec[(freqs > yroi[0]) & (freqs < yroi[1]), :]

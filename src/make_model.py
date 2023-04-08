@@ -36,7 +36,7 @@ def viz(dataloader, classes, save=False, path="dataset.png"):
         ax.axis('off')
     if save: 
         plt.savefig(path, dpi=300)
-    plt.show()
+    # plt.show()
 
 
 def main():
@@ -58,7 +58,7 @@ def main():
 
     print(f"Classes: {classes}")
     print(f"Labels: {np.arange(len(classes))}")
-    # viz(train_loader, classes, save=True, path='../assets/dataset.png')
+    viz(train_loader, classes, save=True, path='../assets/dataset.png')
     # exit()
 
     model = ChirpCNN().to(device)
