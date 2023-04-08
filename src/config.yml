@@ -1,0 +1,36 @@
+# SYNTHETIC DATASET ------
+
+# File system setup
+dataroot: "../data"
+
+# Simulated fish EOD 
+samplerate: 20000
+simulation_duration: 2
+chirp_time: [1]
+
+# Outer boundaries for chirp parameters
+param_levels: 5 
+eodfs: [300, 1500] 
+chirp_sizes: [90, 200] 
+chirp_durations: [0.02, 0.09] 
+chirp_kurtoses: [0.8, 1.2] 
+chirp_contrasts: [0.01, 0.05]
+
+# STFT spectrogram
+frequency_resolution: 5 # nfft = fs/fres 
+overlap_fraction: 0.99 # hanning window overlap
+
+# Spectrogram ROI extraction
+time_pad: 0.12
+freq_pad: [-100, 300]
+time_jitter: 0.01
+freq_jitter: 10
+img_size_px: 128
+
+# CNN MODEL ------
+num_epochs: 10
+batch_size: 10 
+learning_rate: 0.001
+train_size: 0.8
+save_dir: "models/ChirpCNN.pt"
+plot_dir: "../assets"

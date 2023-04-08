@@ -16,37 +16,39 @@ import argparse
 
 from simulations.fish_signal import chirps, wavefish_eods
 from utils.datahandling import resize_image
+from utils.filehandling import ConfLoader
+from utils.logger import make_logger
 
-# chirp_path = "../data/chirp/"
-# nochirp_path = "../data/nochirp/"
+conf = ConfLoader("config.yml")
+logger = make_logger(__name__)
 
 # define parameters for the waveform simulation 
-samplerate = 20000
-simulation_duration = 2
+samplerate = conf.samplerate 
+simulation_duration = conf.simulation_duration
 
 # define parameters for the spectrogram
-freq_resolution = 5
-overlap_frac = 0.99
+freq_resolution = conf.frequency_resolution
+overlap_frac = conf.overlap_fraction
 
 # define chirp parameter boundaries
-chirp_times = [1]
-eodf = (300, 1500)
-size = (90, 200)
-duration = (0.02, 0.09)
-kurtosis = (0.8, 1.2)
-contrast = (0.01, 0.05)
+chirp_times = conf.chirp_time
+eodf = conf.eodfs
+size = conf.chirp_sizes
+duration = conf.chirp_durations
+kurtosis = conf.chirp_kurtoses
+contrast = conf.chirp_contrasts
 
 # define how many levels of each parameter to test
-levels = 5 # CAREFUL! This increases the dataset size by a factor of nparams^5!
+levels = conf.param_levels # CAREFUL! This increases the dataset size by a factor of nparams^5!
 
 # define spectrogram ROI padding around chirp
-time_pad = 0.12 # seconds before and after chirp, symetric
-freq_pad = (-100, 300) # freq above and below chirp, unsymetric
-time_center_jitter = 0.01 # seconds to offset the center of the ROI
-freq_center_jitter = 10 # freq to offset the center of the ROI
+time_pad = conf.time_pad #seconds before and after chirp, symetric
+freq_pad = conf.freq_pad # freq above and below chirp, unsymetric
+time_center_jitter = conf.time_jitter # seconds to offset the center of the ROI
+freq_center_jitter = conf.freq_jitter # freq to offset the center of the ROI
 
 # define transformation params before saving 
-imgsize = 128
+imgsize = conf.img_size_px
 
 def make_chirps(path, debug = False):
 
@@ -54,6 +56,7 @@ def make_chirps(path, debug = False):
     assert debug in [True, False], "Debug must be True or False"
 
     # make the chirp parameter arrays
+    logger.info("Making chirp parameter arrays")
     eodfs = np.linspace(eodf[0], eodf[1], levels).tolist() 
     sizes = np.linspace(size[0], size[1], levels).tolist()
     durations = np.linspace(duration[0], duration[1], levels).tolist()
@@ -84,6 +87,7 @@ def make_chirps(path, debug = False):
         subset = all_params
 
     total = len(subset)
+    logger.info(f"Making {total} chirps, this may take a while...")
     for iter, params in tqdm(enumerate(subset), total = total, desc = "Making chirps"):
 
         ones = np.ones_like(chirp_times)
@@ -189,6 +193,7 @@ def make_shifted_chirps(path, debug = False):
     assert debug in [True, False], "Debug must be True or False"
 
     # make the chirp parameter arrays
+    logger.info("Making chirp parameter arrays")
     eodfs = np.linspace(eodf[0], eodf[1], levels).tolist() 
     sizes = np.linspace(size[0], size[1], levels).tolist()
     durations = np.linspace(duration[0], duration[1], levels).tolist()
@@ -233,6 +238,7 @@ def make_shifted_chirps(path, debug = False):
         subset = all_params
 
     total = len(subset)
+    logger.info(f"Making {total} chirps, this will take a while")
     for iter, params in tqdm(enumerate(subset), total = total, desc = "Making chirps"):
 
         ones = np.ones_like(chirp_times)
@@ -331,7 +337,7 @@ def make_shifted_chirps(path, debug = False):
 
     return total 
 
-
+'''
 def make_nochirps(path, dataset_size, debug = False):
     
     assert path[-1] == "/", "Path must end with a slash"
@@ -403,11 +409,11 @@ def make_nochirps(path, dataset_size, debug = False):
                 cmap = 'gray'
         )
         plt.show()
-
+'''
 
 def interface():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--path", type=str, default="../data/")
+    parser.add_argument("--path", type=str, default=conf.dataroot)
     parser.add_argument("--debug", action="store_true")
     parser.add_argument("--wipe", action="store_true")
     args = parser.parse_args()
@@ -417,8 +423,8 @@ def interface():
 if __name__ == "__main__":
 
     args = interface()
-    chirp_path = args.path + "chirp/"
-    nochirp_path = args.path + "nochirp/"
+    chirp_path = args.path + "/chirp/"
+    nochirp_path = args.path + "/nochirp/"
 
     if args.wipe & os.path.exists(chirp_path):
         shutil.rmtree(chirp_path)
@@ -430,6 +436,7 @@ if __name__ == "__main__":
     if os.path.exists(nochirp_path) == False:
         os.mkdir(nochirp_path)
         
+    logger.info("Making chirps")
     dataset_size = make_chirps(chirp_path, debug = args.debug)
+    logger.info("Making NOchirps")
     make_shifted_chirps(nochirp_path, debug = args.debug)
-    # make_nochirps(nochirp_path, dataset_size, debug = args.debug)

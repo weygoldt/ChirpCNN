@@ -24,6 +24,7 @@ In this project, I will build a simulated dataset using many chirp parameters an
 
 - [x] Create a synthetic dataset 
 - [x] Build a classifier
+- [ ] Build a global yaml config for spectrogram & detection parameters
 - [ ] Add more variation to the dataset
 - [ ] Retrain and test the classifier
 - [ ] Add real data to the classifier

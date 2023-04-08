@@ -1,5 +1,21 @@
+import yaml
 import numpy as np
 from pathlib import Path
+
+
+class ConfLoader:
+    """
+    Load configuration from yaml file as class attributes
+    """
+
+    def __init__(self, path: str) -> None:
+        with open(path) as file:
+            try:
+                conf = yaml.safe_load(file)
+                for key in conf:
+                    setattr(self, key, conf[key])
+            except yaml.YAMLError as error:
+                raise error
 
 
 def get_files(dataroot, ext="npy"):
@@ -46,3 +62,9 @@ def get_files(dataroot, ext="npy"):
     files = [str(file) for file in files]
 
     return files, labels, level_dict
+
+
+class load_conf():
+    def __init__(self, path):
+        self.path = path
+
