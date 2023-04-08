@@ -1,11 +1,11 @@
-# DeepChirps 
+# ChirpCNN
 
 Let's try to improve chirp detection with deep learning.
 
 ## Approach
 
 1. Simulate a labeled dataset 
-2. Train a binary classifier to detect chirps in spectrogram snippets
+2. Train a binary classifier to detect chirps in spectrogram snippets. The current version is a basic CNN implemented in Pytorch.
 3. Slide a window along the frequency track of a single track and apply the classifier on each sliding window
 4. Clean-up: Group chirps if they are detected multiple times
 
