@@ -17,8 +17,8 @@ import argparse
 from simulations.fish_signal import chirps, wavefish_eods
 from utils.datahandling import resize_image
 
-chirp_path = "../data/chirps/"
-nochirp_path = "../data/nochirps/"
+# chirp_path = "../data/chirp/"
+# nochirp_path = "../data/nochirp/"
 
 # define parameters for the waveform simulation 
 samplerate = 20000
@@ -103,7 +103,7 @@ def make_chirps(path, debug = False):
                 samplerate=samplerate, 
                 duration=simulation_duration, 
                 phase0=0.0, 
-                noise_std=0.05
+                noise_std=0.01
         )
 
         signal = signal * ampmod
@@ -134,7 +134,7 @@ def make_chirps(path, debug = False):
         spec = resize_image(spec, imgsize)
 
         # save the chirps
-        np.save(chirp_path + str(uuid.uuid1()), spec)
+        np.save(path + str(uuid.uuid1()), spec)
 
         if not debug:
             continue
@@ -195,11 +195,11 @@ def make_shifted_chirps(path, debug = False):
     # jitter the center of the ROI
     jitters1 = np.random.uniform(
             - 0.3,
-            - time_center_jitter, 
+            - time_center_jitter - 0.1, 
             size = int(len(all_params)/2), 
     ) 
     jitters2 = np.random.uniform(
-            time_center_jitter, 
+            time_center_jitter + 0.1, 
             0.3,
             size = len(all_params) - len(jitters1)
     )
@@ -238,7 +238,7 @@ def make_shifted_chirps(path, debug = False):
                 samplerate=samplerate, 
                 duration=simulation_duration, 
                 phase0=0.0, 
-                noise_std=0.05
+                noise_std=0.01
         )
 
         signal = signal * ampmod
@@ -269,7 +269,7 @@ def make_shifted_chirps(path, debug = False):
         spec = resize_image(spec, imgsize)
 
         # save the chirps
-        np.save(chirp_path + str(uuid.uuid1()), spec)
+        np.save(path + str(uuid.uuid1()), spec)
 
         if not debug:
             continue
@@ -396,8 +396,8 @@ def interface():
 if __name__ == "__main__":
 
     args = interface()
-    chirp_path = args.path + "chirps/"
-    nochirp_path = args.path + "nochirps/"
+    chirp_path = args.path + "chirp/"
+    nochirp_path = args.path + "nochirp/"
 
     if args.wipe & os.path.exists(chirp_path):
         shutil.rmtree(chirp_path)
@@ -411,4 +411,4 @@ if __name__ == "__main__":
         
     dataset_size = make_chirps(chirp_path, debug = args.debug)
     make_shifted_chirps(nochirp_path, debug = args.debug)
-    make_nochirps(nochirp_path, dataset_size, debug = args.debug)
+    # make_nochirps(nochirp_path, dataset_size, debug = args.debug)

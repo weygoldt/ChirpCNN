@@ -50,7 +50,7 @@ def main():
 
     # Initialize model, loss, and optimizer
     num_epochs = 10
-    batch_size = 10
+    batch_size = 20
     learning_rate = 0.001
 
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
