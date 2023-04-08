@@ -26,5 +26,7 @@ In this project, I will build a simulated dataset using many chirp parameters an
 - [x] Build a classifier
 - [ ] Add more variation to the dataset
 - [ ] Retrain and test the classifier
+- [ ] Add real data to the classifier
+- [ ] Retrain and test 
 - [ ] Implement window-sliding on actual data 
-- [ ] Output validation on real data
+- [ ] Output validation on real data & simulated grid datasets 
