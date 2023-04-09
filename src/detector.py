@@ -2,14 +2,21 @@ import shutil
 
 import numpy as np
 import argparse 
+import matplotlib.pyplot as plt
+from matplotlib.patches import Rectangle
 from pathlib import Path
+from IPython import embed
+
 
 from utils.logger import make_logger
 from utils.filehandling import ConfLoader, NumpyLoader
+from utils.datahandling import find_on_time
+from utils.plotstyle import PlotStyle
 from models.modelhandling import load_model
 
 logger = make_logger(__name__) 
 conf = ConfLoader("config.yml")
+ps = PlotStyle()
 
 class Detector:
     def __init__(self, modelpath, dataset, mode):
@@ -19,11 +26,23 @@ class Detector:
         self.mode = mode
         self.model = load_model(modelpath)
         self.data = dataset 
+        self.samplerate = conf.samplerate
+        self.fill_samplerate = 1/np.mean(np.diff(self.data.fill_times))
         self.freq_pad = conf.freq_pad
         self.time_pad = conf.time_pad
+        self.window_size = int(conf.time_pad * 2 * self.fill_samplerate)
+        self.stride = int(conf.stride * self.fill_samplerate)
 
         if (self.data.times[-1] // 600 != 0) and (self.mode == "memory"):
             logger.warning("It is recommended to process recordings longer than 10 minutes using the 'disk' mode")
+
+        if self.window_size % 2 != 0:
+            self.window_size += 1
+            logger.info(f"Time padding is not even. Please change to an even number.")
+
+        if self.stride % 2 != 0:
+            self.stride += 1
+            logger.info(f"Stride is not even. Please change to an even number.")
 
     def detect(self):
         logger.info("Detecting...")
@@ -32,20 +51,90 @@ class Detector:
             self._detect_memory()
         else:
             self._detect_disk()
-        pass 
-        ...
+
         logger.info(f"Detection complete! Results saved to {conf.detection_data_path}")
 
     def _detect_memory(self):
+
         logger.info("Processing in memory...")
+
+        first_index = 0
+        last_index = self.data.fill_times.shape[0]
+        window_start_indices = np.arange(
+                first_index, last_index - self.window_size, self.stride, dtype=int
+                )
 
         for track_id in np.unique(self.data.ident_v):
             logger.info(f"Processing track {track_id}...")
             track = self.data.fund_v[self.data.ident_v == track_id]
 
-            start_time = self.data.times[0] + self.time_pad
-            stop_time = self.data.times[-1] - self.time_pad
-            window_centers = np.arange()
+            for window_start_index in window_start_indices:
+                
+                # Make index were current window will end
+                window_end_index = window_start_index + self.window_size
+
+                # Get the current frequency from the track
+                window_center_t = self.data.fill_times[window_start_index + self.window_size // 2]
+                track_index = find_on_time(self.data.times, window_center_t)
+                center_freq = track[track_index]
+
+                # From the track frequency compute the frequency
+                # boundaries 
+
+                freq_min = center_freq + self.freq_pad[0]
+                freq_max = center_freq + self.freq_pad[1]
+                
+                # Find these values on the frequency axis of the spectrogram
+                freq_min_index = find_on_time(self.data.fill_freqs, freq_min)
+                freq_max_index = find_on_time(self.data.fill_freqs, freq_max)
+
+                # Using window start, stop and freq lims, extract snippet from spec
+                snippet = self.data.fill_spec[
+                        window_start_index:window_end_index,
+                        freq_min_index:freq_max_index,
+                ]
+                
+                fig, ax = plt.subplots()
+                ax.imshow(
+                        self.data.fill_spec, 
+                        aspect="auto",
+                        origin="lower",
+                        extent=[
+                            self.data.fill_times[0],
+                            self.data.fill_times[-1],
+                            self.data.fill_freqs[0],
+                            self.data.fill_freqs[-1],
+                        ],
+                        cmap="magma",
+                )
+                # Create a Rectangle patch
+                rect = Rectangle(
+                        (self.data.fill_times[window_start_index], self.data.fill_freqs[freq_min_index]),
+                        self.data.fill_times[window_end_index] - self.data.fill_times[window_start_index],
+                        self.data.fill_freqs[freq_max_index] - self.data.fill_freqs[freq_min_index],
+                        linewidth=1, 
+                        facecolor='none',
+                        edgecolor='white',
+                )
+
+                # Add the patch to the Axes
+                ax.add_patch(rect)
+
+                # Plot the track
+                ax.plot(self.data.times, track, linewidth=1)
+
+                # Plot the window center 
+                ax.plot(
+                        [self.data.fill_times[window_start_index + self.window_size // 2]],
+                        [center_freq],
+                        marker="o",
+                )
+
+                plt.show()
+
+
+
+
         ...
 
     def _detect_disk(self):

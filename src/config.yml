@@ -19,7 +19,7 @@ frequency_resolution: 5 # nfft = fs/fres
 overlap_fraction: 0.99 # hanning window overlap
 
 # Spectrogram ROI extraction
-time_pad: 0.12
+time_pad: 0.12 
 freq_pad: [-100, 300]
 time_jitter: 0.01
 freq_jitter: 10
@@ -47,3 +47,4 @@ frequency_track_samplerate: 3
 # DETECTOR CONFIGURATION ------
 detection_data_path: "../detection_data"
 disk_cleanup: False
+stride: 0.04
