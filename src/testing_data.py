@@ -9,10 +9,12 @@ from thunderfish.powerspectrum import spectrogram, decibel
 from utils.logger import make_logger
 from utils.filehandling import ConfLoader
 from utils.datahandling import find_on_time
+from utils.plotstyle import PlotStyle
 from simulations.fish_signal import chirps, rises, wavefish_eods
 
 conf = ConfLoader("config.yml")
 logger = make_logger(__name__)
+ps = PlotStyle()
 
 def recording():
     logger.info("Generating fake recording")
@@ -163,7 +165,11 @@ if __name__ == "__main__":
     correct_chirp_times = np.load(conf.testing_data_path + "/correct_chirp_times.npy")
     correct_chirp_time_ids = np.load(conf.testing_data_path + "/correct_chirp_time_ids.npy")
 
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(
+            figsize=(24*ps.cm, 10*ps.cm),
+            constrained_layout = True,
+    )
+
 
     ax.imshow(
             spectrogram, 
@@ -177,7 +183,7 @@ if __name__ == "__main__":
         ax.plot(
                 time, 
                 traces[trace_ids == trace_id], 
-                color="red"
+                color=ps.black
         )
 
         id_chirp_times = correct_chirp_times[correct_chirp_time_ids == trace_id]
@@ -187,13 +193,15 @@ if __name__ == "__main__":
         ax.plot(
                 id_chirp_times,
                 traces[trace_ids == trace_id][freq_index],
-                "o",
+                "|",
+                color=ps.black
         )
 
     ax.set_xlim(spec_times[0], spec_times[-1])
     ax.set_ylim(np.min(traces)-100, np.max(traces)+300)
     ax.set_xlabel("Time (s)")
     ax.set_ylabel("Frequency (Hz)")
+    plt.savefig("../assets/chirps.png")
     plt.show()
 
 

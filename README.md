@@ -2,6 +2,12 @@
 
 Some weakly electric fish produce chirps to communicate. Let's try to improve chirp detection with deep learning. 
 
+## What are chirps?
+
+Chirps are brief (20-200 ms) upward-excursions of the frequency of the electrid organ discharge (EOD) of many wave-type electric fish. The example below shows a simulation of the EOD of a single fish that chirps 50 times.
+
+![chirps example](assets/chirps.png)
+
 ## Approach
 
 1. Simulate a labeled dataset 
@@ -11,7 +17,7 @@ Some weakly electric fish produce chirps to communicate. Let's try to improve ch
 
 The main problem of chirp detection is, that chirps are too fast to resolve the temporal evolution in frequency, while maintaining a frequency resolution to distinguish individual fish on a spectrogram. A spectrogram of a chirp with sufficient frequency resolution does **not** capture a chirp well. But on these spectrograms, we can still see the "ghost" of a chirp: The chirp might not be clearly visible in its temporal evolution, but there is a blurred region where the frequency briefly peaks. But these regions last up to magnitudes longer than a real chirp and come in many shaped and forms, depending on the spectrogram resolution and parameters such as chirp duration, contrast, frequency, etc. The following image contains just a few examples from the current dataset. Each window is fixed to a frequency range of 400 Hz and a time of 240 ms.
 
-![](assets/dataset.png)
+![current dataset](assets/dataset.png)
 
 In this project, I will build a simulated dataset using many chirp parameters and will then try to train a CNN to detect these "ghosts" of chirps on spectrogram images.
 

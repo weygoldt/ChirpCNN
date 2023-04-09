@@ -7,7 +7,7 @@ simulation_duration: 2
 chirp_time: [1]
 
 # Outer boundaries for chirp parameters
-param_levels: 5 
+param_levels: 6 
 eodfs: [300, 1500] 
 chirp_sizes: [90, 200] 
 chirp_durations: [0.02, 0.09] 
@@ -36,9 +36,9 @@ plot_dir: "../assets"
 # RECORDING SIMULATION ------
 testing_data_path: "../detection_data"
 simulation_duration_rec: 120
-num_fish: 5
+num_fish: 1
 num_chirps: 50
-num_rises: 10
+num_rises: 0
 rise_sizes: [10, 100]
 rise_rise_taus: [0.5, 1.5]
 rise_decay_taus: [5, 15]
