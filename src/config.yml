@@ -35,10 +35,10 @@ plot_dir: "../assets"
 
 # RECORDING SIMULATION ------
 testing_data_path: "../detection_data"
-simulation_duration_rec: 120
-num_fish: 4
+simulation_duration_rec: 240
+num_fish: 6
 num_chirps: 50
-num_rises: 0
+num_rises: 3
 rise_sizes: [10, 100]
 rise_rise_taus: [0.5, 1.5]
 rise_decay_taus: [5, 15]
@@ -57,4 +57,4 @@ stride: 0.04
 # Is repeated before the model is trained,
 # a new dataset is generated,
 # and the model is tested on that
-generations: 20
+generations: 30

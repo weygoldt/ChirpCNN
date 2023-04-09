@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+import pathlib
+
 import numpy as np
 import matplotlib.pyplot as plt 
 from scipy.signal import resample 
@@ -142,14 +144,17 @@ def main():
         trace_ids.append(np.ones_like(traces_cropped[-1]) * fish)
     time_cropped = time[(time >= spec_min) & (time <= spec_max)]
 
-    np.save(conf.testing_data_path + "/fill_spec.npy", spec)
-    np.save(conf.testing_data_path + "/fill_freqs.npy", frequencies)
-    np.save(conf.testing_data_path + "/fill_times.npy", spec_times)
-    np.save(conf.testing_data_path + "/fund_v.npy", np.ravel(traces_cropped))
-    np.save(conf.testing_data_path + "/ident_v.npy", np.ravel(trace_ids))
-    np.save(conf.testing_data_path + "/times.npy", time_cropped)
-    np.save(conf.testing_data_path + "/correct_chirp_times.npy", np.ravel(correct_chirp_times))
-    np.save(conf.testing_data_path + "/correct_chirp_time_ids.npy", np.ravel(correct_chirp_time_ids))
+    outpath = pathlib.Path(conf.testing_data_path)
+    outpath.mkdir(parents=True, exist_ok=True)
+
+    np.save(outpath / "fill_spec.npy", spec)
+    np.save(outpath / "fill_freqs.npy", frequencies)
+    np.save(outpath / "fill_times.npy", spec_times)
+    np.save(outpath / "fund_v.npy", np.ravel(traces_cropped))
+    np.save(outpath / "ident_v.npy", np.ravel(trace_ids))
+    np.save(outpath / "times.npy", time_cropped)
+    np.save(outpath / "correct_chirp_times.npy", np.ravel(correct_chirp_times))
+    np.save(outpath / "correct_chirp_time_ids.npy", np.ravel(correct_chirp_time_ids))
 
 
 if __name__ == "__main__":
@@ -170,7 +175,6 @@ if __name__ == "__main__":
             constrained_layout = True,
     )
 
-
     ax.imshow(
             spectrogram, 
             aspect="auto", 
@@ -188,7 +192,7 @@ if __name__ == "__main__":
 
         id_chirp_times = correct_chirp_times[correct_chirp_time_ids == trace_id]
         time_index = np.arange(len(time))
-        freq_index = [find_on_time(time, x) for x in id_chirp_times]
+        freq_index = [find_on_time(time, x, False) for x in id_chirp_times]
         
         ax.plot(
                 id_chirp_times,
@@ -203,5 +207,4 @@ if __name__ == "__main__":
     ax.set_ylabel("Frequency (Hz)")
     plt.savefig("../assets/chirps.png")
     plt.show()
-
 

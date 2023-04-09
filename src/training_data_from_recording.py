@@ -2,6 +2,7 @@
 
 import shutil
 import uuid
+import pathlib 
 
 import numpy as np
 import argparse 
@@ -9,7 +10,6 @@ import torch
 import matplotlib.pyplot as plt
 from torch.utils.data import TensorDataset, DataLoader
 from matplotlib.patches import Rectangle
-from pathlib import Path
 from IPython import embed
 
 from utils.logger import make_logger
@@ -98,9 +98,6 @@ class ChirpExtractor:
                 # Resize snippet
                 snippet = resize_image(snippet, conf.img_size_px)
 
-                # Add dimension for single channel
-                snippet = np.expand_dims(snippet, axis=0)
-
                 # Append snippet to list
                 snippets.append(snippet)
                 center_t.append(window_center_t)
@@ -112,14 +109,22 @@ class ChirpExtractor:
             snippets = np.asarray(snippets).astype(np.float32)
 
             # Save the chirps
+            
+            chirppath = pathlib.Path(f"{conf.training_data_path}/chirp")
+            chirppath.mkdir(parents=True, exist_ok=True)
+
             for snip in snippets[spec_chirp_idx]:
-                np.save(f"{conf.training_data_path}/chirp/{uuid.uuid1()}", snip)
+                np.save(chirppath / str(uuid.uuid1()), snip)
             logger.info(f"Saved {len(spec_chirp_idx)} chirps")
 
             # Remove the chirps from the snippets
             snippets = np.delete(snippets, spec_chirp_idx, axis=0)
+
+            nochirppath = pathlib.Path(f"{conf.training_data_path}/nochirp")
+            nochirppath.mkdir(parents=True, exist_ok=True)
+
             for snip in snippets[np.random.choice(len(snippets), len(spec_chirp_idx))]:
-                np.save(f"{conf.training_data_path}/nochirp/{uuid.uuid1()}", snip)
+                np.save(nochirppath / str(uuid.uuid1()), snip)
             logger.info(f"Saved {len(spec_chirp_idx)} non chirps")
 
 
