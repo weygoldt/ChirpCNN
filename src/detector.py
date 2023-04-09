@@ -1,21 +1,25 @@
+#!/usr/bin/env python3
+
 import shutil
 
 import numpy as np
 import argparse 
+import torch
 import matplotlib.pyplot as plt
+from torch.utils.data import TensorDataset, DataLoader
 from matplotlib.patches import Rectangle
 from pathlib import Path
 from IPython import embed
 
-
 from utils.logger import make_logger
 from utils.filehandling import ConfLoader, NumpyLoader
-from utils.datahandling import find_on_time
+from utils.datahandling import find_on_time, resize_image
 from utils.plotstyle import PlotStyle
 from models.modelhandling import load_model
 
 logger = make_logger(__name__) 
 conf = ConfLoader("config.yml")
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 ps = PlotStyle()
 
 class Detector:
@@ -68,6 +72,8 @@ class Detector:
             logger.info(f"Processing track {track_id}...")
             track = self.data.fund_v[self.data.ident_v == track_id]
 
+            snippets = []
+
             for window_start_index in window_start_indices:
                 
                 # Make index were current window will end
@@ -90,10 +96,23 @@ class Detector:
 
                 # Using window start, stop and freq lims, extract snippet from spec
                 snippet = self.data.fill_spec[
-                        window_start_index:window_end_index,
                         freq_min_index:freq_max_index,
+                        window_start_index:window_end_index,
                 ]
+
+                # Normalize snippet
+                snipped = (snippet - np.min(snippet)) / (np.max(snippet) - np.min(snippet))
+
+                # Resize snippet
+                snippet = resize_image(snippet, conf.img_size_px)
+
+                # Add dimension for single channel
+                snippet = np.expand_dims(snippet, axis=0)
+
+                # Append snippet to list
+                snippets.append(snippet)
                 
+                """
                 fig, ax = plt.subplots()
                 ax.imshow(
                         self.data.fill_spec, 
@@ -129,13 +148,27 @@ class Detector:
                         [center_freq],
                         marker="o",
                 )
+                plt.show()
+                """
 
+            # Convert snippets to tensor and create dataloader
+            snippets = np.asarray(snippets).astype(np.float32)
+        
+            for snip in snippets[np.random.randint(0, len(snippets), 10)]:
+                plt.imshow(snip[0], cmap="magma", origin="lower")
                 plt.show()
 
+            snippets_tensor = torch.from_numpy(snippets)
 
+            with torch.no_grad():
+                outputs = self.model(snippets_tensor)
 
+            probs = torch.softmax(outputs, dim=1)
+            _, preds = torch.max(probs, dim=1)
+            predicted_labels = preds.numpy()
 
-        ...
+            if len(np.unique(predicted_labels)) > 1:
+                logger.info(f"Found {np.sum(predicted_labels == 0)} chirps")
 
     def _detect_disk(self):
         logger.info("Processing on disk...")

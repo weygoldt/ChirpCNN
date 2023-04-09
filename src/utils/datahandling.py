@@ -5,9 +5,11 @@ from .logger import make_logger
 
 logger = make_logger(__name__)
 
+
 def resize_image(image, length):
     image = cv2.resize(image, (length, length), interpolation = cv2.INTER_AREA)
     return image
+
 
 def find_on_time(array, target, limit=True):
     """Takes a time array and a target (e.g. timestamp) and returns an index for a value of the array that matches the target most closely.
