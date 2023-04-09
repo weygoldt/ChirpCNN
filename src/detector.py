@@ -153,6 +153,7 @@ class Detector:
 
             # Convert snippets to tensor and create dataloader
             snippets = np.asarray(snippets).astype(np.float32)
+            print(len(snippets))
         
             for snip in snippets[np.random.randint(0, len(snippets), 10)]:
                 plt.imshow(snip[0], cmap="magma", origin="lower")
@@ -166,6 +167,7 @@ class Detector:
             probs = torch.softmax(outputs, dim=1)
             _, preds = torch.max(probs, dim=1)
             predicted_labels = preds.numpy()
+            print(len(predicted_labels))
 
             if len(np.unique(predicted_labels)) > 1:
                 logger.info(f"Found {np.sum(predicted_labels == 0)} chirps")

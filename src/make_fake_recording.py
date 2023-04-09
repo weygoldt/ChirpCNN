@@ -16,7 +16,7 @@ conf = ConfLoader("config.yml")
 logger = make_logger(__name__)
 ps = PlotStyle()
 
-def recording():
+def main():
     logger.info("Generating fake recording")
 
     time = np.arange(
@@ -154,7 +154,7 @@ def recording():
 
 if __name__ == "__main__":
 
-    recording()
+    main()
 
     spectrogram = np.load(conf.testing_data_path + "/fill_spec.npy")
     frequencies = np.load(conf.testing_data_path + "/fill_freqs.npy")

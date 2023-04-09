@@ -4,7 +4,7 @@ Some weakly electric fish produce chirps to communicate. Let's try to improve ch
 
 ## What are chirps?
 
-Chirps are brief (20-200 ms) upward-excursions of the frequency of the electrid organ discharge (EOD) of many wave-type electric fish. The example below shows a simulation of the EOD of a single fish that chirps 50 times.
+Chirps are brief (20-200 ms) upward-excursions of the frequency of the electrid organ discharge (EOD) of many wave-type electric fish. The example below shows a simulation of the EOD of a single fish that chirps 50 times. The dark black lines are frequency bands of simulated fish. Each black tick is the time point a chirp is simulated. The additional frequency bands are harmonics.
 
 ![chirps example](assets/chirps.png)
 
@@ -38,5 +38,6 @@ In this project, I will build a simulated dataset using many chirp parameters an
 - [ ] Implement window-sliding 
   - [x] Sliding windows + detection in RAM
   - [ ] Understand why sliding window detection performance is much worse than train-test performance
+    - NOTE: I just noticed that I added variation to all chirp parameters except for the phase of the EOD in which the chirp is produced. This is currently the most likely explanation.
   - [ ] Sliding windows + detection by writing windows to disk for large datasets 
 - [ ] Output validation on real data & simulated grid datasets 

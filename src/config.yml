@@ -36,7 +36,7 @@ plot_dir: "../assets"
 # RECORDING SIMULATION ------
 testing_data_path: "../detection_data"
 simulation_duration_rec: 120
-num_fish: 1
+num_fish: 4
 num_chirps: 50
 num_rises: 0
 rise_sizes: [10, 100]
@@ -48,3 +48,13 @@ frequency_track_samplerate: 3
 detection_data_path: "../detection_data"
 disk_cleanup: False
 stride: 0.04
+
+# DATAGEN - TRAIN - TEST ------
+# This value determines how often the 
+# routine 
+#   1. Dataset generation
+#   2. Chirp extraction
+# Is repeated before the model is trained,
+# a new dataset is generated,
+# and the model is tested on that
+generations: 20

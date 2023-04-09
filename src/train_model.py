@@ -26,13 +26,6 @@ conf = ConfLoader("config.yml")
 logger = make_logger(__name__)
 
 
-def interface():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--save", action="store_true", help="Save the model")
-    args = parser.parse_args()
-    return args
-
-
 def viz(dataloader, classes, save=False, path="dataset.png"):
     rows, cols = 5, 5
     fig, axs = plt.subplots(
@@ -52,7 +45,8 @@ def viz(dataloader, classes, save=False, path="dataset.png"):
     # plt.show()
 
 
-def main(save):
+def main():
+    save = True
 
     # Initialize dataset and set up dataloaders
     dataset = SpectrogramDataset(conf.training_data_path)
@@ -152,5 +146,4 @@ def main(save):
 
 
 if __name__ == "__main__":
-    args = interface()
-    main(save=args.save)
+    main()
