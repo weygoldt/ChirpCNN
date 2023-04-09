@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import numpy as np
 import matplotlib.pyplot as plt 
 from scipy.signal import resample 
@@ -6,6 +8,7 @@ from thunderfish.powerspectrum import spectrogram, decibel
 
 from utils.logger import make_logger
 from utils.filehandling import ConfLoader
+from utils.datahandling import find_on_time
 from simulations.fish_signal import chirps, rises, wavefish_eods
 
 conf = ConfLoader("config.yml")
@@ -27,6 +30,8 @@ def recording():
     )
 
     traces = []
+    correct_chirp_times = []
+    correct_chirp_time_ids = []
 
     for fish, eodf in enumerate(eodfs): 
 
@@ -96,6 +101,8 @@ def recording():
 
         rise_trace += eodf
         traces.append(rise_trace)
+        correct_chirp_times.append(chirp_times)
+        correct_chirp_time_ids.append(np.ones_like(chirp_times) * fish)
 
         eod = wavefish_eods(
                 "Alepto", 
@@ -123,30 +130,70 @@ def recording():
             freq_resolution = conf.frequency_resolution, 
             overlap_frac = conf.overlap_fraction
     )
+
     spec = decibel(spec)
-    plt.imshow(spec, aspect="auto", origin="lower")
-    plt.show()
 
     traces_cropped, trace_ids = [], []
     spec_min, spec_max = np.min(spec_times), np.max(spec_times)
     for fish, trace in enumerate(traces):
         traces_cropped.append(trace[(time >= spec_min) & (time <= spec_max)])
         trace_ids.append(np.ones_like(traces_cropped[-1]) * fish)
+    time_cropped = time[(time >= spec_min) & (time <= spec_max)]
 
-    np.save(conf.dataroot_testing + "/spectrogram.npy", spec)
-    np.save(conf.dataroot_testing + "/frequencies.npy", frequencies)
-    np.save(conf.dataroot_testing + "/times.npy", spec_times)
-    np.save(conf.dataroot_testing + "/traces.npy", np.ravel(traces_cropped))
-    np.save(conf.dataroot_testing + "/trace_ids.npy", np.ravel(trace_ids))
-
-    return time, recording, traces
+    np.save(conf.testing_data_path + "/fill_spec.npy", spec)
+    np.save(conf.testing_data_path + "/fill_freqs.npy", frequencies)
+    np.save(conf.testing_data_path + "/fill_times.npy", spec_times)
+    np.save(conf.testing_data_path + "/fund_v.npy", np.ravel(traces_cropped))
+    np.save(conf.testing_data_path + "/ident_v.npy", np.ravel(trace_ids))
+    np.save(conf.testing_data_path + "/times.npy", time_cropped)
+    np.save(conf.testing_data_path + "/correct_chirp_times.npy", np.ravel(correct_chirp_times))
+    np.save(conf.testing_data_path + "/correct_chirp_time_ids.npy", np.ravel(correct_chirp_time_ids))
 
 
 if __name__ == "__main__":
-    time, recording, traces = recording()
 
-    plt.plot(time, recording)
+    recording()
+
+    spectrogram = np.load(conf.testing_data_path + "/fill_spec.npy")
+    frequencies = np.load(conf.testing_data_path + "/fill_freqs.npy")
+    spec_times = np.load(conf.testing_data_path + "/fill_times.npy")
+    traces = np.load(conf.testing_data_path + "/fund_v.npy")
+    trace_ids = np.load(conf.testing_data_path + "/ident_v.npy")
+    time = np.load(conf.testing_data_path + "/times.npy")
+    correct_chirp_times = np.load(conf.testing_data_path + "/correct_chirp_times.npy")
+    correct_chirp_time_ids = np.load(conf.testing_data_path + "/correct_chirp_time_ids.npy")
+
+    fig, ax = plt.subplots()
+
+    ax.imshow(
+            spectrogram, 
+            aspect="auto", 
+            origin="lower",
+            extent=[spec_times[0], spec_times[-1], frequencies[0], frequencies[-1]]
+    )
+
+    for trace_id in np.unique(trace_ids):
+
+        ax.plot(
+                time, 
+                traces[trace_ids == trace_id], 
+                color="red"
+        )
+
+        id_chirp_times = correct_chirp_times[correct_chirp_time_ids == trace_id]
+        time_index = np.arange(len(time))
+        freq_index = [find_on_time(time, x) for x in id_chirp_times]
+        
+        ax.plot(
+                id_chirp_times,
+                traces[trace_ids == trace_id][freq_index],
+                "o",
+        )
+
+    ax.set_xlim(spec_times[0], spec_times[-1])
+    ax.set_ylim(np.min(traces)-100, np.max(traces)+300)
+    ax.set_xlabel("Time (s)")
+    ax.set_ylabel("Frequency (Hz)")
     plt.show()
-    for fish, eod_trace in enumerate(traces):
-        plt.plot(time, eod_trace)
-    plt.show()
+
+

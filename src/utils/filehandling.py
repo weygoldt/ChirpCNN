@@ -1,3 +1,5 @@
+import os 
+
 import yaml
 import numpy as np
 from pathlib import Path
@@ -16,6 +18,21 @@ class ConfLoader:
                     setattr(self, key, conf[key])
             except yaml.YAMLError as error:
                 raise error
+
+
+class NumpyLoader:
+    def __init__(self, dir_path):
+        self.dir_path = dir_path
+        self.load_numpy_files()
+
+    def load_numpy_files(self):
+        files = os.listdir(self.dir_path)
+        npy_files = [file for file in files if file.endswith('.npy')]
+
+        for npy_file in npy_files:
+            attr_name = os.path.splitext(npy_file)[0]
+            attr_value = np.load(os.path.join(self.dir_path, npy_file))
+            setattr(self, attr_name, attr_value)
 
 
 def get_files(dataroot, ext="npy"):
@@ -62,9 +79,4 @@ def get_files(dataroot, ext="npy"):
     files = [str(file) for file in files]
 
     return files, labels, level_dict
-
-
-class load_conf():
-    def __init__(self, path):
-        self.path = path
 
