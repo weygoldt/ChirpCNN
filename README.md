@@ -35,5 +35,8 @@ In this project, I will build a simulated dataset using many chirp parameters an
 - [x] Retrain and test the classifier
 - [ ] Add real data to the classifier
 - [ ] Retrain and test 
-- [ ] Implement window-sliding on actual data 
+- [ ] Implement window-sliding 
+  - [x] Sliding windows + detection in RAM
+  - [ ] Understand why sliding window detection performance is much worse than train-test performance
+  - [ ] Sliding windows + detection by writing windows to disk for large datasets 
 - [ ] Output validation on real data & simulated grid datasets 
