@@ -23,7 +23,7 @@ In this project, I will build a simulated dataset using many chirp parameters an
 
 With this synthetic dataset, I reach a discrimination performance of 99%. But as soon as the frequency traces of chirping fish get close, the current version of the detector falsely assings the same chirp to multiple fish. The plot below illustrated the current state (2023/04/10, 00:27). 
 
-![current detector](assets/detector.png)
+![current detector](assets/detection.png)
 
 ## Issues
 
