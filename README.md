@@ -21,6 +21,10 @@ The main problem of chirp detection is, that chirps are too fast to resolve the 
 
 In this project, I will build a simulated dataset using many chirp parameters and will then try to train a CNN to detect these "ghosts" of chirps on spectrogram images.
 
+With this synthetic dataset, I reach a discrimination performance of 99%. But as soon as the frequency traces of chirping fish get close, the current version of the detector falsely assings the same chirp to multiple fish. The plot below illustrated the current state (2023/04/10, 00:27). 
+
+![current detector](assets/detector.png)
+
 ## Issues
 
 - A chirp only lasts for 20-200 ms but the anomaly it introduces on a spectrogram with sufficient frequency resolution lasts up to a second. 
@@ -33,11 +37,15 @@ In this project, I will build a simulated dataset using many chirp parameters an
 - [x] Build a global yaml config for spectrogram & detection parameters
 - [x] Add more variation to the dataset
 - [x] Retrain and test the classifier
+- [ ] Explore how parameters change performance
+  - [ ] CNN parameters (training rate, batch size, ...)
+  - [ ] Image processing, cropping, ...
 - [ ] Add real data to the classifier
 - [ ] Retrain and test 
 - [ ] Implement window-sliding 
   - [x] Sliding windows + detection in RAM
-  - [ ] Understand why sliding window detection performance is much worse than train-test performance
+  - [x] Understand why sliding window detection performance is much worse than train-test performance
     - NOTE: I just noticed that I added variation to all chirp parameters except for the phase of the EOD in which the chirp is produced. This is currently the most likely explanation.
   - [ ] Sliding windows + detection by writing windows to disk for large datasets 
+  - [ ] Group chirps that are detected multiple times close to each other. This issue was to be expected with the sliding window approach.
 - [ ] Output validation on real data & simulated grid datasets 
