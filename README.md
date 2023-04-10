@@ -55,14 +55,15 @@ pip install git+https://github.com/janscience/audioio.git
 pip install git+https://github.com/janscience/thunderfish.git
 pip install -r requirements.txt
 ```
-4. Run the complete loop
-Executing the `run.py` 
+4. Run the complete loop by executing the `run.py` 
 
-  1. Deletes all data you might have generated previously
-  2. Generates a simulated dataset 
-  3. Trains the model and outputs the model performance on the train-test split
-  4. Generates a new dataset 
-  5. Runs the `detector.py` detection algorithm that uses the model to find chirps on the spectrogram.
+This will
+
+  - Delete all data you might have generated previously
+  - Generate a simulated dataset 
+  - Train the model and outputs the model performance on the train-test split
+  - Generate a new dataset 
+  - Run the `detector.py` detection algorithm that uses the model to find chirps on the spectrogram.
 
 After this pipline is finished, you will be rewarded by the plot above that shows the detections on the spectrogram.
 
