@@ -6,7 +6,7 @@ Some weakly electric fish produce chirps to communicate. Let's try to improve ch
 
 Chirps are brief (20-200 ms) upward-excursions of the frequency of the electrid organ discharge (EOD) of many wave-type electric fish. The example below shows a simulation of the EOD of a single fish that chirps 50 times. Every black line is a frequency band of a single fish. Each black tick is the time point a chirp is simulated. The additional frequency bands are harmonics.
 
-<a href="url"><img src="https://github.com/chirp-cnn/assets/chirps.png" height="auto" width="auto" style="border-radius:50%"></a>
+<a href="url"><img src="https://raw.githubusercontent.com/weygoldt/chirp-cnn/main/assets/chirps.png" height="auto" width="auto" style="border-radius:50%"></a>
 
 ![chirps example](assets/chirps.png)
 
