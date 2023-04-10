@@ -57,4 +57,4 @@ stride: 0.04
 # Is repeated before the model is trained,
 # a new dataset is generated,
 # and the model is tested on that
-generations: 50
+generations: 100
