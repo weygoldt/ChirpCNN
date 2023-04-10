@@ -1,14 +1,14 @@
 # ChirpCNN
 
-Some weakly electric fish produce chirps to communicate. Let's try to improve chirp detection with deep learning. 
+Some weakly electric fish produce chirps to communicate. Let's try to improve chirp detection with a convolutional neural network. 
 
 ## What are chirps?
 
-Chirps are brief (20-200 ms) upward-excursions of the frequency of the electrid organ discharge (EOD) of many wave-type electric fish. The example below shows a simulation of the EOD of a single fish that chirps 50 times. The dark black lines are frequency bands of simulated fish. Each black tick is the time point a chirp is simulated. The additional frequency bands are harmonics.
+Chirps are brief (20-200 ms) upward-excursions of the frequency of the electrid organ discharge (EOD) of many wave-type electric fish. The example below shows a simulation of the EOD of a single fish that chirps 50 times. Every black line is a frequency band of a single fish. Each black tick is the time point a chirp is simulated. The additional frequency bands are harmonics.
 
 ![chirps example](assets/chirps.png)
 
-## Approach
+## How can we detect them?
 
 1. Simulate a labeled dataset 
 2. Train a binary classifier to detect chirps in spectrogram snippets. The current version is a basic CNN implemented in Pytorch.
@@ -48,4 +48,5 @@ With this synthetic dataset, I reach a discrimination performance of 99%. But as
     - NOTE: I just noticed that I added variation to all chirp parameters except for the phase of the EOD in which the chirp is produced. This is currently the most likely explanation.
   - [ ] Sliding windows + detection by writing windows to disk for large datasets 
   - [ ] Group chirps that are detected multiple times close to each other. This issue was to be expected with the sliding window approach.
+  - [ ] Currently I use frequency tracks sampled in the same rate as the original signal. Implement, that I can utilize the frequency tracks form the wavetracker instead.
 - [ ] Output validation on real data & simulated grid datasets 
