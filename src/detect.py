@@ -216,29 +216,39 @@ class Detector:
                     d.fill_freqs[-1],
                 ],
                 zorder = -20,
+                vmin = np.min(d.fill_spec),
+                vmax = np.max(d.fill_spec),
         )
 
         for track_id in np.unique(d.ident_v):
+
             track_id = int(track_id)
             track = d.fund_v[d.ident_v == track_id]
             freq = np.median(track)
-            correct = correct_chirps[correct_chirp_ids == track_id]
-            detect = self.detected_chirps[self.detected_chirp_ids == track_id]
-            ax.plot(d.times, track, linewidth=1, zorder = -10, color=ps.blue)
-            ax.scatter(correct, np.ones_like(correct) * freq, marker="o", color=ps.gblue1, zorder = 0)
-            ax.scatter(detect, np.ones_like(detect) * freq, marker=".", color=ps.gblue3, zorder = 10)
 
-        proxy_artist1 = plt.Line2D([0], [0], color=ps.blue, lw=1, label='EODf tracks')
-        proxy_artist2 = plt.Line2D([0], [0], color=ps.gblue1, ls="none", marker='o', label='Correct chirp positions')
-        proxy_artist3 = plt.Line2D([0], [0], color=ps.gblue3, ls="none", marker='.', label='Detected chirp positions')
+            correct_t = correct_chirps[correct_chirp_ids == track_id]
+            findex = np.asarray([find_on_time(d.times, t) for t in correct_t])
+            correct_f = track[findex]
+
+            detect_t = self.detected_chirps[self.detected_chirp_ids == track_id]
+            findex = np.asarray([find_on_time(d.times, t) for t in detect_t])
+            detect_f = track[findex]
+            
+            ax.plot(d.times, track, linewidth=1, zorder = -10, color=ps.black)
+            ax.scatter(correct_t, correct_f, s=20, marker="o", color=ps.black, zorder = 0)
+            ax.scatter(detect_t, detect_f, s=10, marker="o", color=ps.white, edgecolor=ps.black, zorder = 10)
+
+        # proxy_artist1 = plt.Line2D([0], [0], color=ps.blue, lw=1, label='EODf tracks')
+        # proxy_artist2 = plt.Line2D([0], [0], color=ps.black, ls="none", marker='o', label='Correct chirp positions')
+        # proxy_artist3 = plt.Line2D([0], [0], color=ps.gblue3, ls="none", marker='.', label='Detected chirp positions')
 
         ax.set_ylim(np.min(d.fund_v - 50), np.max(d.fund_v + 150))
         ax.set_xlim(np.min(d.fill_times), np.max(d.fill_times))
         ax.set_xlabel("Time [s]")
         ax.set_ylabel("Frequency [Hz]")
-        ax.legend(bbox_to_anchor=(0, 1.02, 1, 0.2), loc="lower left",
-                    mode="expand", borderaxespad=0, ncol=3,
-                  handles=[proxy_artist1, proxy_artist2, proxy_artist3])
+        # ax.legend(bbox_to_anchor=(0, 1.02, 1, 0.2), loc="lower left",
+        #             mode="expand", borderaxespad=0, ncol=3,
+        #           handles=[proxy_artist1, proxy_artist2, proxy_artist3])
 
         plt.savefig("../assets/detection.png")
         plt.show()

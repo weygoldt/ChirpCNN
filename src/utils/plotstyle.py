@@ -233,7 +233,7 @@ def PlotStyle() -> None:
     plt.rc("legend", fontsize=SMALL_SIZE)  # legend fontsize
     plt.rc("figure", titlesize=BIGGER_SIZE)  # fontsize of the figure title
 
-    plt.rcParams["image.cmap"] = "bone"
+    plt.rcParams["image.cmap"] = "magma"
     plt.rcParams["axes.xmargin"] = 0.05
     plt.rcParams["axes.ymargin"] = 0.1
     plt.rcParams["axes.titlelocation"] = "left"

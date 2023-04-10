@@ -27,22 +27,22 @@ logger = make_logger(__name__)
 
 
 def viz(dataloader, classes, save=False, path="dataset.png"):
-    rows, cols = 5, 5
+    rows, cols = 5, 10
     fig, axs = plt.subplots(
             rows, 
             cols, 
-            figsize=(10, 10),
+            figsize=(24*ps.cm, 12*ps.cm),
             constrained_layout = True
     )
     for ax in axs.flat:
         spectrogram, label = next(iter(dataloader))
-        ax.imshow(spectrogram[0, 0, :, :], origin='lower', cmap="magma")
-        ax.set_title(classes[label[0]], loc = "center")
+        ax.imshow(spectrogram[0, 0, :, :], origin='lower', interpolation='none')
+        ax.set_title(classes[label[0]], loc = "center", fontsize=10)
         ax.axis('off')
     if save: 
         logger.info(f"Saving dataset plot to {path}")
         plt.savefig(path, dpi=300)
-    # plt.show()
+    plt.show()
 
 
 def main():
@@ -66,6 +66,7 @@ def main():
     logger.info(f"Classes: {classes}")
     logger.info(f"Labels: {np.arange(len(classes))}")
     viz(train_loader, classes, save=True, path=conf.plot_dir + '/dataset.png')
+    exit()
 
     model = ChirpCNN().to(device)
     criterion = nn.CrossEntropyLoss()
