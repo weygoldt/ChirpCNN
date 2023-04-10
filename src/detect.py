@@ -216,8 +216,6 @@ class Detector:
                     d.fill_freqs[-1],
                 ],
                 zorder = -20,
-                vmin = np.min(d.fill_spec),
-                vmax = np.max(d.fill_spec),
         )
 
         for track_id in np.unique(d.ident_v):

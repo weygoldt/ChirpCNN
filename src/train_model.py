@@ -42,7 +42,7 @@ def viz(dataloader, classes, save=False, path="dataset.png"):
     if save: 
         logger.info(f"Saving dataset plot to {path}")
         plt.savefig(path, dpi=300)
-    plt.show()
+    # plt.show()
 
 
 def main():
@@ -66,7 +66,7 @@ def main():
     logger.info(f"Classes: {classes}")
     logger.info(f"Labels: {np.arange(len(classes))}")
     viz(train_loader, classes, save=True, path=conf.plot_dir + '/dataset.png')
-    exit()
+    # exit()
 
     model = ChirpCNN().to(device)
     criterion = nn.CrossEntropyLoss()
