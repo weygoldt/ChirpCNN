@@ -1,10 +1,10 @@
 # ChirpCNN
 
-Some weakly electric fish produce chirps to communicate. Let's try to improve chirp detection with deep learning. 
+Some weakly electric fish produce chirps to communicate. Let's try to improve chirp detection with a convolutional neural network. 
 
 ## What are chirps?
 
-Chirps are brief (20-200 ms) upward-excursions of the frequency of the electrid organ discharge (EOD) of many wave-type electric fish. The example below shows a simulation of the EOD of a single fish that chirps 50 times. The dark black lines are frequency bands of simulated fish. Each black tick is the time point a chirp is simulated. The additional frequency bands are harmonics.
+Chirps are brief (20-200 ms) upward-excursions of the frequency of the electrid organ discharge (EOD) of many wave-type electric fish. The example below shows a simulation of the EOD of a single fish that chirps 50 times. Every black line is a frequency band of a single fish. Each black tick is the time point a chirp is simulated. The additional frequency bands are harmonics.
 
 ![chirps example](assets/chirps.png)
 
@@ -20,7 +20,7 @@ In this project, I will build a simulated dataset using many chirp parameters an
 
 With the current synthetic dataset (n=9000), I reach a discrimination performance of 97%. But as soon as the frequency traces of chirping fish get close, the current version of the detector falsely assings the same chirp to multiple fish. The plot below illustrated the current state (2023/04/10, 00:27). 
 
-![current detector](assets/detector.png)
+![current detector](assets/detection.png)
 
 So what the current implementation solves, is reliable detection (on simulated data) but assignment is still an issue, which I might be able so solve with an algorithmic approach, similarly to the non-cnn chirp detector.
 
@@ -85,4 +85,5 @@ After this pipline is finished, you will be rewarded by the plot above that show
   - [ ] Sliding windows + detection by writing windows to disk for large datasets 
   - [ ] Group chirps that are detected multiple times close to each other. This issue was to be expected with the sliding window approach.
   - [ ] Implement a full post-processing pipeline to determine to which fish the chirps belong that are detected simultaneously on fish with close baseline EODfs.
+  - [ ] Currently I use frequency tracks sampled in the same rate as the original signal. Implement, that I can utilize the frequency tracks form the wavetracker instead.
 - [ ] Output validation on real data & simulated grid datasets 
