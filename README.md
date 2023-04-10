@@ -8,6 +8,8 @@ Chirps are brief (20-200 ms) upward-excursions of the frequency of the electrid 
 
 <a href="url"><img src="https://raw.githubusercontent.com/weygoldt/chirp-cnn/main/assets/chirps.png" height="auto" width="auto" style="border-radius:50%"></a>
 
+<img src="IMAGE_URL" alt="https://raw.githubusercontent.com/weygoldt/chirp-cnn/main/assets/chirps.png" style="border-radius: 50px;">
+
 ![chirps example](assets/chirps.png)
 
 ## How can we **detect** them?
