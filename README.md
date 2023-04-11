@@ -89,3 +89,4 @@ After this pipline is finished, you will be rewarded by the plot above that show
   - [ ] Implement a full post-processing pipeline to determine to which fish the chirps belong that are detected simultaneously on fish with close baseline EODfs.
   - [ ] Currently I use frequency tracks sampled in the same rate as the original signal. Implement, that I can utilize the frequency tracks form the wavetracker instead.
 - [ ] Output validation on real data & simulated grid datasets 
+- [ ] In the animation plotting routine, redo the colors and add the real chirps onto the track of the sliding window
