@@ -9,9 +9,11 @@ import torch.nn.functional as F
 import numpy as np
 
 
+
 def load_model(modelpath):
-    model = ChirpCNN()
-    model.load_state_dict(torch.load(modelpath))
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    model = ChirpCNN().to(device)
+    model.load_state_dict(torch.load(modelpath, map_location=device))
     model.eval()
     return model
 
