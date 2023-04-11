@@ -90,3 +90,4 @@ After this pipline is finished, you will be rewarded by the plot above that show
   - [ ] Currently I use frequency tracks sampled in the same rate as the original signal. Implement, that I can utilize the frequency tracks form the wavetracker instead.
 - [ ] Output validation on real data & simulated grid datasets 
 - [ ] In the animation plotting routine, redo the colors and add the real chirps onto the track of the sliding window
+- [ ] Add a line plot with the estimated probability to the detector
