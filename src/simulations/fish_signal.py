@@ -1,7 +1,8 @@
 import sys
-from IPython import embed
-import thunderfish.powerspectrum as ps
+
 import numpy as np
+import thunderfish.powerspectrum as ps
+from IPython import embed
 
 species_name = dict(
     Sine="Sinewave",
@@ -384,15 +385,13 @@ def chirps(
     frequency = eodf * np.ones(n)
     am = np.ones(n)
 
-    for time, width, size, kurtosis, contrast in zip(chirp_times, chirp_width, chirp_size, chirp_kurtosis, chirp_contrast):
-
+    for time, width, size, kurtosis, contrast in zip(
+        chirp_times, chirp_width, chirp_size, chirp_kurtosis, chirp_contrast
+    ):
         # chirp frequency waveform:
         chirp_t = np.arange(-2.0 * width, 2.0 * width, 1.0 / samplerate)
-        chirp_sig = (
-            0.5 * width / (2.0 * np.log(10.0)) ** (0.5 / kurtosis)
-        )
+        chirp_sig = 0.5 * width / (2.0 * np.log(10.0)) ** (0.5 / kurtosis)
         gauss = np.exp(-0.5 * ((chirp_t / chirp_sig) ** 2.0) ** kurtosis)
-
 
         # add chirps on baseline eodf:
         index = int(time * samplerate)
@@ -433,7 +432,7 @@ def rises(
         Sampling rate in Hertz.
     duration: float
         Duration of the generated data in seconds.
-    rise_times: list 
+    rise_times: list
         Timestamp of each of the rises in seconds.
     rise_size: list
         Size of the respective rise (frequency increase above eodf) in Hertz.
@@ -452,15 +451,12 @@ def rises(
     # baseline eod frequency:
     frequency = eodf * np.ones(n)
 
-    for time, size, riset, decayt in zip(rise_times, rise_size, rise_tau, decay_tau):  
-
+    for time, size, riset, decayt in zip(
+        rise_times, rise_size, rise_tau, decay_tau
+    ):
         # rise frequency waveform:
         rise_t = np.arange(0.0, 5.0 * decayt, 1.0 / samplerate)
-        rise = (
-            size
-            * (1.0 - np.exp(-rise_t / riset))
-            * np.exp(-rise_t / decayt)
-        )
+        rise = size * (1.0 - np.exp(-rise_t / riset)) * np.exp(-rise_t / decayt)
 
         # add rises on baseline eodf:
         index = int(time * samplerate)
@@ -472,13 +468,14 @@ def rises(
             frequency[index : index + len(rise)] += rise
     return frequency
 
+
 class FishSignal:
     def __init__(self, samplerate, duration, eodf, nchirps, nrises):
         time = np.arange(0, duration, 1 / samplerate)
         chirp_times = np.random.uniform(0, duration, nchirps)
         rise_times = np.random.uniform(0, duration, nrises)
 
-        # pick random parameters for chirps 
+        # pick random parameters for chirps
         chirp_size = np.random.uniform(60, 200, nchirps)
         chirp_width = np.random.uniform(0.01, 0.1, nchirps)
         chirp_kurtosis = np.random.uniform(1, 1, nchirps)
@@ -534,7 +531,6 @@ class FishSignal:
         self.eodf = eodf
 
     def visualize(self):
-
         spec, freqs, spectime = ps.spectrogram(
             data=self.signal,
             ratetime=self.samplerate,
@@ -549,7 +545,12 @@ class FishSignal:
         ax1.set_xlabel("Time (s)")
         ax1.set_title("EOD signal")
 
-        ax2.imshow(ps.decibel(spec), origin='lower', aspect="auto", extent=[spectime[0], spectime[-1], freqs[0], freqs[-1]])
+        ax2.imshow(
+            ps.decibel(spec),
+            origin="lower",
+            aspect="auto",
+            extent=[spectime[0], spectime[-1], freqs[0], freqs[-1]],
+        )
         ax2.set_ylabel("Frequency (Hz)")
         ax2.set_xlabel("Time (s)")
         ax2.set_title("Spectrogram")

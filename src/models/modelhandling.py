@@ -1,17 +1,16 @@
 import os
 
+import numpy as np
 import torch
 import torch.nn as nn
-import torch.optim as optim
-from torch.utils.data import Dataset, DataLoader
-from torchvision.transforms import ToTensor
 import torch.nn.functional as F
-import numpy as np
-
+import torch.optim as optim
+from torch.utils.data import DataLoader, Dataset
+from torchvision.transforms import ToTensor
 
 
 def load_model(modelpath):
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = ChirpCNN().to(device)
     model.load_state_dict(torch.load(modelpath, map_location=device))
     model.eval()
@@ -24,7 +23,7 @@ class SpectrogramDataset(Dataset):
         self.class_labels = os.listdir(root_dir)
         self.file_paths = []
         self.labels = []
-        self.transform = transform 
+        self.transform = transform
 
         for i, class_label in enumerate(self.class_labels):
             class_dir = os.path.join(self.root_dir, class_label)
@@ -41,7 +40,7 @@ class SpectrogramDataset(Dataset):
         file_path = self.file_paths[index]
         label = self.labels[index]
         spectrogram = np.expand_dims(np.load(file_path), axis=0)
-        spectrogram = spectrogram.astype('float32')
+        spectrogram = spectrogram.astype("float32")
         spectrogram = torch.from_numpy(spectrogram)
         if self.transform:
             spectrogram = self.transform(spectrogram)
@@ -50,11 +49,10 @@ class SpectrogramDataset(Dataset):
 
 class ChirpCNN(nn.Module):
     def __init__(self):
-        
-        # SuperInit the nn.Module parent class 
+        # SuperInit the nn.Module parent class
         super(ChirpCNN, self).__init__()
-        
-        # Note: The input size of the next must always be the 
+
+        # Note: The input size of the next must always be the
         # output size of the previous layer
 
         self.conf1 = nn.Conv2d(1, 6, 5)
@@ -78,12 +76,11 @@ class ChirpCNN(nn.Module):
         self.fc3 = nn.Linear(84, 2)
 
     def forward(self, x):
-
         # Apply first convolutional and pooling layers
         x = self.pool(F.relu(self.conf1(x)))
         x = self.pool(F.relu(self.conf2(x)))
 
-        # Flatten the 3d tensor into a 1d tensor to pass 
+        # Flatten the 3d tensor into a 1d tensor to pass
         # into the fully connected layers. -1 means that
         # the batch size is inferred from the other dimensions
 
@@ -92,4 +89,3 @@ class ChirpCNN(nn.Module):
         x = F.relu(self.fc2(x))
         x = self.fc3(x)
         return x
-

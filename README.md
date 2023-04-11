@@ -81,6 +81,7 @@ After this pipline is finished, you will be rewarded by the plot above that show
 - [ ] Retrain and test 
 - [ ] Implement window-sliding 
   - [x] Sliding windows + detection in RAM
+  - [x] Change sliding window to on-the-fly detection to support larger datasets. Currently it does batch detection
   - [x] Understand why sliding window detection performance is much worse than train-test performance
     - NOTE: I just noticed that I added variation to all chirp parameters except for the phase of the EOD in which the chirp is produced. This is currently the most likely explanation.
   - [ ] Sliding windows + detection by writing windows to disk for large datasets 

@@ -1,25 +1,25 @@
 # SYNTHETIC TRAINING DATASET ------
 training_data_path: "../training_data"
 
-# Simulated fish EOD 
+# Simulated fish EOD
 samplerate: 20000
 simulation_duration: 2
 chirp_time: [1]
 
 # Outer boundaries for chirp parameters
-param_levels: 6 
-eodfs: [300, 1500] 
-chirp_sizes: [90, 200] 
-chirp_durations: [0.02, 0.09] 
-chirp_kurtoses: [0.8, 1.2] 
+param_levels: 6
+eodfs: [300, 1500]
+chirp_sizes: [90, 200]
+chirp_durations: [0.02, 0.09]
+chirp_kurtoses: [0.8, 1.2]
 chirp_contrasts: [0.01, 0.05]
 
 # STFT spectrogram
-frequency_resolution: 5 # nfft = fs/fres 
-overlap_fraction: 0.99 # hanning window overlap
+frequency_resolution: 5  # nfft = fs/fres
+overlap_fraction: 0.99  # hanning window overlap
 
 # Spectrogram ROI extraction
-time_pad: 0.12 
+time_pad: 0.12
 freq_pad: [-100, 300]
 time_jitter: 0.01
 freq_jitter: 10
@@ -27,7 +27,7 @@ img_size_px: 128
 
 # CNN MODEL ------
 num_epochs: 10
-batch_size: 10 
+batch_size: 10
 learning_rate: 0.001
 train_size: 0.8
 save_dir: "models/ChirpCNN.pt"
@@ -50,8 +50,8 @@ disk_cleanup: False
 stride: 0.04
 
 # DATAGEN - TRAIN - TEST ------
-# This value determines how often the 
-# routine 
+# This value determines how often the
+# routine
 #   1. Dataset generation
 #   2. Chirp extraction
 # Is repeated before the model is trained,

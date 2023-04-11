@@ -1,13 +1,13 @@
-import numpy as np
 import cv2
+import numpy as np
 
-from .logger import make_logger 
+from .logger import make_logger
 
 logger = make_logger(__name__)
 
 
 def resize_image(image, length):
-    image = cv2.resize(image, (length, length), interpolation = cv2.INTER_AREA)
+    image = cv2.resize(image, (length, length), interpolation=cv2.INTER_AREA)
     return image
 
 
@@ -40,11 +40,13 @@ def find_on_time(array, target, limit=True):
 
         return idx
 
-    def logerror(): 
-        return logger.error('Target is outside of array limits.')
+    def logerror():
+        return logger.error("Target is outside of array limits.")
 
-    def logwarning(): 
-        return logger.warning('Target is outside of array limits but you allowed this!')
+    def logwarning():
+        return logger.warning(
+            "Target is outside of array limits but you allowed this!"
+        )
 
     # find the closest value
     idx = find_closest(array, target)
@@ -54,9 +56,9 @@ def find_on_time(array, target, limit=True):
     dt_target = target - found
 
     if target <= array[0]:
-        dt_sampled = array[idx+1]-array[idx]
+        dt_sampled = array[idx + 1] - array[idx]
 
-        if abs(array[idx]-target) > dt_sampled/2:
+        if abs(array[idx] - target) > dt_sampled / 2:
             if limit:
                 idx = np.nan
                 logerror()
@@ -65,11 +67,11 @@ def find_on_time(array, target, limit=True):
 
     if target > array[0] and target < array[-1]:
         if dt_target >= 0:
-            dt_sampled = array[idx+1]-array[idx]
+            dt_sampled = array[idx + 1] - array[idx]
         else:
-            dt_sampled = array[idx]-array[idx-1]
+            dt_sampled = array[idx] - array[idx - 1]
 
-        if abs(array[idx]-target) > dt_sampled/2:
+        if abs(array[idx] - target) > dt_sampled / 2:
             if limit:
                 idx = np.nan
                 logerror()
@@ -77,13 +79,12 @@ def find_on_time(array, target, limit=True):
                 logwarning()
 
     if target >= array[-1]:
-        dt_sampled = array[idx] - array[idx-1]
+        dt_sampled = array[idx] - array[idx - 1]
 
-        if abs(array[idx]-target) > dt_sampled/2:
+        if abs(array[idx] - target) > dt_sampled / 2:
             if limit:
                 idx = np.nan
                 logerror()
             else:
                 logwarning()
     return idx
-

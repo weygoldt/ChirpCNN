@@ -1,8 +1,8 @@
-import os 
-
-import yaml
-import numpy as np
+import os
 from pathlib import Path
+
+import numpy as np
+import yaml
 
 
 class ConfLoader:
@@ -27,7 +27,7 @@ class NumpyLoader:
 
     def load_numpy_files(self):
         files = os.listdir(self.dir_path)
-        npy_files = [file for file in files if file.endswith('.npy')]
+        npy_files = [file for file in files if file.endswith(".npy")]
 
         for npy_file in npy_files:
             attr_name = os.path.splitext(npy_file)[0]
@@ -39,7 +39,7 @@ def get_files(dataroot, ext="npy"):
     """
     Get file paths, labels, and level dictionary for a given dataroot directory.
     This is very useful for loading lots of files that are sorted in folders,
-    which label the included files. The returned labels are integer values and 
+    which label the included files. The returned labels are integer values and
     the level dict shows which integer corresponds to which parent directory name.
 
     Parameters
@@ -79,4 +79,3 @@ def get_files(dataroot, ext="npy"):
     files = [str(file) for file in files]
 
     return files, labels, level_dict
-

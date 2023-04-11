@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
 
+import clean
+import detect
+import make_fake_recording
+import train_model
+import training_data_from_recording
 from utils.filehandling import ConfLoader
 from utils.logger import make_logger
-import make_fake_recording
-import training_data_from_recording 
-import train_model
-import detect
-import clean
 
 conf = ConfLoader("config.yml")
 logger = make_logger(__name__)
 
-def main():
 
+def main():
     clean.main()
 
     for i in range(conf.generations):

@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 
-import shutil
 import pathlib
+import shutil
 
 from utils.filehandling import ConfLoader
 from utils.logger import make_logger
 
 logger = make_logger(__name__)
 conf = ConfLoader("config.yml")
+
 
 def main():
     logger.info("Cleaning up...")
@@ -21,6 +22,7 @@ def main():
         pathlib.Path(conf.save_dir).unlink(missing_ok=True)
 
     logger.info("Done.")
+
 
 if __name__ == "__main__":
     main()

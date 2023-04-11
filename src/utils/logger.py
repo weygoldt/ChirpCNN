@@ -2,12 +2,13 @@ import logging
 
 
 def make_logger(name: str):
-
     # create logger formats for file and terminal
     file_formatter = logging.Formatter(
-        "[ %(levelname)s ] ~ %(asctime)s ~ %(module)s.%(funcName)s: %(message)s")
+        "[ %(levelname)s ] ~ %(asctime)s ~ %(module)s.%(funcName)s: %(message)s"
+    )
     console_formatter = logging.Formatter(
-        "[ %(levelname)s ] in %(module)s.%(funcName)s: %(message)s")
+        "[ %(levelname)s ] in %(module)s.%(funcName)s: %(message)s"
+    )
 
     # create stream handler for terminal output
     console_handler = logging.StreamHandler()
@@ -23,7 +24,6 @@ def make_logger(name: str):
 
 
 if __name__ == "__main__":
-
     # initiate logger
     mylogger = make_logger(__name__)
 
