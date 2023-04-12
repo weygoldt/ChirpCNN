@@ -22,7 +22,7 @@ With the current synthetic dataset (n=30000), I reach a discrimination performan
 
 ![current detector](assets/detection.png)
 
-The black circles are points were chirps were simulated. The white circles with a black border plotte above them are the points were my detector found a chirp. So what the current implementation solves, is reliable detection (on simulated data) but assignment is still an issue. As seen on the plot, when frequency bands are close to each other, one chirp is often detected on two frequency bands. I might be able so solve with an algorithmic approach, similarly to the non-cnn chirp detector.
+The black markers are the points were my detector found a chirp. So what the current implementation solves, is reliable detection (on simulated data) but assignment is still an issue. As seen on the plot, when frequency bands are close to each other, one chirp is often detected on two frequency bands. I might be able so solve with an algorithmic approach, similarly to the non-cnn chirp detector.
 
 ## Issues
 
