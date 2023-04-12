@@ -1,11 +1,12 @@
-cmocean==2.0
+cmocean==3.0.3
 cycler==0.11.0
 ipython==8.12.0
-matplotlib==3.7.0
+matplotlib==3.7.1
 numpy==1.23.5
+opencv_python_headless==4.7.0.72
 PyYAML==6.0
 scipy==1.10.1
 thunderfish==1.9.10
 torch==2.0.0
 torchvision==0.15.1
-tqdm==4.64.1
+tqdm==4.65.0
