@@ -11,7 +11,9 @@ import torch
 import torch.nn.functional as F
 from IPython import embed
 from matplotlib.patches import Rectangle
-from torch.utils.data import DataLoader, TensorDataset
+
+# from torch.utils.data import DataLoader, TensorDataset
+from scipy.signal import find_peaks
 
 from models.modelhandling import load_model
 from utils.datahandling import find_on_time, resize_image
@@ -63,17 +65,16 @@ class Detector:
 
     def classify_single(self, img):
         with torch.no_grad():
-            img = torch.from_numpy(img)
+            img = torch.from_numpy(img).to(device)
             outputs = self.model(img)
             probs = F.softmax(outputs, dim=1)
             _, preds = torch.max(outputs, dim=1)
-        probs = probs.numpy()[0][0]
-        preds = preds.numpy()[0]
+        probs = probs.cpu().numpy()[0][0]
+        preds = preds.cpu().numpy()[0]
         return probs, preds
 
     def detect(self, plot=False):
         logger.info("Detecting...")
-
         if self.mode == "memory":
             self._detect_memory(plot)
         else:
@@ -96,6 +97,9 @@ class Detector:
         for track_id in np.unique(self.data.ident_v):
             logger.info(f"Processing track {track_id}...")
             track = self.data.fund_v[self.data.ident_v == track_id]
+            time = self.data.times[
+                self.data.idx_v[self.data.ident_v == track_id]
+            ]
 
             predicted_labels = []
             predicted_probs = []
@@ -110,7 +114,7 @@ class Detector:
                     window_start_index + np.floor(self.window_size / 2) + 1
                 )
                 window_center_t = self.data.fill_times[center_idx]
-                track_index = find_on_time(self.data.times, window_center_t)
+                track_index = find_on_time(time, window_center_t)
                 center_freq = track[track_index]
 
                 # From the track frequency compute the frequency
@@ -123,7 +127,7 @@ class Detector:
                 freq_min_index = find_on_time(self.data.fill_freqs, freq_min)
                 freq_max_index = find_on_time(self.data.fill_freqs, freq_max)
 
-                # Using window start, stop and freq lims, extract snippet from spec
+                # Using window start, stop and feeq lims, extract snippet from spec
                 snippet = self.data.fill_spec[
                     freq_min_index:freq_max_index,
                     window_start_index:window_end_index,
@@ -240,14 +244,19 @@ class Detector:
             predicted_probs = np.asarray(predicted_probs)
             center_t = np.asarray(center_t)
 
-            if len(np.unique(predicted_labels)) > 1:
-                logger.info(f"Found {np.sum(predicted_labels == 0)} chirps")
+            # detect the peaks in the probabilities
+            # peaks of probabilities are chirps
+            peaks, _ = find_peaks(predicted_probs, height=0.5)
+            peaktimes = center_t[peaks]
+            peakprobs = predicted_probs[peaks]
 
-            detected_chirps.append(center_t[predicted_labels == 0])
-            detected_chirp_probs.append(predicted_probs[predicted_labels == 0])
-            detected_chirp_ids.append(
-                np.repeat(track_id, np.sum(predicted_labels == 0))
-            )
+            if len(np.unique(peaks)) > 1:
+                detfrac = len(peaks) / conf.num_chirps
+                logger.info(f"Found {len(peaks)} chirps")
+
+            detected_chirps.append(peaktimes)
+            detected_chirp_probs.append(peakprobs)
+            detected_chirp_ids.append(np.repeat(int(track_id), len(peaktimes)))
 
         self.detected_chirps = np.concatenate(detected_chirps)
         self.detected_chirp_probs = np.concatenate(detected_chirp_probs)
@@ -256,27 +265,14 @@ class Detector:
     def _detect_disk(self, plot):
         logger.info("This function is not yet implemented. Aborting ...")
 
-        # data_path = Path(conf.detection_data_path + "/detector")
-        # if data_path.exists():
-        #     logger.info("Removing data from previous run...")
-        #     shutil.rmtree(data_path)
-        # else:
-        #     logger.info("Creating directory for detector data...")
-        #     data_path.mkdir(parents=True, exist_ok=True)
-        # pass
-        # ...
-        # if conf.disk_cleanup:
-        #     logger.info("Cleaning up detector data...")
-        #     shutil.rmtree(data_path)
-
     def plot(self):
         d = self.data  # <----- Quick fix, remove this!!!
-        correct_chirps = np.load(
-            conf.testing_data_path + "/correct_chirp_times.npy"
-        )
-        correct_chirp_ids = np.load(
-            conf.testing_data_path + "/correct_chirp_time_ids.npy"
-        )
+        # correct_chirps = np.load(
+        #     conf.testing_data_path + "/correct_chirp_times.npy"
+        # )
+        # correct_chirp_ids = np.load(
+        #     conf.testing_data_path + "/correct_chirp_time_ids.npy"
+        # )
 
         fig, ax = plt.subplots(
             figsize=(24 * ps.cm, 12 * ps.cm), constrained_layout=True
@@ -292,39 +288,40 @@ class Detector:
                 d.fill_freqs[-1],
             ],
             zorder=-20,
-            vmin=np.min(d.fill_spec) * 0.6,
-            vmax=np.max(d.fill_spec),
+            # vmin=np.min(d.fill_spec) * 0.6,
+            # vmax=np.max(d.fill_spec),
             interpolation="gaussian",
         )
 
         for track_id in np.unique(d.ident_v):
             track_id = int(track_id)
             track = d.fund_v[d.ident_v == track_id]
+            time = d.times[d.idx_v[d.ident_v == track_id]]
             freq = np.median(track)
 
-            correct_t = correct_chirps[correct_chirp_ids == track_id]
-            findex = np.asarray([find_on_time(d.times, t) for t in correct_t])
-            correct_f = track[findex]
+            # correct_t = correct_chirps[correct_chirp_ids == track_id]
+            # findex = np.asarray([find_on_time(d.times, t) for t in correct_t])
+            # correct_f = track[findex]
 
             detect_t = self.detected_chirps[self.detected_chirp_ids == track_id]
             findex = np.asarray([find_on_time(d.times, t) for t in detect_t])
             detect_f = track[findex]
 
-            ax.plot(d.times, track, linewidth=1, zorder=-10, color=ps.black)
-            ax.scatter(
-                correct_t, correct_f, s=20, marker="o", color=ps.black, zorder=0
-            )
+            ax.plot(time, track, linewidth=1, zorder=-10, color=ps.black)
+            # ax.scatter(
+            #     correct_t, correct_f, s=20, marker="o", color=ps.black, zorder=0
+            # )
             ax.scatter(
                 detect_t,
                 detect_f,
-                s=10,
+                s=20,
                 marker="o",
-                color=ps.white,
+                color=ps.black,
                 edgecolor=ps.black,
                 zorder=10,
             )
 
-        ax.set_ylim(np.min(d.fund_v - 50), np.max(d.fund_v + 150))
+        ax.set_ylim(np.min(d.fund_v - 100), np.max(d.fund_v + 300))
         ax.set_xlim(np.min(d.fill_times), np.max(d.fill_times))
         ax.set_xlabel("Time [s]")
         ax.set_ylabel("Frequency [Hz]")
@@ -358,7 +355,7 @@ def main():
     d = NumpyLoader(args.path)
     modelpath = conf.save_dir
     det = Detector(modelpath, d, args.mode)
-    det.detect(plot=True)
+    det.detect(plot=False)
     det.plot()
 
 

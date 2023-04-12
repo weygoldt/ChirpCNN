@@ -18,7 +18,7 @@ On these spectrograms, we can still see the "ghost" of a chirp: The chirp might 
 
 In this project, I will build a simulated dataset using many chirp parameters and will then try to train a simple convolutional neural network as a binary image classifier to detect these "ghosts" of chirps on spectrogram images.
 
-With the current synthetic dataset (n=30000), I reach a discrimination performance of 98%. But as soon as the frequency traces of chirping fish get close, the current version of the detector falsely assings the same chirp to multiple fish. The plot below illustrated the current state (2023/04/11, 10:35). 
+With the current synthetic dataset (n=30000), I reach a discrimination performance of 98%. But as soon as the frequency traces of chirping fish get close, the current version of the detector falsely assings the same chirp to multiple fish. The plot below illustrated the current state, the first try of detecting on non-artificial data. 
 
 ![current detector](assets/detection.png)
 

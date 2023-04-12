@@ -3,6 +3,7 @@ from pathlib import Path
 
 import numpy as np
 import yaml
+from thunderfish.dataloader import DataLoader
 
 
 class ConfLoader:
@@ -79,3 +80,40 @@ def get_files(dataroot, ext="npy"):
     files = [str(file) for file in files]
 
     return files, labels, level_dict
+
+
+class LoadData:
+    """
+    Load data from raw file and wavetracker files
+
+    Attributes
+    ----------
+    data : DataLoader object containing raw data
+    samplerate : sampling rate of raw data
+    time : array of time for tracked fundamental frequency
+    freq : array of fundamental frequency
+    idx : array of indices to access time array
+    ident : array of identifiers for each tracked fundamental frequency
+    ids : array of unique identifiers exluding NaNs
+    """
+
+    def __init__(self, datapath: str) -> None:
+        # load raw data
+        self.datapath = datapath
+        self.file = os.path.join(datapath, "traces-grid1.raw")
+        self.raw = DataLoader(self.file, 60.0, 0, channel=-1)
+        self.raw_rate = self.raw.samplerate
+
+        # load wavetracker files
+        self.time = np.load(datapath + "times.npy", allow_pickle=True)
+        self.freq = np.load(datapath + "fund_v.npy", allow_pickle=True)
+        self.powers = np.load(datapath + "sign_v.npy", allow_pickle=True)
+        self.idx = np.load(datapath + "idx_v.npy", allow_pickle=True)
+        self.ident = np.load(datapath + "ident_v.npy", allow_pickle=True)
+        self.ids = np.unique(self.ident[~np.isnan(self.ident)])
+
+    def __repr__(self) -> str:
+        return f"LoadData({self.file})"
+
+    def __str__(self) -> str:
+        return f"LoadData({self.file})"

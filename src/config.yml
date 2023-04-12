@@ -3,14 +3,15 @@ training_data_path: "../training_data"
 
 # Simulated fish EOD
 samplerate: 20000
-simulation_duration: 2
-chirp_time: [1]
+noise_stds: [0, 0.1]
+# simulation_duration: 2
+# chirp_time: [1]
 
 # Outer boundaries for chirp parameters
-param_levels: 6
+# param_levels: 6
 eodfs: [300, 1500]
 chirp_sizes: [90, 200]
-chirp_durations: [0.02, 0.09]
+chirp_durations: [0.02, 0.1]
 chirp_kurtoses: [0.8, 1.2]
 chirp_contrasts: [0.01, 0.05]
 
@@ -21,8 +22,8 @@ overlap_fraction: 0.99  # hanning window overlap
 # Spectrogram ROI extraction
 time_pad: 0.12
 freq_pad: [-100, 300]
-time_jitter: 0.01
-freq_jitter: 10
+# time_jitter: 0.01
+# freq_jitter: 10
 img_size_px: 128
 
 # CNN MODEL ------
@@ -40,14 +41,14 @@ num_fish: 6
 num_chirps: 50
 num_rises: 3
 rise_sizes: [10, 100]
-rise_rise_taus: [0.5, 1.5]
-rise_decay_taus: [5, 15]
+rise_rise_taus: [0.1, 1.5]
+rise_decay_taus: [2, 15]
 frequency_track_samplerate: 3
 
 # DETECTOR CONFIGURATION ------
 detection_data_path: "../detection_data"
 disk_cleanup: False
-stride: 0.04
+stride: 0.02
 
 # DATAGEN - TRAIN - TEST ------
 # This value determines how often the

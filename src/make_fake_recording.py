@@ -96,10 +96,19 @@ def main():
             conf.samplerate,
             conf.simulation_duration_rec,
             phase0=0,
-            noise_std=0.01,
+            noise_std=0,
         )
 
+        # draw random values to generate noise
+        noise_std = np.random.uniform(conf.noise_stds[0], conf.noise_stds[1])
+        noise = noise_std * np.random.randn(len(eod))
+        eod += noise
+
+        # modulate amplitude to simulate chirp amplitude decrease
         eod = eod * amplitude_modulation
+
+        # modulate amplitude to simulate movement
+        # this still needs to be implemented
 
         if fish == 0:
             recording = eod

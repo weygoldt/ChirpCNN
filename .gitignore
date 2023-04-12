@@ -1,6 +1,8 @@
 training_data
 detection_data
+testdata
 anim
+.vscode
 .python-version
 
 # Created by https://www.toptal.com/developers/gitignore/api/python,latex
