@@ -11,17 +11,17 @@ noise_stds: [0, 0.1]
 # param_levels: 6
 eodfs: [300, 1500]
 chirp_sizes: [90, 200]
-chirp_durations: [0.02, 0.1]
-chirp_kurtoses: [0.8, 1.2]
-chirp_contrasts: [0.01, 0.05]
+chirp_durations: [0.01, 0.1]
+chirp_kurtoses: [0.6, 1.4]
+chirp_contrasts: [0.01, 0.1]
 
 # STFT spectrogram
-frequency_resolution: 5  # nfft = fs/fres
+frequency_resolution: 8  # nfft = fs/fres
 overlap_fraction: 0.99  # hanning window overlap
-
+ 
 # Spectrogram ROI extraction
-time_pad: 0.12
-freq_pad: [-150, 350]
+time_pad: 0.10
+freq_pad: [-100, 300]
 # time_jitter: 0.01
 # freq_jitter: 10
 img_size_px: 128
@@ -31,7 +31,7 @@ num_epochs: 10
 batch_size: 10
 learning_rate: 0.001
 train_size: 0.8
-save_dir: "models/ChirpCNN.pt"
+save_dir: "models/model.pt"
 plot_dir: "../assets"
 
 # RECORDING SIMULATION ------
@@ -58,4 +58,4 @@ stride: 0.02
 # Is repeated before the model is trained,
 # a new dataset is generated,
 # and the model is tested on that
-generations: 5
+generations: 50

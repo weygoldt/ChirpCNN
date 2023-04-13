@@ -23,9 +23,9 @@ def main():
     logger.info("Training model...")
     train_model.main()
 
-    logger.info("Creating new dataset ...")
-    make_fake_recording.main()
-    detect.main()
+    # logger.info("Creating new dataset ...")
+    # make_fake_recording.main()
+    # detect.main()
 
 
 if __name__ == "__main__":

@@ -2,8 +2,6 @@
 
 import argparse
 import gc
-import shutil
-from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -15,11 +13,15 @@ from matplotlib.patches import Rectangle
 # from torch.utils.data import DataLoader, TensorDataset
 from scipy.signal import find_peaks
 
-from models.modelhandling import load_model
+from models.modelhandling import ChirpNet, ChirpNet2, load_model
 from utils.datahandling import find_on_time, resize_image
 from utils.filehandling import ConfLoader, NumpyLoader
 from utils.logger import make_logger
 from utils.plotstyle import PlotStyle
+
+# import shutil
+# from pathlib import Path
+
 
 # import matplotlib
 # matplotlib.use('Agg')
@@ -39,7 +41,7 @@ class Detector:
         logger.info("Initializing detector...")
 
         self.mode = mode
-        self.model = load_model(modelpath)
+        self.model = load_model(modelpath, ChirpNet)
         self.data = dataset
         self.samplerate = conf.samplerate
         self.fill_samplerate = 1 / np.mean(np.diff(self.data.fill_times))
@@ -305,6 +307,8 @@ class Detector:
 
             detect_t = self.detected_chirps[self.detected_chirp_ids == track_id]
             findex = np.asarray([find_on_time(d.times, t) for t in detect_t])
+            if len(findex) == 0:
+                continue
             detect_f = track[findex]
 
             ax.plot(time, track, linewidth=1, zorder=-10, color=ps.black)

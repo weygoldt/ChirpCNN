@@ -15,7 +15,7 @@ from torch.utils.data import DataLoader, Dataset
 from torchvision.transforms import ToTensor
 from tqdm import tqdm
 
-from models.modelhandling import ChirpCNN, SpectrogramDataset
+from models.modelhandling import ChirpNet, ChirpNet2, SpectrogramDataset
 from utils.filehandling import ConfLoader
 from utils.logger import make_logger
 from utils.plotstyle import PlotStyle
@@ -24,6 +24,11 @@ ps = PlotStyle()
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 conf = ConfLoader("config.yml")
 logger = make_logger(__name__)
+
+
+# create a function (this my favorite choice)
+def RMSELoss(predicted, target):
+    return torch.sqrt(torch.mean((predicted - target) ** 2))
 
 
 def viz(dataloader, classes, save=False, path="dataset.png"):
@@ -39,11 +44,15 @@ def viz(dataloader, classes, save=False, path="dataset.png"):
     if save:
         logger.info(f"Saving dataset plot to {path}")
         plt.savefig(path, dpi=300)
+        plt.close()
+        plt.clf()
+        plt.cla()
     # plt.show()
 
 
 def main():
     save = True
+    criterion = RMSELoss
 
     # Initialize dataset and set up dataloaders
     dataset = SpectrogramDataset(conf.training_data_path)
@@ -68,7 +77,7 @@ def main():
     logger.info(f"Labels: {np.arange(len(classes))}")
     viz(train_loader, classes, save=True, path=conf.plot_dir + "/dataset.png")
 
-    model = ChirpCNN().to(device)
+    model = ChirpNet().to(device)
     criterion = nn.CrossEntropyLoss()
     optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate)
 
@@ -78,19 +87,24 @@ def main():
     logger.info(f"Number of iterations: {n_iterations}")
 
     # Train the model
+    step_loss = []
     for epoch in range(num_epochs):
+        model.train()
         for i, (spectrograms, labels) in enumerate(train_loader):
+            # Get data and label and put them on the GPU
             spectrograms = spectrograms.to(device)
             labels = labels.to(device)
 
             # Forward pass
-            outputs = model(spectrograms)
-            loss = criterion(outputs, labels)
+            outputs = model(spectrograms)  # forward pass
+            loss = criterion(outputs, labels)  # calculate the loss
 
             # Backward and optimize
-            optimizer.zero_grad()
-            loss.backward()
-            optimizer.step()
+            optimizer.zero_grad()  # zero the gradient buffers
+            loss.backward()  # calculate the gradients
+            optimizer.step()  # update the weights
+
+            step_loss.append(loss.item())
 
             if (i + 1) % 10 == 0:
                 logger.info(
@@ -100,16 +114,23 @@ def main():
     logger.info("Finished training")
 
     # Test the model
+    validation_loss = []
     with torch.no_grad():
         n_correct = 0
         n_samples = 0
         n_class_correct = [0 for i in range(len(classes))]
         n_class_samples = [0 for i in range(len(classes))]
 
+        model.eval()
+
         for spectrograms, labels in tqdm(test_loader, desc="Testing"):
             spectrograms = spectrograms.to(device)
             labels = labels.to(device)
             outputs = model(spectrograms)
+
+            # Calculate loss
+            loss = criterion(outputs, labels)
+            validation_loss.append(loss.item())
 
             # max returns (value, index)
             _, predicted = torch.max(outputs, 1)
@@ -144,6 +165,12 @@ def main():
     if save:
         logger.info(f"Saving model to {conf.save_dir}")
         torch.save(model.state_dict(), conf.save_dir)
+
+    fig, ax = plt.subplots()
+    ax.plot(step_loss, label="train_loss")
+    ax.plot(validation_loss, label="val_loss")
+    ax.legend()
+    plt.show()
 
 
 if __name__ == "__main__":

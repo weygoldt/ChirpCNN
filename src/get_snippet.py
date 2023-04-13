@@ -6,7 +6,7 @@ from thunderfish.powerspectrum import decibel, spectrogram
 
 from utils.filehandling import LoadData
 
-datapath = "/home/weygoldt/projects/chirpdetection/data/2022-06-02-10_00/"
+datapath = "/home/weygoldt/projects/chirpdetector/data/2022-06-02-10_00/"
 
 data = LoadData(str(datapath))
 
@@ -94,10 +94,10 @@ plt.ylim(500, 1200)
 plt.show()
 
 # save the data
-np.save("../testdata/fill_spec.npy", spec_sum)
-np.save("../testdata/fill_times.npy", times)
-np.save("../testdata/fill_freqs.npy", freqs)
-np.save("../testdata/fund_v.npy", tracks)
-np.save("../testdata/ident_v.npy", ident)
-np.save("../testdata/idx_v.npy", idx)
-np.save("../testdata/times.npy", time)
+np.save("../real_data/fill_spec.npy", spec_sum)
+np.save("../real_data/fill_times.npy", times)
+np.save("../real_data/fill_freqs.npy", freqs)
+np.save("../real_data/fund_v.npy", tracks)
+np.save("../real_data/ident_v.npy", ident)
+np.save("../real_data/idx_v.npy", idx)
+np.save("../real_data/times.npy", time)

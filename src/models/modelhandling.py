@@ -9,12 +9,12 @@ from torch.utils.data import Dataset
 from torchvision.transforms import ToTensor
 
 
-def load_model(modelpath):
+def load_model(modelpath, model):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model = ChirpCNN().to(device)
-    model.load_state_dict(torch.load(modelpath, map_location=device))
-    model.eval()
-    return model
+    mod = model().to(device)
+    mod.load_state_dict(torch.load(modelpath, map_location=device))
+    mod.eval()
+    return mod
 
 
 class SpectrogramDataset(Dataset):
@@ -47,38 +47,23 @@ class SpectrogramDataset(Dataset):
         return spectrogram, label
 
 
-class ChirpCNN(nn.Module):
+class ChirpNet(nn.Module):
     def __init__(self):
-        # SuperInit the nn.Module parent class
-        super(ChirpCNN, self).__init__()
+        super(ChirpNet, self).__init__()
 
-        # Note: The input size of the next must always be the
-        # output size of the previous layer
+        self.conv1 = nn.Conv2d(in_channels=1, out_channels=6, kernel_size=5)
+        self.pool = nn.MaxPool2d(kernel_size=2, stride=2)
+        self.conv2 = nn.Conv2d(in_channels=6, out_channels=16, kernel_size=5)
 
-        self.conf1 = nn.Conv2d(1, 6, 5)
-        self.pool = nn.MaxPool2d(2, 2)
-        self.conf2 = nn.Conv2d(6, 16, 5)
-
-        # Note: The input size of the next must always be the
-        # output size of the previous layer. Linear layer flattens
-        # the 3d tensor into a 1d tensor. So the input size is the
-        # product of the output sizes of all dimensions (except the
-        # batch dimension) of the previous layer.
-        # See https://www.youtube.com/watch?v=pDdP0TFzsoQ
-        # for a good explanation.
-
-        self.fc1 = nn.Linear(16 * 29 * 29, 120)
-        self.fc2 = nn.Linear(120, 84)
-
-        # Note: The number of output channels of the last layer
-        # must be equal to the number of classes
-
-        self.fc3 = nn.Linear(84, 2)
+        self.fc1 = nn.Linear(in_features=16 * 29 * 29, out_features=120)
+        self.fc2 = nn.Linear(in_features=120, out_features=84)
+        self.fc3 = nn.Linear(in_features=84, out_features=2)
 
     def forward(self, x):
         # Apply first convolutional and pooling layers
-        x = self.pool(F.relu(self.conf1(x)))
-        x = self.pool(F.relu(self.conf2(x)))
+
+        x = self.pool(F.relu(self.conv1(x)))
+        x = self.pool(F.relu(self.conv2(x)))
 
         # Flatten the 3d tensor into a 1d tensor to pass
         # into the fully connected layers. -1 means that
@@ -89,3 +74,38 @@ class ChirpCNN(nn.Module):
         x = F.relu(self.fc2(x))
         x = self.fc3(x)
         return x
+
+
+class ChirpNet2(nn.Module):
+    def __init__(self):
+        super(ChirpNet2, self).__init__()
+
+        self.conv1 = nn.Conv2d(
+            in_channels=1, out_channels=12, kernel_size=5, stride=1, padding=1
+        )
+        self.bn1 = nn.BatchNorm2d(12)
+        self.conv2 = nn.Conv2d(
+            in_channels=12, out_channels=12, kernel_size=5, stride=1, padding=1
+        )
+        self.bn2 = nn.BatchNorm2d(12)
+        self.pool = nn.MaxPool2d(2, 2)
+        self.conv4 = nn.Conv2d(
+            in_channels=12, out_channels=24, kernel_size=5, stride=1, padding=1
+        )
+        self.bn4 = nn.BatchNorm2d(24)
+        self.conv5 = nn.Conv2d(
+            in_channels=24, out_channels=24, kernel_size=5, stride=1, padding=1
+        )
+        self.bn5 = nn.BatchNorm2d(24)
+        self.fc1 = nn.Linear(24 * 10 * 10, 2)
+
+    def forward(self, input):
+        output = F.relu(self.bn1(self.conv1(input)))
+        output = F.relu(self.bn2(self.conv2(output)))
+        output = self.pool(output)
+        output = F.relu(self.bn4(self.conv4(output)))
+        output = F.relu(self.bn5(self.conv5(output)))
+        output = output.view(-1, 24 * 10 * 10)
+        output = self.fc1(output)
+
+        return output
