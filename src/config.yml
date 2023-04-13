@@ -20,7 +20,7 @@ frequency_resolution: 5  # nfft = fs/fres
 overlap_fraction: 0.99  # hanning window overlap
 
 # Spectrogram ROI extraction
-time_pad: 0.14
+time_pad: 0.12
 freq_pad: [-150, 350]
 # time_jitter: 0.01
 # freq_jitter: 10
@@ -58,4 +58,4 @@ stride: 0.02
 # Is repeated before the model is trained,
 # a new dataset is generated,
 # and the model is tested on that
-generations: 100
+generations: 5
