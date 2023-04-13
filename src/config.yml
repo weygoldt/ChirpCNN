@@ -20,8 +20,8 @@ frequency_resolution: 5  # nfft = fs/fres
 overlap_fraction: 0.99  # hanning window overlap
 
 # Spectrogram ROI extraction
-time_pad: 0.12
-freq_pad: [-100, 300]
+time_pad: 0.14
+freq_pad: [-150, 350]
 # time_jitter: 0.01
 # freq_jitter: 10
 img_size_px: 128

@@ -67,7 +67,6 @@ def main():
     logger.info(f"Classes: {classes}")
     logger.info(f"Labels: {np.arange(len(classes))}")
     viz(train_loader, classes, save=True, path=conf.plot_dir + "/dataset.png")
-    # exit()
 
     model = ChirpCNN().to(device)
     criterion = nn.CrossEntropyLoss()
