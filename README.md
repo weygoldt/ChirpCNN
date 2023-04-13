@@ -77,17 +77,19 @@ After this pipline is finished, you will be rewarded by the plot above that show
 - [ ] Explore how parameters change performance
   - [ ] CNN parameters (training rate, batch size, ...)
   - [ ] Image processing, cropping, ...
-- [ ] Add real data to the classifier
+- [x] Add real data to the classifier
 - [ ] Retrain and test 
 - [ ] Implement window-sliding 
   - [x] Sliding windows + detection in RAM
   - [x] Change sliding window to on-the-fly detection to support larger datasets. Currently it does batch detection
   - [x] Understand why sliding window detection performance is much worse than train-test performance
     - NOTE: I just noticed that I added variation to all chirp parameters except for the phase of the EOD in which the chirp is produced. This is currently the most likely explanation.
-  - [ ] Sliding windows + detection by writing windows to disk for large datasets 
-  - [ ] Group chirps that are detected multiple times close to each other. This issue was to be expected with the sliding window approach.
+  - [x] Sliding windows + detection by writing windows to disk for large datasets
+    - NOTE: I discarded this idea. Rather, I aim towards on the fly detection. The full spectrogram should be computed beforehand and the detector just loads that.
+  - [x] Group chirps that are detected multiple times close to each other. This issue was to be expected with the sliding window approach.
+    - NOTE: I did this by using the peaks of the chirp probabilities, which works quite well for now. But it would be more elegant to weigh the timestamps for all single detected chirps by their chirp probablility and compute the mean of that. This is probably more temporally accurate.
   - [ ] Implement a full post-processing pipeline to determine to which fish the chirps belong that are detected simultaneously on fish with close baseline EODfs.
-  - [ ] Currently I use frequency tracks sampled in the same rate as the original signal. Implement, that I can utilize the frequency tracks form the wavetracker instead.
+  - [x] Currently I use frequency tracks sampled in the same rate as the original signal. Implement, that I can utilize the frequency tracks form the wavetracker instead.
 - [ ] Output validation on real data & simulated grid datasets 
 - [ ] In the animation plotting routine, redo the colors and add the real chirps onto the track of the sliding window
 - [ ] Add a line plot with the estimated probability to the detector
