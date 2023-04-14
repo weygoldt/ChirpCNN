@@ -53,7 +53,7 @@ class ChirpNet(nn.Module):
 
         # original img size of 128x128
 
-        self.conv1 = nn.Conv2d(in_channels=1, out_channels=16, kernel_size=5)
+        self.conv1 = nn.Conv2d(in_channels=1, out_channels=6, kernel_size=5)
 
         # after first conv layer: (img_width - kernel_size + 2*padding)/stride + 1
         # that makes (128 - 5 + 2*0) / 1 + 1 = 124
@@ -62,13 +62,13 @@ class ChirpNet(nn.Module):
 
         # after first pooling layer: (124 - 2) / 2 + 1 = 62
 
-        self.conv2 = nn.Conv2d(in_channels=16, out_channels=32, kernel_size=5)
+        self.conv2 = nn.Conv2d(in_channels=6, out_channels=16, kernel_size=5)
 
         # after second conv layer: (62 - 5 + 2*0) / 1 + 1 = 58
         # the forward pools again so after second pooling layer: (58 - 2) / 2 + 1 = 29
         # so the in-feature size is 16 channels * 29 pixels * 29 pixels
 
-        self.fc1 = nn.Linear(in_features=32 * 29 * 29, out_features=120)
+        self.fc1 = nn.Linear(in_features=16 * 29 * 29, out_features=120)
         self.fc2 = nn.Linear(in_features=120, out_features=84)
         self.fc3 = nn.Linear(in_features=84, out_features=2)
 
@@ -82,7 +82,7 @@ class ChirpNet(nn.Module):
         # into the fully connected layers. -1 means that
         # the batch size is inferred from the other dimensions
 
-        x = x.view(-1, 32 * 29 * 29)
+        x = x.view(-1, 16 * 29 * 29)
 
         # call firt fully connected layer
         # apply relu activation function

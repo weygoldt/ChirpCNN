@@ -10,13 +10,13 @@ noise_stds: [0, 0.1]
 # Outer boundaries for chirp parameters
 # param_levels: 6
 eodfs: [300, 1500]
-chirp_sizes: [90, 200]
+chirp_sizes: [90, 300]
 chirp_durations: [0.01, 0.1]
 chirp_kurtoses: [0.6, 1.4]
 chirp_contrasts: [0.01, 0.1]
 
 # STFT spectrogram
-frequency_resolution: 8  # nfft = fs/fres
+frequency_resolution: 6  # nfft = fs/fres
 overlap_fraction: 0.99  # hanning window overlap
  
 # Spectrogram ROI extraction
@@ -58,4 +58,4 @@ stride: 0.02
 # Is repeated before the model is trained,
 # a new dataset is generated,
 # and the model is tested on that
-generations: 50
+generations: 30
