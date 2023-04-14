@@ -4,7 +4,7 @@ Some weakly electric fish produce chirps to communicate. Let's try to improve ch
 
 ## What are chirps?
 
-Chirps are brief (20-200 ms) upward-excursions of the frequency of the electrid organ discharge (EOD) of many wave-type electric fish. The example below shows a simulation of the EOD of a single fish that chirps 50 times. Every black line is a frequency band of a single fish. Each black tick is the time point a chirp is simulated. The additional frequency bands are harmonics.
+Chirps are brief (20-200 ms) upward-excursions of the frequency of the electrid organ discharge (EOD) of many wave-type electric fish. The example below shows a simulation of the EODs of multiple fish that each chirp 50 times at random points in time. Every black line is a frequency band of a single fish. Each black tick is the time point a chirp is simulated. The additional frequency bands are harmonics.
 
 ![chirps example](assets/chirps.png)
 
@@ -12,13 +12,15 @@ Chirps are brief (20-200 ms) upward-excursions of the frequency of the electrid 
 
 The main problem of chirp detection is, that chirps are too fast to resolve the temporal evolution in frequency, while maintaining a frequency resolution to distinguish individual fish on a spectrogram. A spectrogram of a chirp with sufficient frequency resolution does **not** capture a chirp well. If there is just a single fish in the recording, we could just filter the recording and compute an instantaneous frequency, but once there are multiple fish, the only way to separate them is by spectral analyses.
 
+So the kind of spectrogram we need is a trade-off between the temporal and frequency resolution. We already extracted the bands of the EOD baseline frequency for each fish using a spectrogam with a frequency resolution of 0.5 Hz in the [wavetracker](https://github.com/tillraab/wavetracker) project. Most chirps are invisible on a spectrogram with this resolution. I currently use a frequency resolution of 6 Hz with a window overlap of .99. 
+
 On these spectrograms, we can still see the "ghost" of a chirp: The chirp might not be clearly visible in its temporal evolution, but there is a blurred region where the frequency briefly peaks. But these regions last up to magnitudes longer than a real chirp and come in many shaped and forms, depending on the spectrogram resolution and parameters such as chirp duration, contrast, frequency, etc. The following image contains just a few examples from the current dataset. Each window is fixed to a frequency range of 400 Hz and a time of 240 ms.
 
 ![current dataset](assets/dataset.png)
 
 In this project, I will build a simulated dataset using many chirp parameters and will then try to train a simple convolutional neural network as a binary image classifier to detect these "ghosts" of chirps on spectrogram images.
 
-With the current synthetic dataset (n=30000), I reach a discrimination performance of 98%. But as soon as the frequency traces of chirping fish get close, the current version of the detector falsely assings the same chirp to multiple fish. The plot below illustrated the current state, the first try of detecting on non-artificial data. 
+With the current synthetic dataset (n=15000), I reach a discrimination performance of 98%. But as soon as the frequency traces of chirping fish get close, the current version of the detector falsely assings the same chirp to multiple fish. The plot below illustrated the current state, the first try of detecting on non-artificial data.
 
 ![current detector](assets/detection.png)
 
@@ -77,9 +79,11 @@ After this pipline is finished, you will be rewarded by the plot above that show
 - [ ] Explore how parameters change performance
   - [ ] CNN parameters (training rate, batch size, ...)
   - [ ] Image processing, cropping, ...
+  - [ ] Implement image transforms the generalize further 
+  - [ ] Look into the ray-tune system for painless hyperparameter optimization
 - [x] Add real data to the classifier
 - [ ] Retrain and test 
-- [ ] Implement window-sliding 
+- [x] Implement window-sliding 
   - [x] Sliding windows + detection in RAM
   - [x] Change sliding window to on-the-fly detection to support larger datasets. Currently it does batch detection
   - [x] Understand why sliding window detection performance is much worse than train-test performance
@@ -93,3 +97,9 @@ After this pipline is finished, you will be rewarded by the plot above that show
 - [ ] Output validation on real data & simulated grid datasets 
 - [ ] In the animation plotting routine, redo the colors and add the real chirps onto the track of the sliding window
 - [ ] Add a line plot with the estimated probability to the detector
+- [ ] Understand the training loss, etc. Implement a training loss plot that shows how training went. This is absolutely urgent to prevent overfitting!
+
+## Project log 
+- 2023/04/13: First time all chirps are correctly assigned on the real data snippet. Decraesed frequency resolution of the training dataset and made windows narrower.
+- 2023/04/12: First semi-successfull run on a snippet of real data. 
+- 2023/04/09: First successfull run of the detector on synthetic data.
