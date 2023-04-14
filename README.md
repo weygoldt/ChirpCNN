@@ -26,12 +26,15 @@ With the current synthetic dataset (n=15000), I reach a discrimination performan
 
 The black markers are the points were my detector found a chirp. So what the current implementation solves, is reliable detection (on simulated data) but assignment is still an issue. As seen on the plot, when frequency bands are close to each other, one chirp is often detected on two frequency bands. I might be able so solve with an algorithmic approach, similarly to the non-cnn chirp detector.
 
+**UPDATE:** The chirps that are falsely detected twice for different fish can be sorted by the probability the network computes for each chirp. Simply only accepting the chirp with the highest probability in a given time window (currently 20 ms) completely resolves the issue of duplicates on the current test snippet.
+
 ## Issues
 
 - [x] A chirp only lasts for 20-200 ms but the anomaly it introduces on a spectrogram with sufficient frequency resolution lasts up to a second. 
-  - Note: Chirps are often further apart than that and the current implementation detects them well even if they are close. This is only results in issues when the *exact* timing of a chirp is important.
-- [ ] The classifier might be able to detect chirps well, but assigning them to the correct emitter is a seperate problem.
+  - Note: Chirps are often further apart than that and the current implementation detects them well even if they are close. This is only results in issues when the *exact* timing of a chirp is important and the chirp rate is high.
+- [x] The classifier might be able to detect chirps well, but assigning them to the correct emitter is a seperate problem.
   - Note: Here I could borrow methods from the previous chirp detector, that was good at assignment but not so good with detection.
+  - Current solution: If the a multiple chirps are detected simultaneously for multiple fish, discarding all chirps except for the one with the highest class probability is sufficient for now to correctly assing chirps. This of course biases the detector to not beeing able to detect simultaneous chirps. So this is **not fully solved**.
 
 ## How to run this setup
 
