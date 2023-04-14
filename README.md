@@ -98,10 +98,17 @@ After this pipline is finished, you will be rewarded by the plot above that show
 - [ ] In the animation plotting routine, redo the colors and add the real chirps onto the track of the sliding window
 - [ ] Add a line plot with the estimated probability to the detector
 - [ ] Understand the training loss, etc. Implement a training loss plot that shows how training went. This is absolutely urgent to prevent overfitting!
-- [ ] Implement batch norm. Until now, each snippet is min-max normed before entering the network. This removes information that could be used during detection.
+- [ ] Implement norm. Until now, each snippet is min-max normed before entering the network. This removes information that could be used during detection.
+  - [ ] Standardize dataset before feeding it to the network and remove min max norm in data simulation script.
+  - [ ] Try batch norming the output of the convolution layers.
 - [ ] Get natural values for the chirp contrast. It from the spectrogram inversion experiment, it seems that natural contrasts are much stronger and could show on a spectrogram. This could be useful for the convnet detection.
+- [ ] Try drastically increase the batch size, e.g. to 100
+- [ ] Implement tensor-based detection on gpu instead of numpy.
+- [ ] Implement the ability to load much larger spectograms without having to load it into ram
+- [ ] Implement the creation of large spectrograms on the GPU according to the detection parameters in the config file.
 
 ## Project log 
+- 2023/04/14: Probably solved the issue that the same chirp is detected twice for two fish. I just take group chirps that are less than 20 ms apart and use only the one with the highest probability reported by the model and discard the rest. Even fancier implementations could use things like the dip in the baseline envelope during a chirp to determine to which fish the chirp truly belongs to.
 - 2023/04/13: First time all chirps are correctly assigned on the real data snippet. Decraesed frequency resolution of the training dataset and made windows narrower.
 - 2023/04/12: First semi-successfull run on a snippet of real data. 
 - 2023/04/09: First successfull run of the detector on synthetic data.

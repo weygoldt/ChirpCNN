@@ -52,11 +52,14 @@ def viz(dataloader, classes, save=False, path="dataset.png"):
 
 def main():
     save = True
-    # criterion = RMSELoss
 
     # Initialize dataset and set up dataloaders
     dataset = SpectrogramDataset(conf.training_data_path)
     classes = dataset.class_labels
+    logger.info(f"Classes: {classes}")
+    logger.info(f"Labels: {np.arange(len(classes))}")
+
+    # Divide dataset into train and test set
     train_size = int(conf.train_size * len(dataset))
     test_size = len(dataset) - train_size
     train_dataset, test_dataset = torch.utils.data.random_split(
@@ -68,13 +71,34 @@ def main():
     batch_size = conf.batch_size
     learning_rate = conf.learning_rate
 
+    # Create dataloaders for the train and test set
     train_loader = DataLoader(
         train_dataset, batch_size=batch_size, shuffle=True
     )
     test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=True)
 
-    logger.info(f"Classes: {classes}")
-    logger.info(f"Labels: {np.arange(len(classes))}")
+    # Standardize the training dataset ------
+
+    # Compute the mean of the training dataset
+    # logger.info("Standardizing the training dataset...")
+    # total_sum = 0
+    # num_of_pixels = len(train_dataset) * 128 * 128
+    # for batch in train_loader:
+    #     total_sum += torch.sum(batch[0])
+    # mean = total_sum / num_of_pixels
+
+    # # Compute the standard deviation of the training dataset
+    # sum_of_squared_error = 0
+    # for batch in train_loader:
+    #     sum_of_squared_error += torch.sum((batch[0] - mean).pow(2))
+    # std = torch.sqrt(sum_of_squared_error / num_of_pixels)
+
+    # logger.info(f"Mean: {mean}, Standard deviation: {std}")
+
+    # # Standardize the test dataset
+    # learn more here https://www.youtube.com/watch?v=lu7TCu7HeYc
+
+    # Visualize a few examples from the dataset
     viz(train_loader, classes, save=True, path=conf.plot_dir + "/dataset.png")
 
     model = ChirpNet().to(device)

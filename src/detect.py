@@ -32,6 +32,43 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 ps = PlotStyle()
 
 
+def group_close_chirps(chirps, time_tolerance=0.02):
+    """
+    Group close chirps into one chirp
+    """
+    grouped_chirps = []
+    group = []
+    for i, chirp in enumerate(chirps):
+        if i == 0:
+            group.append(chirp)
+        else:
+            if (chirp[0] - group[-1][0]) < time_tolerance:
+                group.append(chirp)
+            else:
+                grouped_chirps.append(group)
+                group = [chirp]
+    if group:
+        grouped_chirps.append(group)
+
+    return grouped_chirps
+
+
+def select_highest_prob_chirp(grouped_chirps):
+    """
+    Select the highest probability chirp from each group
+    """
+
+    best_chirps = []
+    for i, group in enumerate(grouped_chirps):
+        if len(group) > 1:
+            probs = [chirp[2] for chirp in group]
+            highest_prob = np.argmax(probs)
+            best_chirps.append(group[highest_prob])
+        else:
+            best_chirps.append(group[0])
+    return best_chirps
+
+
 class Detector:
     def __init__(self, modelpath, dataset, mode):
         assert mode in [
@@ -49,8 +86,7 @@ class Detector:
         self.time_pad = conf.time_pad
         self.window_size = int(conf.time_pad * 2 * self.fill_samplerate)
         self.stride = int(conf.stride * self.fill_samplerate)
-        self.detected_chirps = None
-        self.detected_chirp_ids = None
+        self.chirps = None
 
         if (self.data.times[-1] // 600 != 0) and (self.mode == "memory"):
             logger.warning(
@@ -92,8 +128,6 @@ class Detector:
         )
 
         detected_chirps = []
-        detected_chirp_probs = []
-        detected_chirp_ids = []
 
         iter = 0
         for track_id in np.unique(self.data.ident_v):
@@ -106,6 +140,7 @@ class Detector:
             predicted_labels = []
             predicted_probs = []
             center_t = []
+            center_f = []
 
             for window_start_index in window_start_indices:
                 # Make index were current window will end
@@ -146,6 +181,7 @@ class Detector:
                 predicted_labels.append(label)
                 predicted_probs.append(prob)
                 center_t.append(window_center_t)
+                center_f.append(center_freq)
 
                 iter += 1
                 if not plot:
@@ -245,24 +281,47 @@ class Detector:
             predicted_labels = np.asarray(predicted_labels)
             predicted_probs = np.asarray(predicted_probs)
             center_t = np.asarray(center_t)
+            center_f = np.asarray(center_f)
 
             # detect the peaks in the probabilities
             # peaks of probabilities are chirps
+
             peaks, _ = find_peaks(predicted_probs, height=0.5)
+            logger.info(f"ConvNet found {len(peaks)} chirps ")
+
             peaktimes = center_t[peaks]
+            peakfreqs = center_f[peaks]
+            peakid = np.repeat(int(track_id), len(peaktimes))
             peakprobs = predicted_probs[peaks]
 
-            if len(np.unique(peaks)) > 1:
-                detfrac = len(peaks) / conf.num_chirps
-                logger.info(f"Found {len(peaks)} chirps")
+            # put time, freq and id in list of touples
+            chirps = list(zip(peaktimes, peakfreqs, peakprobs, peakid))
 
-            detected_chirps.append(peaktimes)
-            detected_chirp_probs.append(peakprobs)
-            detected_chirp_ids.append(np.repeat(int(track_id), len(peaktimes)))
+            # each chirp is now a touple with (time, freq, id, prob)
+            detected_chirps.append(chirps)
 
-        self.detected_chirps = np.concatenate(detected_chirps)
-        self.detected_chirp_probs = np.concatenate(detected_chirp_probs)
-        self.detected_chirp_ids = np.concatenate(detected_chirp_ids)
+        # flatten the list of lists to a single list with all the chirps
+        detected_chirps = np.concatenate(detected_chirps)
+
+        # Sort chirps by time they were detected at
+        detected_chirps = detected_chirps[detected_chirps[:, 0].argsort()]
+
+        # group chirps that are close by in time to find the ones
+        # that were detected twice on seperate fish
+
+        grouped_chirps = group_close_chirps(detected_chirps, 0.02)
+
+        # go through the close chirp and find the most probable one
+        # for now just use the ConvNets prediction probability
+        # this can be much more fancy, perhaps by going through
+        # all duplicates and finding the stronges dip in the baseline
+        # envelope. E.g. inverting the masked spectrogram for a single
+        # fish would give a nice envelope. Bandpass filtering the envelope
+        # also works but is not as robust as the spectrogram inversion (in
+        # the case of strong fluctuations of the baseline e.g. during
+        # a rise.)
+
+        self.chirps = select_highest_prob_chirp(grouped_chirps)
 
     def _detect_disk(self, plot):
         logger.info("This function is not yet implemented. Aborting ...")
@@ -290,8 +349,6 @@ class Detector:
                 d.fill_freqs[-1],
             ],
             zorder=-20,
-            # vmin=np.min(d.fill_spec) * 0.6,
-            # vmax=np.max(d.fill_spec),
             interpolation="gaussian",
         )
 
@@ -299,25 +356,14 @@ class Detector:
             track_id = int(track_id)
             track = d.fund_v[d.ident_v == track_id]
             time = d.times[d.idx_v[d.ident_v == track_id]]
-            freq = np.median(track)
-
-            # correct_t = correct_chirps[correct_chirp_ids == track_id]
-            # findex = np.asarray([find_on_time(d.times, t) for t in correct_t])
-            # correct_f = track[findex]
-
-            detect_t = self.detected_chirps[self.detected_chirp_ids == track_id]
-            findex = np.asarray([find_on_time(d.times, t) for t in detect_t])
-            if len(findex) == 0:
-                continue
-            detect_f = track[findex]
 
             ax.plot(time, track, linewidth=1, zorder=-10, color=ps.black)
-            # ax.scatter(
-            #     correct_t, correct_f, s=20, marker="o", color=ps.black, zorder=0
-            # )
+
+        for chirp in self.chirps:
+            t, f = chirp[0], chirp[1]
             ax.scatter(
-                detect_t,
-                detect_f,
+                t,
+                f,
                 s=20,
                 marker="o",
                 color=ps.black,
