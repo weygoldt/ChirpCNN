@@ -31,9 +31,10 @@ The black markers are the points were my detector found a chirp. So what the cur
 ## Issues
 
 - [x] A chirp only lasts for 20-200 ms but the anomaly it introduces on a spectrogram with sufficient frequency resolution lasts up to a second. 
-  - Note: Chirps are often further apart than that and the current implementation detects them well even if they are close. This is only results in issues when the *exact* timing of a chirp is important.
-- [ ] The classifier might be able to detect chirps well, but assigning them to the correct emitter is a seperate problem.
+  - Note: Chirps are often further apart than that and the current implementation detects them well even if they are close. This is only results in issues when the *exact* timing of a chirp is important and the chirp rate is high.
+- [x] The classifier might be able to detect chirps well, but assigning them to the correct emitter is a seperate problem.
   - Note: Here I could borrow methods from the previous chirp detector, that was good at assignment but not so good with detection.
+  - Current solution: If the a multiple chirps are detected simultaneously for multiple fish, discarding all chirps except for the one with the highest class probability is sufficient for now to correctly assing chirps. This of course biases the detector to not beeing able to detect simultaneous chirps. So this is not fully solved.
 
 ## How to run this setup
 
