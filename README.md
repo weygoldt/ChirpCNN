@@ -98,6 +98,7 @@ After this pipline is finished, you will be rewarded by the plot above that show
 - [ ] In the animation plotting routine, redo the colors and add the real chirps onto the track of the sliding window
 - [ ] Add a line plot with the estimated probability to the detector
 - [ ] Understand the training loss, etc. Implement a training loss plot that shows how training went. This is absolutely urgent to prevent overfitting!
+- Implement batch norm. Until now, each snippet is min-max normed before entering the network. This removes information that could be used during detection.
 
 ## Project log 
 - 2023/04/13: First time all chirps are correctly assigned on the real data snippet. Decraesed frequency resolution of the training dataset and made windows narrower.
