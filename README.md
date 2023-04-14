@@ -1,6 +1,6 @@
-# ChirpCNN
+# ChirpNet - A chirp detection algorithm with a neural network
 
-Some weakly electric fish produce chirps to communicate. Let's try to improve chirp detection with a convolutional neural network. 
+The previous [chirp detection algorithm](https://github.com/weygoldt/chirpdetector) was based entirely on manual extraction of multiple features across time and space, where anomalies on a all features at the same time were chirps. This approach uses the summed spectrogram across all electrodes on an electrode grid to detect chirps from the spectrogram images. The core of this algoritm is a simple convolutional neural network that is trained to discriminate chirps using a simulated dataset.
 
 ## What are chirps?
 
