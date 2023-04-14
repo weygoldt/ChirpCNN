@@ -52,7 +52,7 @@ def viz(dataloader, classes, save=False, path="dataset.png"):
 
 def main():
     save = True
-    criterion = RMSELoss
+    # criterion = RMSELoss
 
     # Initialize dataset and set up dataloaders
     dataset = SpectrogramDataset(conf.training_data_path)
