@@ -126,11 +126,14 @@ def main():
 
     spec = decibel(spec)
 
-    traces_cropped, trace_ids = [], []
+    traces_cropped, trace_ids, trace_idx = [], [], []
     spec_min, spec_max = np.min(spec_times), np.max(spec_times)
+
     for fish, trace in enumerate(traces):
         traces_cropped.append(trace[(time >= spec_min) & (time <= spec_max)])
         trace_ids.append(np.ones_like(traces_cropped[-1]) * fish)
+        trace_idx.append(np.arange(len(traces_cropped[-1])))
+
     time_cropped = time[(time >= spec_min) & (time <= spec_max)]
 
     outpath = pathlib.Path(conf.testing_data_path)
@@ -141,6 +144,7 @@ def main():
     np.save(outpath / "fill_times.npy", spec_times)
     np.save(outpath / "fund_v.npy", np.ravel(traces_cropped))
     np.save(outpath / "ident_v.npy", np.ravel(trace_ids))
+    np.save(outpath / "idx_v.npy", np.ravel(trace_idx))
     np.save(outpath / "times.npy", time_cropped)
     np.save(outpath / "correct_chirp_times.npy", np.ravel(correct_chirp_times))
     np.save(

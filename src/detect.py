@@ -300,6 +300,8 @@ class Detector:
             # each chirp is now a touple with (time, freq, id, prob)
             detected_chirps.append(chirps)
 
+        logger.info("Sorting detected chirps ...")
+
         # flatten the list of lists to a single list with all the chirps
         detected_chirps = np.concatenate(detected_chirps)
 
