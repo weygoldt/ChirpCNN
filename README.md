@@ -6,7 +6,7 @@ Some weakly electric fish produce chirps to communicate. Let's try to improve ch
 
 Chirps are brief (20-200 ms) upward-excursions of the frequency of the electrid organ discharge (EOD) of many wave-type electric fish. The example below shows a simulation of the EODs of multiple fish that each chirp 50 times at random points in time. Every black line is a frequency band of a single fish. Each black tick is the time point a chirp is simulated. The additional frequency bands are harmonics.
 
-![chirps example](assets/chirps.png)
+![chirps example](assets/chirps_.png)
 
 ## How can we **detect** them?
 
@@ -16,13 +16,13 @@ So the kind of spectrogram we need is a trade-off between the temporal and frequ
 
 On these spectrograms, we can still see the "ghost" of a chirp: The chirp might not be clearly visible in its temporal evolution, but there is a blurred region where the frequency briefly peaks. But these regions last up to magnitudes longer than a real chirp and come in many shaped and forms, depending on the spectrogram resolution and parameters such as chirp duration, contrast, frequency, etc. The following image contains just a few examples from the current dataset. Each window is fixed to a frequency range of 400 Hz and a time of 240 ms.
 
-![current dataset](assets/dataset.png)
+![current dataset](assets/dataset_.png)
 
 In this project, I will build a simulated dataset using many chirp parameters and will then try to train a simple convolutional neural network as a binary image classifier to detect these "ghosts" of chirps on spectrogram images.
 
 With the current synthetic dataset (n=15000), I reach a discrimination performance of 98%. But as soon as the frequency traces of chirping fish get close, the current version of the detector falsely assings the same chirp to multiple fish. The plot below illustrated the current state, the first try of detecting on non-artificial data.
 
-![current detector](assets/detection.png)
+![current detector](assets/detection_.png)
 
 The black markers are the points were my detector found a chirp. So what the current implementation solves, is reliable detection (on simulated data) but assignment is still an issue. As seen on the plot, when frequency bands are close to each other, one chirp is often detected on two frequency bands. I might be able so solve with an algorithmic approach, similarly to the non-cnn chirp detector.
 
