@@ -1,5 +1,5 @@
 import os
-from pathlib import Path
+import pathlib
 from pprint import pprint
 
 import nixio as nio
@@ -78,7 +78,7 @@ def get_files(dataroot, ext="npy"):
     """
 
     # Get file paths
-    files = list(Path(dataroot).rglob(ext))
+    files = list(pathlib.Path(dataroot).rglob(ext))
 
     # Extract parent directory names as labels
     parents = [file.parent.name for file in files]
@@ -112,19 +112,19 @@ class LoadData:
     ids : array of unique identifiers exluding NaNs
     """
 
-    def __init__(self, datapath: str) -> None:
+    def __init__(self, datapath: pathlib.Path) -> None:
         # load raw data
         self.datapath = datapath
-        self.file = os.path.join(datapath, "traces-grid1.raw")
+        self.file = os.path.join(datapath / "/traces-grid1.raw")
         self.raw = DataLoader(self.file, 60.0, 0, channel=-1)
         self.raw_rate = self.raw.samplerate
 
         # load wavetracker files
-        self.time = np.load(datapath + "times.npy", allow_pickle=True)
-        self.freq = np.load(datapath + "fund_v.npy", allow_pickle=True)
-        self.powers = np.load(datapath + "sign_v.npy", allow_pickle=True)
-        self.idx = np.load(datapath + "idx_v.npy", allow_pickle=True)
-        self.ident = np.load(datapath + "ident_v.npy", allow_pickle=True)
+        self.time = np.load(datapath / "/times.npy", allow_pickle=True)
+        self.freq = np.load(datapath / "/fund_v.npy", allow_pickle=True)
+        self.powers = np.load(datapath / "/sign_v.npy", allow_pickle=True)
+        self.idx = np.load(datapath / "/idx_v.npy", allow_pickle=True)
+        self.ident = np.load(datapath / "/ident_v.npy", allow_pickle=True)
         self.ids = np.unique(self.ident[~np.isnan(self.ident)])
 
     def __repr__(self) -> str:
@@ -132,49 +132,3 @@ class LoadData:
 
     def __str__(self) -> str:
         return f"LoadData({self.file})"
-
-
-class LoadNix:
-    def __init__(self, filepath) -> None:
-        self.file = nio.File.open(self.filepath, nio.FileMode.ReadOnly)
-        if len(self.file.blocks) > 1:
-            raise ValueError(
-                "File contains more than one block. Using first block only.j"
-            )
-
-    @property
-    def spec(self):
-        return self.file.blocks[0].data_arrays["spec"]
-
-    @property
-    def spec_freq(self):
-        return self.file.blocks[0].data_arrays["spec_freq"]
-
-    @property
-    def spec_time(self):
-        return self.file.blocks[0].data_arrays["spec_time"]
-
-    @property
-    def track_freqs(self):
-        return self.file.blocks[0].data_arrays["track_freqs"]
-
-    @property
-    def track_times(self):
-        return self.file.blocks[0].data_arrays["track_times"]
-
-    @property
-    def track_idents(self):
-        return self.file.blocks[0].data_arrays["track_idents"]
-
-    @property
-    def track_indices(self):
-        return self.file.blocks[0].data_arrays["track_indices"]
-
-    def info(self):
-        pprint(self.file.pprint(()))
-
-    def __repr__(self) -> str:
-        return f"LoadNix({self.filepath})"
-
-    def __str__(self) -> str:
-        return f"LoadNix({self.filepath})"

@@ -23,12 +23,12 @@ class NixDataset:
 
         block = self.file.blocks[0]
         self.spec = block.data_arrays["spec"]
-        self.spec_freqs = block.data_arrays["spec_freq"]
-        self.spec_times = block.data_arrays["spec_time"]
-        self.track_freqs = block.data_arrays["track_freqs"]
-        self.track_times = block.data_arrays["track_times"]
-        self.track_idents = block.data_arrays["track_idents"]
-        self.track_indices = block.data_arrays["track_indices"]
+        self.spec_freqs = block.data_arrays["spec_freq"][:]
+        self.spec_times = np.asarray(block.data_arrays["spec_time"][:])
+        self.track_freqs = np.asarray(block.data_arrays["track_freqs"][:])
+        self.track_times = np.asarray(block.data_arrays["track_times"][:])
+        self.track_idents = np.asarray(block.data_arrays["track_idents"][:])
+        self.track_indices = np.asarray(block.data_arrays["track_indices"][:])
 
     def __repr__(self) -> str:
         return f"NixDataset({self.path})"

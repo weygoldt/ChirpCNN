@@ -176,6 +176,29 @@ class Detector:
                 snippet = np.asarray([snippet]).astype(np.float32)
                 prob, label = self.classify_single(snippet)
 
+                fig, ax = plt.subplots()
+                ax.imshow(snippet[0][0], origin="lower")
+                ax.text(
+                    0.5,
+                    0.5,
+                    f"{prob:.2f}",
+                    horizontalalignment="center",
+                    verticalalignment="center",
+                    transform=ax.transAxes,
+                    color="white",
+                    fontsize=28,
+                )
+                ax.axis("off")
+                plt.savefig(
+                    f"../anim/{iter:05d}.png", dpi=300, bbox_inches="tight"
+                )
+                # Clear the plot
+                plt.cla()
+                plt.clf()
+                plt.close("all")
+                plt.close(fig)
+                gc.collect()
+
                 # Append snippet to list
                 predicted_labels.append(label)
                 predicted_probs.append(prob)
@@ -301,6 +324,9 @@ class Detector:
 
         logger.info("Sorting detected chirps ...")
 
+        # remove empty lists
+        detected_chirps = [x for x in detected_chirps if x]
+
         # flatten the list of lists to a single list with all the chirps
         detected_chirps = np.concatenate(detected_chirps)
 
@@ -339,6 +365,7 @@ class Detector:
         fig, ax = plt.subplots(
             figsize=(24 * ps.cm, 12 * ps.cm), constrained_layout=True
         )
+
         ax.imshow(
             d.spec,
             aspect="auto",
@@ -353,12 +380,12 @@ class Detector:
             interpolation="gaussian",
         )
 
-        for track_id in np.unique(d.track_idents):
+        for track_id in np.unique(d.track_idents[:]):
             track_id = int(track_id)
-            track = d.track_freqs[d.track_idents == track_id]
-            time = d.track_times[d.track_indices[d.track_idents == track_id]]
-
+            track = d.track_freqs[:][d.track_idents[:] == track_id]
+            time = d.track_times[d.track_indices[d.track_idents[:] == track_id]]
             ax.plot(time, track, linewidth=1, zorder=-10, color=ps.black)
+            ax.text(time[10], track[0], str(track_id), color=ps.black)
 
         for chirp in self.chirps:
             t, f = chirp[0], chirp[1]
@@ -373,7 +400,7 @@ class Detector:
             )
 
         ax.set_ylim(np.min(d.track_freqs - 100), np.max(d.track_freqs + 300))
-        ax.set_xlim(np.min(d.spec_times), np.max(d.spec_times))
+        ax.set_xlim(np.min(d.spec_times[:]), np.max(d.spec_times[:]))
         ax.set_xlabel("Time [s]")
         ax.set_ylabel("Frequency [Hz]")
 
