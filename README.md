@@ -109,6 +109,7 @@ After this pipline is finished, you will be rewarded by the plot above that show
 - [ ] Implement tensor-based detection on gpu instead of numpy.
 - [ ] Implement the ability to load much larger spectograms without having to load it into ram
 - [ ] Implement the creation of large spectrograms on the GPU according to the detection parameters in the config file.
+- [ ] Buid a universal dataclass that the detector uses to load data. It should load the minimum amount of data necessary to run the detector and it should be able to load NIX datasets and wavetracker datasets. I am not sure how to implement this yet. Maybe built a seperate class for each and then have a factory that returns the correct class depending on the files in the input folder.
 
 ## Project log 
 - 2023/04/14: Probably solved the issue that the same chirp is detected twice for two fish. I just take group chirps that are less than 20 ms apart and use only the one with the highest probability reported by the model and discard the rest. Even fancier implementations could use things like the dip in the baseline envelope during a chirp to determine to which fish the chirp truly belongs to.
