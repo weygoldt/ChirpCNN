@@ -1,9 +1,15 @@
 import os
 from pathlib import Path
+from pprint import pprint
 
+import nixio as nio
 import numpy as np
 import yaml
+
+# from logger import make_logger
 from thunderfish.dataloader import DataLoader
+
+# logger = make_logger(__name__)
 
 
 class ConfLoader:
@@ -34,6 +40,15 @@ class NumpyLoader:
             attr_name = os.path.splitext(npy_file)[0]
             attr_value = np.load(os.path.join(self.dir_path, npy_file))
             setattr(self, attr_name, attr_value)
+
+    def info(self):
+        pprint(vars(self))
+
+    def __repr__(self) -> str:
+        return f"NumpyLoader({self.dir_path})"
+
+    def __str__(self) -> str:
+        return f"NumpyLoader({self.dir_path})"
 
 
 def get_files(dataroot, ext="npy"):
@@ -117,3 +132,49 @@ class LoadData:
 
     def __str__(self) -> str:
         return f"LoadData({self.file})"
+
+
+class LoadNix:
+    def __init__(self, filepath) -> None:
+        self.file = nio.File.open(self.filepath, nio.FileMode.ReadOnly)
+        if len(self.file.blocks) > 1:
+            raise ValueError(
+                "File contains more than one block. Using first block only.j"
+            )
+
+    @property
+    def spec(self):
+        return self.file.blocks[0].data_arrays["spec"]
+
+    @property
+    def spec_freq(self):
+        return self.file.blocks[0].data_arrays["spec_freq"]
+
+    @property
+    def spec_time(self):
+        return self.file.blocks[0].data_arrays["spec_time"]
+
+    @property
+    def track_freqs(self):
+        return self.file.blocks[0].data_arrays["track_freqs"]
+
+    @property
+    def track_times(self):
+        return self.file.blocks[0].data_arrays["track_times"]
+
+    @property
+    def track_idents(self):
+        return self.file.blocks[0].data_arrays["track_idents"]
+
+    @property
+    def track_indices(self):
+        return self.file.blocks[0].data_arrays["track_indices"]
+
+    def info(self):
+        pprint(self.file.pprint(()))
+
+    def __repr__(self) -> str:
+        return f"LoadNix({self.filepath})"
+
+    def __str__(self) -> str:
+        return f"LoadNix({self.filepath})"

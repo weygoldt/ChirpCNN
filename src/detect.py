@@ -9,8 +9,6 @@ import torch
 import torch.nn.functional as F
 from IPython import embed
 from matplotlib.patches import Rectangle
-
-# from torch.utils.data import DataLoader, TensorDataset
 from scipy.signal import find_peaks
 
 from models.modelhandling import ChirpNet, ChirpNet2, load_model
@@ -18,13 +16,6 @@ from utils.datahandling import find_on_time, resize_image
 from utils.filehandling import ConfLoader, NumpyLoader
 from utils.logger import make_logger
 from utils.plotstyle import PlotStyle
-
-# import shutil
-# from pathlib import Path
-
-
-# import matplotlib
-# matplotlib.use('Agg')
 
 logger = make_logger(__name__)
 conf = ConfLoader("config.yml")
