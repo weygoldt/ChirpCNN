@@ -2,6 +2,7 @@
 
 import argparse
 import gc
+import pathlib
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -13,7 +14,8 @@ from scipy.signal import find_peaks
 
 from models.modelhandling import ChirpNet, ChirpNet2, load_model
 from utils.datahandling import find_on_time, resize_image
-from utils.filehandling import ConfLoader, NumpyLoader
+from utils.dataloader import load_data
+from utils.filehandling import ConfLoader
 from utils.logger import make_logger
 from utils.plotstyle import PlotStyle
 
@@ -72,14 +74,14 @@ class Detector:
         self.model = load_model(modelpath, ChirpNet)
         self.data = dataset
         self.samplerate = conf.samplerate
-        self.fill_samplerate = 1 / np.mean(np.diff(self.data.fill_times))
+        self.spec_samplerate = 1 / np.mean(np.diff(self.data.spec_times))
         self.freq_pad = conf.freq_pad
         self.time_pad = conf.time_pad
-        self.window_size = int(conf.time_pad * 2 * self.fill_samplerate)
-        self.stride = int(conf.stride * self.fill_samplerate)
+        self.window_size = int(conf.time_pad * 2 * self.spec_samplerate)
+        self.stride = int(conf.stride * self.spec_samplerate)
         self.chirps = None
 
-        if (self.data.times[-1] // 600 != 0) and (self.mode == "memory"):
+        if (self.data.track_times[-1] // 600 != 0) and (self.mode == "memory"):
             logger.warning(
                 "It is recommended to process recordings longer than 10 minutes using the 'disk' mode"
             )
@@ -113,7 +115,7 @@ class Detector:
         logger.info("Processing in memory...")
 
         first_index = 0
-        last_index = self.data.fill_times.shape[0]
+        last_index = self.data.spec_times.shape[0]
         window_start_indices = np.arange(
             first_index, last_index - self.window_size, self.stride, dtype=int
         )
@@ -121,11 +123,15 @@ class Detector:
         detected_chirps = []
 
         iter = 0
-        for track_id in np.unique(self.data.ident_v):
+        for track_id in np.unique(self.data.track_idents):
             logger.info(f"Processing track {track_id}...")
-            track = self.data.fund_v[self.data.ident_v == track_id]
-            time = self.data.times[
-                self.data.idx_v[self.data.ident_v == track_id]
+            track = self.data.track_freqs[:][
+                self.data.track_idents[:] == track_id
+            ]
+            time = self.data.track_times[:][
+                self.data.track_indices[:][
+                    self.data.track_idents[:] == track_id
+                ]
             ]
 
             predicted_labels = []
@@ -141,7 +147,7 @@ class Detector:
                 center_idx = int(
                     window_start_index + np.floor(self.window_size / 2) + 1
                 )
-                window_center_t = self.data.fill_times[center_idx]
+                window_center_t = self.data.spec_times[center_idx]
                 track_index = find_on_time(time, window_center_t)
                 center_freq = track[track_index]
 
@@ -152,17 +158,23 @@ class Detector:
                 freq_max = center_freq + self.freq_pad[1]
 
                 # Find these values on the frequency axis of the spectrogram
-                freq_min_index = find_on_time(self.data.fill_freqs, freq_min)
-                freq_max_index = find_on_time(self.data.fill_freqs, freq_max)
+                freq_min_index = find_on_time(
+                    self.data.spec_freqs[:], freq_min
+                )[0]
+                freq_max_index = find_on_time(
+                    self.data.spec_freqs[:], freq_max
+                )[0]
 
                 # Using window start, stop and feeq lims, extract snippet from spec
-                snippet = self.data.fill_spec[
+                snippet = self.data.spec[
                     freq_min_index:freq_max_index,
                     window_start_index:window_end_index,
                 ]
+
                 snippet = (snippet - np.min(snippet)) / (
                     np.max(snippet) - np.min(snippet)
                 )
+
                 snippet = resize_image(snippet, conf.img_size_px)
                 snippet = np.expand_dims(snippet, axis=0)
                 snippet = np.asarray([snippet]).astype(np.float32)
@@ -180,26 +192,24 @@ class Detector:
 
                 fig, ax = plt.subplots(1, 1, figsize=(24 * ps.cm, 12 * ps.cm))
                 ax.imshow(
-                    self.data.fill_spec,
+                    self.data.spec,
                     aspect="auto",
                     origin="lower",
                     extent=[
-                        self.data.fill_times[0],
-                        self.data.fill_times[-1],
-                        self.data.fill_freqs[0],
-                        self.data.fill_freqs[-1],
+                        self.data.spec_times[:][0],
+                        self.data.spec_times[:][-1],
+                        self.data.spec_freqs[:][0],
+                        self.data.spec_freqs[:][-1],
                     ],
                     cmap="magma",
-                    vmin=np.min(self.data.fill_spec) * 0.6,
-                    vmax=np.max(self.data.fill_spec),
                     zorder=-100,
                     interpolation="gaussian",
                 )
                 # Create a Rectangle patch
-                startx = self.data.fill_times[window_start_index]
-                stopx = self.data.fill_times[window_end_index]
-                starty = self.data.fill_freqs[freq_min_index]
-                stopy = self.data.fill_freqs[freq_max_index]
+                startx = self.data.spec_times[:][window_start_index]
+                stopx = self.data.spec_times[:][window_end_index]
+                starty = self.data.spec_freqs[:][freq_min_index]
+                stopy = self.data.spec_freqs[:][freq_max_index]
 
                 if label == 1:
                     patchc = ps.white
@@ -208,10 +218,10 @@ class Detector:
 
                 rect = Rectangle(
                     (startx, starty),
-                    self.data.fill_times[window_end_index]
-                    - self.data.fill_times[window_start_index],
-                    self.data.fill_freqs[freq_max_index]
-                    - self.data.fill_freqs[freq_min_index],
+                    self.data.spec_times[:][window_end_index]
+                    - self.data.spec_times[:][window_start_index],
+                    self.data.spec_freqs[:][freq_max_index]
+                    - self.data.spec_freqs[:][freq_min_index],
                     linewidth=2,
                     facecolor="none",
                     edgecolor=patchc,
@@ -232,12 +242,14 @@ class Detector:
                 )
 
                 # Plot the track
-                ax.plot(self.data.times, track, linewidth=1, color=ps.black)
+                ax.plot(
+                    self.data.track_times[:], track, linewidth=1, color=ps.black
+                )
 
                 # Plot the window center
                 ax.plot(
                     [
-                        self.data.fill_times[
+                        self.data.spec_times[
                             window_start_index + self.window_size // 2
                         ]
                     ],
@@ -254,9 +266,9 @@ class Detector:
                 if startxw < 0:
                     stopxw = stopxw - startxw
                     startxw = 0
-                if stopxw > self.data.fill_times[-1]:
-                    startxw = startxw - (stopxw - self.data.fill_times[-1])
-                    stopxw = self.data.fill_times[-1]
+                if stopxw > self.data.spec_times[-1]:
+                    startxw = startxw - (stopxw - self.data.spec_times[-1])
+                    stopxw = self.data.spec_times[-1]
                 ax.set_xlim(startxw, stopxw)
                 ax.axis("off")
                 plt.subplots_adjust(left=-0.01, right=1, top=1, bottom=0)
@@ -332,14 +344,14 @@ class Detector:
             figsize=(24 * ps.cm, 12 * ps.cm), constrained_layout=True
         )
         ax.imshow(
-            d.fill_spec,
+            d.spec,
             aspect="auto",
             origin="lower",
             extent=[
-                d.fill_times[0],
-                d.fill_times[-1],
-                d.fill_freqs[0],
-                d.fill_freqs[-1],
+                d.spec_times[0],
+                d.spec_times[-1],
+                d.spec_freqs[0],
+                d.spec_freqs[-1],
             ],
             zorder=-20,
             interpolation="gaussian",
@@ -365,7 +377,7 @@ class Detector:
             )
 
         ax.set_ylim(np.min(d.fund_v - 100), np.max(d.fund_v + 300))
-        ax.set_xlim(np.min(d.fill_times), np.max(d.fill_times))
+        ax.set_xlim(np.min(d.spec_times), np.max(d.spec_times))
         ax.set_xlabel("Time [s]")
         ax.set_ylabel("Frequency [Hz]")
 
@@ -395,7 +407,7 @@ def interface():
 
 def main():
     args = interface()
-    d = NumpyLoader(args.path)
+    d = load_data(pathlib.Path(args.path))
     modelpath = conf.save_dir
     det = Detector(modelpath, d, args.mode)
     det.detect(plot=False)
