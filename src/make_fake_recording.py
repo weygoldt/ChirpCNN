@@ -35,6 +35,8 @@ def main():
 
     nfft = freqres_to_nfft(conf.frequency_resolution, conf.samplerate)
     hop_length = overlap_to_hoplen(conf.overlap_fraction, nfft)
+    print(nfft)
+    print(hop_length)
 
     spectrogram_of = Spectrogram(
         n_fft=nfft,
@@ -132,8 +134,10 @@ def main():
         # this still needs to be implemented
 
         # add noise in one iter only to avoid adding too much noise
+        eod = eod + noise
+
         if fish == 0:
-            recording = eod + noise
+            recording = eod
         else:
             recording += eod
 

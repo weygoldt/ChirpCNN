@@ -9,7 +9,9 @@ from IPython import embed
 from thunderfish.dataloader import DataLoader
 from torchaudio.transforms import AmplitudeToDB, Spectrogram
 
-from utils.filehandling import LoadData
+from utils.filehandling import ConfLoader, LoadData
+
+conf = ConfLoader("config.yml")
 
 
 def next_power_of_two(num):
@@ -86,14 +88,14 @@ def main():
     samplingrate = data.raw.samplerate
     nelectrodes = data.raw.shape[1]
 
-    nfft = freqres_to_nfft(6, samplingrate)
-    hop_length = overlap_to_hoplen(0.99, nfft)
+    nfft = freqres_to_nfft(conf.frequency_resolution, samplingrate)
+    hop_length = overlap_to_hoplen(conf.overlap_fraction, nfft)
     chunk_size = samplingrate * buffersize
     padding = 1 * samplingrate  # padding of raw singnal to limit edge effects
 
     # Good window for this recording
-    window_start_index = (3 * 60 * 60 + 6 * 60 + 20) * samplingrate
-    window_stop_index = window_start_index + 300 * samplingrate
+    window_start_index = (3 * 60 * 60 + 6 * 60 + 43) * samplingrate
+    window_stop_index = window_start_index + 180 * samplingrate
     signal = data.raw[window_start_index:window_stop_index]
     nchunks = math.ceil(signal.shape[0] / chunk_size)
 
@@ -252,7 +254,6 @@ def main():
     save_time = block.create_data_array(
         "track_times", "time axis", data=track_time, unit="s"
     )
-
     file.close()
 
 

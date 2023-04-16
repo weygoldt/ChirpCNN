@@ -147,7 +147,7 @@ class Detector:
                 center_idx = int(
                     window_start_index + np.floor(self.window_size / 2) + 1
                 )
-                window_center_t = self.data.spec_times[center_idx]
+                window_center_t = self.data.spec_times[:][center_idx]
                 track_index = find_on_time(time, window_center_t)
                 center_freq = track[track_index]
 
@@ -158,12 +158,8 @@ class Detector:
                 freq_max = center_freq + self.freq_pad[1]
 
                 # Find these values on the frequency axis of the spectrogram
-                freq_min_index = find_on_time(
-                    self.data.spec_freqs[:], freq_min
-                )[0]
-                freq_max_index = find_on_time(
-                    self.data.spec_freqs[:], freq_max
-                )[0]
+                freq_min_index = find_on_time(self.data.spec_freqs[:], freq_min)
+                freq_max_index = find_on_time(self.data.spec_freqs[:], freq_max)
 
                 # Using window start, stop and feeq lims, extract snippet from spec
                 snippet = self.data.spec[
@@ -357,10 +353,10 @@ class Detector:
             interpolation="gaussian",
         )
 
-        for track_id in np.unique(d.ident_v):
+        for track_id in np.unique(d.track_idents):
             track_id = int(track_id)
-            track = d.fund_v[d.ident_v == track_id]
-            time = d.times[d.idx_v[d.ident_v == track_id]]
+            track = d.track_freqs[d.track_idents == track_id]
+            time = d.track_times[d.track_indices[d.track_idents == track_id]]
 
             ax.plot(time, track, linewidth=1, zorder=-10, color=ps.black)
 
@@ -376,7 +372,7 @@ class Detector:
                 zorder=10,
             )
 
-        ax.set_ylim(np.min(d.fund_v - 100), np.max(d.fund_v + 300))
+        ax.set_ylim(np.min(d.track_freqs - 100), np.max(d.track_freqs + 300))
         ax.set_xlim(np.min(d.spec_times), np.max(d.spec_times))
         ax.set_xlabel("Time [s]")
         ax.set_ylabel("Frequency [Hz]")
