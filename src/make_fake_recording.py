@@ -4,10 +4,18 @@ import pathlib
 
 import matplotlib.pyplot as plt
 import numpy as np
+import torch
 from IPython import embed
 from scipy.signal import resample
-from thunderfish.powerspectrum import decibel, spectrogram
+from torchaudio.transforms import AmplitudeToDB, Spectrogram
 
+from get_larger_snippet import (
+    freqres_to_nfft,
+    imshow,
+    next_power_of_two,
+    overlap_to_hoplen,
+    safe_int,
+)
 from simulations.fish_signal import chirps, rises, wavefish_eods
 from utils.datahandling import find_on_time
 from utils.filehandling import ConfLoader
@@ -18,9 +26,23 @@ conf = ConfLoader("config.yml")
 logger = make_logger(__name__)
 ps = PlotStyle()
 
+device = "cuda" if torch.cuda.is_available() else "cpu"
+device = "cpu"
+
 
 def main():
     logger.info("Generating fake recording")
+
+    nfft = freqres_to_nfft(conf.frequency_resolution, conf.samplerate)
+    hop_length = overlap_to_hoplen(conf.overlap_fraction, nfft)
+
+    spectrogram_of = Spectrogram(
+        n_fft=nfft,
+        hop_length=hop_length,
+        power=2,
+        normalized=True,
+    ).to(device)
+    in_decibel = AmplitudeToDB(stype="power", top_db=80).to(device)
 
     time = np.arange(0, conf.simulation_duration_rec, 1 / conf.samplerate)
 
@@ -102,7 +124,6 @@ def main():
         # draw random values to generate noise
         noise_std = np.random.uniform(conf.noise_stds[0], conf.noise_stds[1])
         noise = noise_std * np.random.randn(len(eod))
-        eod += noise
 
         # modulate amplitude to simulate chirp amplitude decrease
         eod = eod * amplitude_modulation
@@ -110,21 +131,20 @@ def main():
         # modulate amplitude to simulate movement
         # this still needs to be implemented
 
+        # add noise in one iter only to avoid adding too much noise
         if fish == 0:
-            recording = eod
+            recording = eod + noise
         else:
             recording += eod
 
     recording = recording / len(eodfs)
 
-    spec, frequencies, spec_times = spectrogram(
-        data=recording,
-        ratetime=conf.samplerate,
-        freq_resolution=conf.frequency_resolution,
-        overlap_frac=conf.overlap_fraction,
-    )
+    spec = spectrogram_of(torch.tensor(recording).float().to(device))
+    spec = in_decibel(spec).cpu().numpy()
 
-    spec = decibel(spec)
+    # get time and frequency axis
+    spec_times = np.arange(0, spec.shape[1]) * hop_length / conf.samplerate
+    frequencies = np.arange(0, spec.shape[0]) * conf.samplerate / nfft
 
     traces_cropped, trace_ids, trace_idx = [], [], []
     spec_min, spec_max = np.min(spec_times), np.max(spec_times)

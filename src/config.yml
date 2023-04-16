@@ -13,7 +13,7 @@ eodfs: [300, 1500]
 chirp_sizes: [90, 300]
 chirp_durations: [0.01, 0.1]
 chirp_kurtoses: [0.6, 1.4]
-chirp_contrasts: [0.01, 0.1]
+chirp_contrasts: [0.01, 0.2]
 
 # STFT spectrogram
 frequency_resolution: 6  # nfft = fs/fres
