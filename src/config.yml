@@ -49,7 +49,7 @@ frequency_track_samplerate: 3
 # DETECTOR CONFIGURATION ------
 detection_data_path: "../detection_data"
 disk_cleanup: False
-stride: 0.02
+stride: 0.01
 
 # DATAGEN - TRAIN - TEST ------
 # This value determines how often the

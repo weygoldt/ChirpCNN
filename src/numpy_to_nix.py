@@ -93,8 +93,8 @@ def convert(path):
     padding = 1 * samplingrate  # padding of raw singnal to limit edge effects
 
     # Good window for this recording
-    window_start_index = (3 * 60 * 60 + 6 * 60 + 43) * samplingrate
-    window_stop_index = window_start_index + 180 * samplingrate
+    window_start_index = (3 * 60 * 60 + 6 * 60 + 20) * samplingrate
+    window_stop_index = window_start_index + 300 * samplingrate
     signal = data.raw[window_start_index:window_stop_index]
     nchunks = math.ceil(signal.shape[0] / chunk_size)
 

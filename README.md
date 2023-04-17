@@ -109,10 +109,12 @@ After this pipline is finished, you will be rewarded by the plot above that show
 - [ ] Try drastically increase the batch size, e.g. to 100
 - [ ] Implement tensor-based detection on gpu instead of numpy.
 - [ ] Implement the ability to load much larger spectograms without having to load it into ram
-- [ ] Implement the creation of large spectrograms on the GPU according to the detection parameters in the config file.
-- [ ] Buid a universal dataclass that the detector uses to load data. It should load the minimum amount of data necessary to run the detector and it should be able to load NIX datasets and wavetracker datasets. I am not sure how to implement this yet. Maybe built a seperate class for each and then have a factory that returns the correct class depending on the files in the input folder.
+- [x] Implement the creation of large spectrograms on the GPU according to the detection parameters in the config file.
+- [x] Buid a universal dataclass that the detector uses to load data. It should load the minimum amount of data necessary to run the detector and it should be able to load NIX datasets and wavetracker datasets. I am not sure how to implement this yet. Maybe built a seperate class for each and then have a factory that returns the correct class depending on the files in the input folder.
 - [ ] Understand how I can get the probabilities from the cross entropy loss function directly instead of adding a softmax.
 - [ ] Understand why training dataset spec computation fails on GPU. Implement generalized spec function that uses rolling windows automatically if array size becomes too large.
+- [ ] Instead of the peak prob use the probs to weight the timestamps and compute the mean of that. This should be more accurate. This should also further alleviate the problem of multiple detections of the same chirp.
+- [ ] Move hard coded time tolerance to config and clean and restructure config.
 
 ## Project log 
 - 2023/04/14: Probably solved the issue that the same chirp is detected twice for two fish. I just take group chirps that are less than 20 ms apart and use only the one with the highest probability reported by the model and discard the rest. Even fancier implementations could use things like the dip in the baseline envelope during a chirp to determine to which fish the chirp truly belongs to.

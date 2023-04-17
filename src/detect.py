@@ -148,7 +148,7 @@ class Detector:
                     window_start_index + np.floor(self.window_size / 2) + 1
                 )
                 window_center_t = self.data.spec_times[:][center_idx]
-                track_index = find_on_time(time, window_center_t)
+                track_index = find_on_time(time, window_center_t, limit=False)
                 center_freq = track[track_index]
 
                 # From the track frequency compute the frequency
@@ -176,28 +176,28 @@ class Detector:
                 snippet = np.asarray([snippet]).astype(np.float32)
                 prob, label = self.classify_single(snippet)
 
-                fig, ax = plt.subplots()
-                ax.imshow(snippet[0][0], origin="lower")
-                ax.text(
-                    0.5,
-                    0.5,
-                    f"{prob:.2f}",
-                    horizontalalignment="center",
-                    verticalalignment="center",
-                    transform=ax.transAxes,
-                    color="white",
-                    fontsize=28,
-                )
-                ax.axis("off")
-                plt.savefig(
-                    f"../anim/{iter:05d}.png", dpi=300, bbox_inches="tight"
-                )
-                # Clear the plot
-                plt.cla()
-                plt.clf()
-                plt.close("all")
-                plt.close(fig)
-                gc.collect()
+                # fig, ax = plt.subplots()
+                # ax.imshow(snippet[0][0], origin="lower")
+                # ax.text(
+                #     0.5,
+                #     0.5,
+                #     f"{prob:.2f}",
+                #     horizontalalignment="center",
+                #     verticalalignment="center",
+                #     transform=ax.transAxes,
+                #     color="white",
+                #     fontsize=28,
+                # )
+                # ax.axis("off")
+                # plt.savefig(
+                #     f"../anim/{iter:05d}.png", dpi=300, bbox_inches="tight"
+                # )
+                # # Clear the plot
+                # plt.cla()
+                # plt.clf()
+                # plt.close("all")
+                # plt.close(fig)
+                # gc.collect()
 
                 # Append snippet to list
                 predicted_labels.append(label)
@@ -336,7 +336,7 @@ class Detector:
         # group chirps that are close by in time to find the ones
         # that were detected twice on seperate fish
 
-        grouped_chirps = group_close_chirps(detected_chirps, 0.02)
+        grouped_chirps = group_close_chirps(detected_chirps, 0.1)
 
         # go through the close chirp and find the most probable one
         # for now just use the ConvNets prediction probability

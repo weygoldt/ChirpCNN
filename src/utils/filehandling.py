@@ -115,16 +115,16 @@ class LoadData:
     def __init__(self, datapath: pathlib.Path) -> None:
         # load raw data
         self.datapath = datapath
-        self.file = os.path.join(datapath / "/traces-grid1.raw")
+        self.file = os.path.join(datapath / "traces-grid1.raw")
         self.raw = DataLoader(self.file, 60.0, 0, channel=-1)
         self.raw_rate = self.raw.samplerate
 
         # load wavetracker files
-        self.time = np.load(datapath / "/times.npy", allow_pickle=True)
-        self.freq = np.load(datapath / "/fund_v.npy", allow_pickle=True)
-        self.powers = np.load(datapath / "/sign_v.npy", allow_pickle=True)
-        self.idx = np.load(datapath / "/idx_v.npy", allow_pickle=True)
-        self.ident = np.load(datapath / "/ident_v.npy", allow_pickle=True)
+        self.time = np.load(datapath / "times.npy", allow_pickle=True)
+        self.freq = np.load(datapath / "fund_v.npy", allow_pickle=True)
+        self.powers = np.load(datapath / "sign_v.npy", allow_pickle=True)
+        self.idx = np.load(datapath / "idx_v.npy", allow_pickle=True)
+        self.ident = np.load(datapath / "ident_v.npy", allow_pickle=True)
         self.ids = np.unique(self.ident[~np.isnan(self.ident)])
 
     def __repr__(self) -> str:
