@@ -4,11 +4,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 from thunderfish.powerspectrum import decibel, spectrogram
 
-from utils.filehandling import LoadData
+from utils.filehandling import NumpyDataset
 
 datapath = "/home/weygoldt/projects/chirpdetector/data/2022-06-02-10_00/"
 
-data = LoadData(str(datapath))
+data = NumpyDataset(str(datapath))
 
 # good chirp times for data: 2022-06-02-10_00
 window_start_index = (3 * 60 * 60 + 6 * 60 + 20) * data.raw_rate
@@ -101,3 +101,4 @@ np.save("../real_data/fund_v.npy", tracks)
 np.save("../real_data/ident_v.npy", ident)
 np.save("../real_data/idx_v.npy", idx)
 np.save("../real_data/times.npy", time)
+np.save("../real_data/raw.npy", raw)

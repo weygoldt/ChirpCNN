@@ -8,11 +8,13 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
-import torch.optim as optim
+
+# import torch.nn.functional as F
+# import torch.optim as optim
 from IPython import embed
 from torch.utils.data import DataLoader, Dataset
-from torchvision.transforms import ToTensor
+
+# from torchvision.transforms import ToTensor
 from tqdm import tqdm
 
 from models.modelhandling import ChirpNet, ChirpNet2, SpectrogramDataset

@@ -12,7 +12,7 @@ from IPython import embed
 from thunderfish.dataloader import DataLoader
 from torchaudio.transforms import AmplitudeToDB, Spectrogram
 
-from utils.filehandling import ConfLoader, LoadData
+from utils.filehandling import ConfLoader, NumpyDataset
 
 conf = ConfLoader("config.yml")
 
@@ -81,7 +81,7 @@ def imshow(spec, time, freq):
 
 def convert(path):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    data = LoadData(path)
+    data = NumpyDataset(path)
 
     buffersize = 20
     samplingrate = data.raw.samplerate
@@ -93,8 +93,8 @@ def convert(path):
     padding = 1 * samplingrate  # padding of raw singnal to limit edge effects
 
     # Good window for this recording
-    window_start_index = (3 * 60 * 60 + 6 * 60 + 20) * samplingrate
-    window_stop_index = window_start_index + 300 * samplingrate
+    window_start_index = (3 * 60 * 60 + 6 * 60) * samplingrate
+    window_stop_index = window_start_index + 600 * samplingrate
     signal = data.raw[window_start_index:window_stop_index]
     nchunks = math.ceil(signal.shape[0] / chunk_size)
 
