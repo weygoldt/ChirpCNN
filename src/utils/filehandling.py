@@ -4,6 +4,7 @@ import pathlib
 import nixio as nio
 import numpy as np
 import yaml
+from IPython import embed
 from thunderfish.dataloader import DataLoader
 
 
@@ -118,6 +119,45 @@ class NumpyDataset:
         self.track_freqs = np.load(datapath / "fund_v.npy", allow_pickle=True)
         self.track_indices = np.load(datapath / "idx_v.npy", allow_pickle=True)
         self.track_idents = np.load(datapath / "ident_v.npy", allow_pickle=True)
+
+    def crop(self, start, stop):
+        self.raw = self.raw[start:stop, :]
+        start_t = start / self.raw_rate
+        stop_t = stop / self.raw_rate
+        tracks = []
+        indices = []
+        idents = []
+        for track_id in np.unique(self.track_idents):
+            # make array for each track
+            track = self.track_freqs[self.track_idents == track_id]
+            time = self.track_times[
+                self.track_indices[self.track_idents == track_id]
+            ]
+            index = self.track_indices[self.track_idents == track_id]
+
+            # snip the track
+            track = track[(time >= start_t) & (time <= stop_t)]
+            index = index[(time >= start_t) & (time <= stop_t)]
+            ident = np.repeat(track_id, len(track))
+
+            # append to the list
+            tracks.append(track)
+            indices.append(index)
+            idents.append(ident)
+
+        # convert to numpy arrays
+        tracks = np.concatenate(tracks)
+        indices = np.concatenate(indices)
+        indices -= indices[0]
+        idents = np.concatenate(idents)
+        time = self.track_times[
+            (self.track_times >= start_t) & (self.track_times <= stop_t)
+        ]
+
+        self.track_freqs = tracks
+        self.track_idents = idents
+        self.track_indices = indices
+        self.track_times = time - time[0]
 
     def __repr__(self) -> str:
         return f"NumpyDataset({self.file})"

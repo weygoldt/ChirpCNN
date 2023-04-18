@@ -3,10 +3,8 @@ import math
 import numpy as np
 import torch
 from IPython import embed
-from logger import make_logger
 from torchaudio.transforms import AmplitudeToDB, Spectrogram
 
-logger = make_logger(__name__)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
@@ -84,7 +82,10 @@ def sint(num):
     ValueError
         Fails if the input number is not an integer.
     """
-    if num.is_integer():
+
+    if type(num) == int:
+        return num
+    elif num.is_integer():
         return int(num)
     else:
         raise ValueError("Number is not an integer.")
@@ -130,6 +131,11 @@ def spectrogram(data, samplingrate, nfft, hop_length):
         The frequency resolution of the spectrogram.
     overlap : float
         The overlap of the spectrogram. Must be between 0 and 1.
+
+    Returns
+    -------
+    torch.Tensor
+        The spectrogram matrix.
     """
     data = torch.from_numpy(data).to(device)
     spectrogram_of = Spectrogram(
@@ -139,7 +145,7 @@ def spectrogram(data, samplingrate, nfft, hop_length):
         normalized=True,
         window_fn=torch.hann_window,
     ).to(device)
-    spec = spectrogram_of(data).cpu().numpy()
+    spec = spectrogram_of(data)
     time = np.arange(0, spec.shape[1]) * hop_length / samplingrate
     freq = np.arange(0, spec.shape[0]) * samplingrate / nfft
     return spec, time, freq
@@ -155,9 +161,8 @@ def decibel(spec):
 
     Returns
     -------
-    np.ndarray
+    torch.Tensor
         The spectrogram matrix in decibel scale.
     """
-    spec = torch.from_numpy(spec).to(device)
     decibel_of = AmplitudeToDB(stype="power", top_db=80).to(device)
-    return decibel_of(spec).cpu().numpy()
+    return decibel_of(spec)
