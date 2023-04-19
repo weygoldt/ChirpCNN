@@ -1,3 +1,4 @@
+import copy
 import os
 import pathlib
 
@@ -109,38 +110,26 @@ def load_data(path: pathlib.Path, ext="npy"):
         return NumpyDataset(path)
 
 
-class NumpyDataset:
-    def __init__(self, datapath: pathlib.Path) -> None:
-        self.path = datapath
-        file = os.path.join(datapath / "traces-grid1.raw")
-        self.raw = DataLoader(file, 60.0, 0, channel=-1)
-        self.raw_rate = self.raw.samplerate
-        self.track_times = np.load(datapath / "times.npy", allow_pickle=True)
-        self.track_freqs = np.load(datapath / "fund_v.npy", allow_pickle=True)
-        self.track_indices = np.load(datapath / "idx_v.npy", allow_pickle=True)
-        self.track_idents = np.load(datapath / "ident_v.npy", allow_pickle=True)
-
-    def crop(self, start, stop):
-        self.raw = self.raw[start:stop, :]
-        start_t = start / self.raw_rate
-        stop_t = stop / self.raw_rate
+class DataSubset:
+    def __init__(self, data, start, stop):
+        self.samplerate = data.samplerate
+        self.raw = data.raw[start:stop, :]
+        start_t = start / self.samplerate
+        stop_t = stop / self.samplerate
         tracks = []
         indices = []
         idents = []
-        for track_id in np.unique(self.track_idents):
-            # make array for each track
-            track = self.track_freqs[self.track_idents == track_id]
-            time = self.track_times[
-                self.track_indices[self.track_idents == track_id]
+        for track_id in np.unique(data.track_idents):
+            track = data.track_freqs[data.track_idents == track_id]
+            time = data.track_times[
+                data.track_indices[data.track_idents == track_id]
             ]
-            index = self.track_indices[self.track_idents == track_id]
+            index = data.track_indices[data.track_idents == track_id]
 
-            # snip the track
             track = track[(time >= start_t) & (time <= stop_t)]
             index = index[(time >= start_t) & (time <= stop_t)]
             ident = np.repeat(track_id, len(track))
 
-            # append to the list
             tracks.append(track)
             indices.append(index)
             idents.append(ident)
@@ -150,14 +139,25 @@ class NumpyDataset:
         indices = np.concatenate(indices)
         indices -= indices[0]
         idents = np.concatenate(idents)
-        time = self.track_times[
-            (self.track_times >= start_t) & (self.track_times <= stop_t)
+        time = data.track_times[
+            (data.track_times >= start_t) & (data.track_times <= stop_t)
         ]
-
         self.track_freqs = tracks
         self.track_idents = idents
         self.track_indices = indices
         self.track_times = time - time[0]
+
+
+class NumpyDataset:
+    def __init__(self, datapath: pathlib.Path) -> None:
+        self.path = datapath
+        file = os.path.join(datapath / "traces-grid1.raw")
+        self.raw = DataLoader(file, 60.0, 0, channel=-1)
+        self.samplerate = self.raw.samplerate
+        self.track_times = np.load(datapath / "times.npy", allow_pickle=True)
+        self.track_freqs = np.load(datapath / "fund_v.npy", allow_pickle=True)
+        self.track_indices = np.load(datapath / "idx_v.npy", allow_pickle=True)
+        self.track_idents = np.load(datapath / "ident_v.npy", allow_pickle=True)
 
     def __repr__(self) -> str:
         return f"NumpyDataset({self.file})"

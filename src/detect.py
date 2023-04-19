@@ -20,7 +20,7 @@ from utils.datahandling import (
     norm_tensor,
     resize_tensor_image,
 )
-from utils.filehandling import ConfLoader, load_data
+from utils.filehandling import ConfLoader, DataSubset, load_data
 from utils.logger import make_logger
 from utils.plotstyle import PlotStyle
 from utils.spectrogram import (
@@ -102,7 +102,9 @@ def detect_chirps(
     track_indices,
     track_idents,
 ):
-    window_starts = np.arange(0, len(spec_times) - 1, stride, dtype=int)
+    window_starts = np.arange(
+        0, len(spec_times) - window_size, stride, dtype=int
+    )
     detect_chirps = []
     iter = 0
 
@@ -125,10 +127,6 @@ def detect_chirps(
             if time[0] > spec_times[window_start + window_size]:
                 continue
 
-            # exit if the center time is after the last time in the track
-            if spec_times[window_start + int(window_size / 2)] > time[-1]:
-                break
-
             # time axis indices
             min_time_index = window_start
             max_time_index = window_start + window_size
@@ -136,7 +134,10 @@ def detect_chirps(
             center_time = spec_times[center_time_index]
 
             # frequency axis indices
-            window_center_track = find_on_time(time, center_time, False)
+            window_center_track = find_on_time(time, center_time, True)
+            if window_center_track is np.nan:
+                embed()
+
             window_center_freq = track[window_center_track]
             min_freq = window_center_freq - conf.freq_pad[0]
             max_freq = window_center_freq + conf.freq_pad[1]
@@ -244,46 +245,6 @@ def detect_chirps(
     return chirps
 
 
-def extract_window(data, start, stop, samplerate):
-    # crop the raw data
-    raw = data.raw[start:stop, :]
-
-    # time to snip the track data
-    start_t = start / samplerate
-    stop_t = stop / samplerate
-
-    tracks = []
-    indices = []
-    idents = []
-    for track_id in np.unique(data.track_idents):
-        # make array for each track
-        track = data.track_freqs[data.track_idents == track_id]
-        time = data.track_times[
-            data.track_indices[data.track_idents == track_id]
-        ]
-        index = data.track_indices[data.track_idents == track_id]
-
-        # snip the track
-        track = track[(time >= start_t) & (time <= stop_t)]
-        index = index[(time >= start_t) & (time <= stop_t)]
-        ident = np.repeat(track_id, len(track))
-
-        # append to the list
-        tracks.append(track)
-        indices.append(index)
-        idents.append(ident)
-
-    # convert to numpy arrays
-    tracks = np.concatenate(tracks)
-    indices = np.concatenate(indices)
-    indices -= indices[0]
-    idents = np.concatenate(idents)
-    time = data.track_times[
-        (data.track_times >= start_t) & (data.track_times <= stop_t)
-    ]
-    return raw, tracks, idents, indices, time
-
-
 class Detector:
     def __init__(self, modelpath, dataset):
         logger.info("Initializing detector...")
@@ -340,6 +301,7 @@ class Detector:
             # get start and stop indices for the current chunk
             # including some overlap to compensate for edge effects
             # this diffrers for the first and last chunk
+
             if i == 0:
                 idx1 = sint(i * self.chunksize)
                 idx2 = sint((i + 1) * self.chunksize + self.spectrogram_overlap)
@@ -350,15 +312,17 @@ class Detector:
                 idx1 = sint(i * self.chunksize - self.spectrogram_overlap)
                 idx2 = sint((i + 1) * self.chunksize + self.spectrogram_overlap)
 
-            # extract all data arrays for that window
-            chunk, freqs, idents, indices, times = extract_window(
-                self.data, idx1, idx2, self.samplingrate
-            )
+            # # extract all data arrays for that window
+            # chunk, freqs, idents, indices, times = extract_window(
+            #     self.data, idx1, idx2, self.samplingrate
+            # )
+
+            chunk = DataSubset(self.data, idx1, idx2)
 
             # compute the spectrogram for all electrodes
             for el in range(self.n_electrodes):
                 chunk_spec, spec_times, spec_freqs = spectrogram(
-                    chunk[:, el],
+                    chunk.raw[:, el],
                     self.samplingrate,
                     nfft=self.nfft,
                     hop_length=self.hop_len,
@@ -389,10 +353,10 @@ class Detector:
                 "spec": spec,
                 "spec_freqs": spec_freqs,
                 "spec_times": spec_times,
-                "track_freqs": freqs,
-                "track_times": times,
-                "track_idents": idents,
-                "track_indices": indices,
+                "track_freqs": chunk.track_freqs,
+                "track_times": chunk.track_times,
+                "track_idents": chunk.track_idents,
+                "track_indices": chunk.track_indices,
             }
 
             # detect the chirps for the current chunk
@@ -452,8 +416,9 @@ def main():
     # for trial of code
     start = (3 * 60 * 60 + 6 * 60 + 20) * conf.samplerate
     stop = start + 600 * conf.samplerate
-    data.crop(start, stop)
-    det = Detector(modelpath, data)
+    test = DataSubset(data, start, stop)
+
+    det = Detector(modelpath, test)
     det.detect()
 
 
@@ -462,3 +427,42 @@ if __name__ == "__main__":
     main()
     t1 = time.time()
     print(f"Time elapsed: {t1 - t0:.2f} s")
+
+# def extract_window(data, start, stop, samplerate):
+#     # crop the raw data
+#     raw = data.raw[start:stop, :]
+
+#     # time to snip the track data
+#     start_t = start / samplerate
+#     stop_t = stop / samplerate
+
+#     tracks = []
+#     indices = []
+#     idents = []
+#     for track_id in np.unique(data.track_idents):
+#         # make array for each track
+#         track = data.track_freqs[data.track_idents == track_id]
+#         time = data.track_times[
+#             data.track_indices[data.track_idents == track_id]
+#         ]
+#         index = data.track_indices[data.track_idents == track_id]
+
+#         # snip the track
+#         track = track[(time >= start_t) & (time <= stop_t)]
+#         index = index[(time >= start_t) & (time <= stop_t)]
+#         ident = np.repeat(track_id, len(track))
+
+#         # append to the list
+#         tracks.append(track)
+#         indices.append(index)
+#         idents.append(ident)
+
+#     # convert to numpy arrays
+#     tracks = np.concatenate(tracks)
+#     indices = np.concatenate(indices)
+#     indices -= indices[0]
+#     idents = np.concatenate(idents)
+#     time = data.track_times[
+#         (data.track_times >= start_t) & (data.track_times <= stop_t)
+#     ]
+#     return raw, tracks, idents, indices, time
