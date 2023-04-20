@@ -36,6 +36,7 @@ The black markers are the points were the detector found a chirp. So what the cu
   - Note: Here I could borrow methods from the previous chirp detector, that was good at assignment but not so good with detection.
   - Current solution: If the a multiple chirps are detected simultaneously for multiple fish, discarding all chirps except for the one with the highest class probability is sufficient for now to correctly assing chirps. This of course biases the detector to not beeing able to detect simultaneous chirps. So this is **not fully solved**.
 - [ ] Understand why detection of real data is completely broken after switching to pytorch gpu accelerated spectrograms. Detection of fake data still works well. There is probably a processing step I either duplicated or left out somewhere. Need to find the time to dig in to this. Before switching, detection worked flawlessly. But had to switch to try out larger datasets.
+  - NOTE: Because the pytorch image interpolation function produces different results than opencv.
 
 ## How to run this setup
 
