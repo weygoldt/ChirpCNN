@@ -15,7 +15,12 @@ from utils.datahandling import find_on_time
 from utils.filehandling import ConfLoader
 from utils.logger import make_logger
 from utils.plotstyle import PlotStyle
-from utils.spectrogram import freqres_to_nfft, overlap_to_hoplen
+from utils.spectrogram import (
+    decibel,
+    freqres_to_nfft,
+    overlap_to_hoplen,
+    spectrogram,
+)
 
 conf = ConfLoader("config.yml")
 logger = make_logger(__name__)
@@ -31,39 +36,41 @@ def main():
     nfft = freqres_to_nfft(conf.frequency_resolution, conf.samplerate)
     hop_length = overlap_to_hoplen(conf.overlap_fraction, nfft)
 
-    spectrogram_of = Spectrogram(
-        n_fft=nfft,
-        hop_length=hop_length,
-        power=2,
-        normalized=True,
-    ).to(device)
-    in_decibel = AmplitudeToDB(stype="power", top_db=80).to(device)
+    # spectrogram_of = Spectrogram(
+    #     n_fft=nfft,
+    #     hop_length=hop_length,
+    #     power=2,
+    #     normalized=True,
+    # ).to(device)
+    # in_decibel = AmplitudeToDB(stype="power", top_db=80).to(device)
 
     time = np.arange(0, conf.simulation_duration_rec, 1 / conf.samplerate)
 
-    eodfs = np.random.randint(conf.eodfs[0], conf.eodfs[1], size=conf.num_fish)
+    num_fish = np.random.randint(conf.num_fish[0], conf.num_fish[1], size=1)
+    eodfs = np.random.randint(conf.eodfs[0], conf.eodfs[1], size=num_fish)
 
     traces = []
     correct_chirp_times = []
     correct_chirp_time_ids = []
 
     for fish, eodf in enumerate(eodfs):
-        chirp_times = np.random.uniform(0, time[-1], size=conf.num_chirps)
+        num_chirps = np.random.randint(conf.num_chirps[0], conf.num_chirps[1])
+        chirp_times = np.random.uniform(0, time[-1], size=num_chirps)
         chirp_sizes = np.random.uniform(
-            conf.chirp_sizes[0], conf.chirp_sizes[1], size=conf.num_chirps
+            conf.chirp_sizes[0], conf.chirp_sizes[1], size=num_chirps
         )
         chirp_durations = np.random.uniform(
             conf.chirp_durations[0],
             conf.chirp_durations[1],
-            size=conf.num_chirps,
+            size=num_chirps,
         )
         chirp_kurtoses = np.random.uniform(
-            conf.chirp_kurtoses[0], conf.chirp_kurtoses[1], size=conf.num_chirps
+            conf.chirp_kurtoses[0], conf.chirp_kurtoses[1], size=num_chirps
         )
         chirp_contrasts = np.random.uniform(
             conf.chirp_contrasts[0],
             conf.chirp_contrasts[1],
-            size=conf.num_chirps,
+            size=num_chirps,
         )
         chirp_trace, amplitude_modulation = chirps(
             0,
@@ -76,19 +83,20 @@ def main():
             chirp_contrasts,
         )
 
+        num_rises = np.random.randint(conf.num_rises[0], conf.num_rises[1])
         rise_times = np.random.uniform(
-            0, conf.simulation_duration_rec, size=conf.num_rises
+            0, conf.simulation_duration_rec, size=num_rises
         )
         rise_sizes = np.random.uniform(
-            conf.rise_sizes[0], conf.rise_sizes[1], size=conf.num_rises
+            conf.rise_sizes[0], conf.rise_sizes[1], size=num_rises
         )
         rise_rise_taus = np.random.uniform(
-            conf.rise_rise_taus[0], conf.rise_rise_taus[1], size=conf.num_rises
+            conf.rise_rise_taus[0], conf.rise_rise_taus[1], size=num_rises
         )
         rise_decay_taus = np.random.uniform(
             conf.rise_decay_taus[0],
             conf.rise_decay_taus[1],
-            size=conf.num_rises,
+            size=num_rises,
         )
         rise_trace = rises(
             0,
@@ -135,14 +143,16 @@ def main():
         noise_std = np.random.uniform(conf.noise_stds[0], conf.noise_stds[1])
         noise = noise_std * np.random.randn(len(eod))
         recording += noise
-        spec = spectrogram_of(torch.tensor(recording).float().to(device))
+        spec, _, _ = spectrogram(
+            recording, conf.samplerate, nfft, hop_length, trycuda=False
+        )
 
         if e == 0:
             spec = spec
         else:
             spec += spec
 
-    spec = in_decibel(spec).cpu().numpy() / conf.num_electrodes
+    spec = decibel(spec, trycuda=False).numpy() / conf.num_electrodes
 
     # get time and frequency axis
     spec_times = np.arange(0, spec.shape[1]) * hop_length / conf.samplerate
@@ -164,13 +174,16 @@ def main():
     np.save(outpath / "fill_spec.npy", spec)
     np.save(outpath / "fill_freqs.npy", frequencies)
     np.save(outpath / "fill_times.npy", spec_times)
-    np.save(outpath / "fund_v.npy", np.ravel(traces_cropped))
-    np.save(outpath / "ident_v.npy", np.ravel(trace_ids))
-    np.save(outpath / "idx_v.npy", np.ravel(trace_idx))
+    np.save(outpath / "fund_v.npy", np.concatenate(traces_cropped))
+    np.save(outpath / "ident_v.npy", np.concatenate(trace_ids))
+    np.save(outpath / "idx_v.npy", np.concatenate(trace_idx))
     np.save(outpath / "times.npy", time_cropped)
-    np.save(outpath / "correct_chirp_times.npy", np.ravel(correct_chirp_times))
     np.save(
-        outpath / "correct_chirp_time_ids.npy", np.ravel(correct_chirp_time_ids)
+        outpath / "correct_chirp_times.npy", np.concatenate(correct_chirp_times)
+    )
+    np.save(
+        outpath / "correct_chirp_time_ids.npy",
+        np.concatenate(correct_chirp_time_ids),
     )
 
 

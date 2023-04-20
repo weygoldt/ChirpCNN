@@ -118,7 +118,7 @@ def specshow(spec, time, freq, ax, **kwargs):
     return im
 
 
-def spectrogram(data, samplingrate, nfft, hop_length):
+def spectrogram(data, samplingrate, nfft, hop_length, trycuda=True):
     """Compute the spectrogram of a signal.
 
     Parameters
@@ -137,6 +137,11 @@ def spectrogram(data, samplingrate, nfft, hop_length):
     torch.Tensor
         The spectrogram matrix.
     """
+    if trycuda:
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    else:
+        device = torch.device("cpu")
+
     data = torch.from_numpy(data).to(device)
     spectrogram_of = Spectrogram(
         n_fft=nfft,
@@ -151,7 +156,7 @@ def spectrogram(data, samplingrate, nfft, hop_length):
     return spec, time, freq
 
 
-def decibel(spec):
+def decibel(spec, trycuda=True):
     """Convert a spectrogram to decibel scale.
 
     Parameters
@@ -164,5 +169,10 @@ def decibel(spec):
     torch.Tensor
         The spectrogram matrix in decibel scale.
     """
+    if trycuda:
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    else:
+        device = torch.device("cpu")
+
     decibel_of = AmplitudeToDB(stype="power", top_db=80).to(device)
     return decibel_of(spec)

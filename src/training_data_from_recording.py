@@ -13,7 +13,7 @@ from matplotlib.patches import Rectangle
 from torch.utils.data import DataLoader, TensorDataset
 
 from models.modelhandling import load_model
-from utils.datahandling import find_on_time, resize_image, resize_tensor_image
+from utils.datahandling import find_on_time, norm_tensor, resize_tensor_image
 from utils.filehandling import ConfLoader, NumpyLoader
 from utils.logger import make_logger
 from utils.plotstyle import PlotStyle
@@ -21,6 +21,8 @@ from utils.plotstyle import PlotStyle
 logger = make_logger(__name__)
 conf = ConfLoader("config.yml")
 ps = PlotStyle()
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+logger.info(f"Using device {device}")
 
 
 class ChirpExtractor:
@@ -95,13 +97,20 @@ class ChirpExtractor:
                     window_start_index:window_end_index,
                 ]
 
+                snippet = torch.from_numpy(snippet)
+
                 # Normalize snippet
-                snippet = (snippet - np.min(snippet)) / (
-                    np.max(snippet) - np.min(snippet)
-                )
+                snippet = norm_tensor(snippet)
 
                 # Resize snippet
                 snippet = resize_tensor_image(snippet, conf.img_size_px)
+
+                # take only the image part
+                snippet = snippet[0][0]
+
+                # to float32
+                snippet = snippet.type(torch.float32)
+                snippet = snippet.numpy()
 
                 # Append snippet to list
                 snippets.append(snippet)
@@ -112,10 +121,9 @@ class ChirpExtractor:
             spec_chirp_idx = np.asarray(
                 [find_on_time(center_t, t, limit=False) for t in chirp_times]
             )
-            spec_chirp_times = self.data.fill_times[spec_chirp_idx]
-            snippets = np.asarray(snippets).astype(np.float32)
 
-            # Save the chirps
+            snippets = np.asarray(snippets)
+            spec_chirp_times = self.data.fill_times[spec_chirp_idx]
 
             chirppath = pathlib.Path(f"{conf.training_data_path}/chirp")
             chirppath.mkdir(parents=True, exist_ok=True)

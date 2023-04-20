@@ -8,13 +8,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 import torch.nn as nn
-
-# import torch.nn.functional as F
-# import torch.optim as optim
 from IPython import embed
 from torch.utils.data import DataLoader, Dataset
-
-# from torchvision.transforms import ToTensor
 from tqdm import tqdm
 
 from models.modelhandling import ChirpNet, ChirpNet2, SpectrogramDataset
@@ -28,15 +23,15 @@ conf = ConfLoader("config.yml")
 logger = make_logger(__name__)
 
 
-# create a function (this my favorite choice)
-def RMSELoss(predicted, target):
-    return torch.sqrt(torch.mean((predicted - target) ** 2))
+# # create a function (this my favorite choice)
+# def RMSELoss(predicted, target):
+#     return torch.sqrt(torch.mean((predicted - target) ** 2))
 
 
 def viz(dataloader, classes, save=False, path="dataset.png"):
-    rows, cols = 5, 10
+    rows, cols = 10, 10
     fig, axs = plt.subplots(
-        rows, cols, figsize=(24 * ps.cm, 12 * ps.cm), constrained_layout=True
+        rows, cols, figsize=(24 * ps.cm, 24 * ps.cm), constrained_layout=True
     )
     for ax in axs.flat:
         spectrogram, label = next(iter(dataloader))
@@ -46,7 +41,8 @@ def viz(dataloader, classes, save=False, path="dataset.png"):
     if save:
         logger.info(f"Saving dataset plot to {path}")
         plt.savefig(path, dpi=300)
-        plt.close()
+        plt.close("all")
+        plt.close(fig)
         plt.clf()
         plt.cla()
     # plt.show()
