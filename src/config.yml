@@ -51,7 +51,7 @@ detection_data_path: "../detection_data"
 disk_cleanup: False
 stride: 0.01
 min_chirp_dt: 0.02
-buffersize: 10
+buffersize: 60
 spectrogram_overlap: 1
 num_electrodes: 11
 

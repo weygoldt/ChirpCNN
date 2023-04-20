@@ -15,6 +15,7 @@ from utils.datahandling import find_on_time
 from utils.filehandling import ConfLoader
 from utils.logger import make_logger
 from utils.plotstyle import PlotStyle
+from utils.spectrogram import freqres_to_nfft, overlap_to_hoplen
 
 conf = ConfLoader("config.yml")
 logger = make_logger(__name__)

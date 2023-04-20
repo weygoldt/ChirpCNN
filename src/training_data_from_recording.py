@@ -13,7 +13,7 @@ from matplotlib.patches import Rectangle
 from torch.utils.data import DataLoader, TensorDataset
 
 from models.modelhandling import load_model
-from utils.datahandling import find_on_time, resize_image
+from utils.datahandling import find_on_time, resize_image, resize_tensor_image
 from utils.filehandling import ConfLoader, NumpyLoader
 from utils.logger import make_logger
 from utils.plotstyle import PlotStyle
@@ -101,7 +101,7 @@ class ChirpExtractor:
                 )
 
                 # Resize snippet
-                snippet = resize_image(snippet, conf.img_size_px)
+                snippet = resize_tensor_image(snippet, conf.img_size_px)
 
                 # Append snippet to list
                 snippets.append(snippet)

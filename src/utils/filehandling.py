@@ -145,7 +145,7 @@ class DataSubset:
         self.track_freqs = tracks
         self.track_idents = idents
         self.track_indices = indices
-        self.track_times = time - time[0]
+        self.track_times = time
 
 
 class NumpyDataset:

@@ -3,6 +3,7 @@
 import argparse
 import pathlib
 import time
+from copy import deepcopy
 
 import matplotlib.pyplot as plt
 
@@ -11,6 +12,7 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 from IPython import embed
+from scipy.interpolate import interp1d
 
 from models.modelhandling import ChirpNet, load_model
 from utils.datahandling import (
@@ -136,7 +138,8 @@ def detect_chirps(
             # frequency axis indices
             window_center_track = find_on_time(time, center_time, True)
             if window_center_track is np.nan:
-                embed()
+                print(np.min(time), np.max(time), center_time)
+                window_center_track = find_on_time(time, center_time, False)
 
             window_center_freq = track[window_center_track]
             min_freq = window_center_freq - conf.freq_pad[0]
@@ -294,7 +297,6 @@ class Detector:
         n_chunks = np.ceil(self.data.raw.shape[0] / self.chunksize).astype(int)
 
         chirps = []
-        timetracker = 0
         for i in range(n_chunks):
             logger.info(f"Processing chunk {i + 1} of {n_chunks}...")
 
@@ -312,16 +314,26 @@ class Detector:
                 idx1 = sint(i * self.chunksize - self.spectrogram_overlap)
                 idx2 = sint((i + 1) * self.chunksize + self.spectrogram_overlap)
 
-            # # extract all data arrays for that window
-            # chunk, freqs, idents, indices, times = extract_window(
-            #     self.data, idx1, idx2, self.samplingrate
-            # )
+            # check if start of the chunk is before the end of the data
+            last_chunk_time = idx1 / self.samplingrate
+            first_track_time = self.data.track_times[0]
+
+            # compute the time of the spectrogram
+            spec_times = (
+                np.arange(idx1, idx2 + 1, self.hop_len) / self.samplingrate
+            )
+            spec_freqs = (
+                np.arange(0, self.nfft / 2 + 1) * self.samplingrate / self.nfft
+            )
+
+            if last_chunk_time < first_track_time:
+                continue
 
             chunk = DataSubset(self.data, idx1, idx2)
 
             # compute the spectrogram for all electrodes
             for el in range(self.n_electrodes):
-                chunk_spec, spec_times, spec_freqs = spectrogram(
+                chunk_spec, _, _ = spectrogram(
                     chunk.raw[:, el],
                     self.samplingrate,
                     nfft=self.nfft,
@@ -342,10 +354,6 @@ class Detector:
             # convert the spectrogram to dB
             # .. still a tensor
             spec = decibel(spec)
-
-            # add timetracker to times and update timetracker
-            spec_times += timetracker
-            timetracker += spec_times[-1]
 
             # make a detection data dict
             # the spec is still a tensor!
@@ -415,10 +423,54 @@ def main():
 
     # for trial of code
     start = (3 * 60 * 60 + 6 * 60 + 20) * conf.samplerate
-    stop = start + 600 * conf.samplerate
-    test = DataSubset(data, start, stop)
+    stop = start + 240 * conf.samplerate
+    data = DataSubset(data, start, stop)
+    data.track_times -= data.track_times[0]
 
-    det = Detector(modelpath, test)
+    # interpolate the track data
+    track_freqs = []
+    track_idents = []
+    track_indices = []
+    new_times = np.arange(
+        data.track_times[0], data.track_times[-1], conf.stride
+    )
+    index_helper = np.arange(len(new_times))
+    for track_id in np.unique(data.track_idents):
+        start_time = data.track_times[
+            data.track_indices[data.track_idents == track_id][0]
+        ]
+        stop_time = data.track_times[
+            data.track_indices[data.track_idents == track_id][-1]
+        ]
+        times_full = new_times[
+            (new_times >= start_time) & (new_times <= stop_time)
+        ]
+        times_sampled = data.track_times[
+            data.track_indices[data.track_idents == track_id]
+        ]
+        freqs_sampled = data.track_freqs[data.track_idents == track_id]
+        f = interp1d(times_sampled, freqs_sampled, kind="cubic")
+        freqs_interp = f(times_full)
+
+        index_interp = index_helper[
+            (times_full >= start_time) & (times_full <= stop_time)
+        ]
+        ident_interp = np.ones(len(freqs_interp)) * track_id
+
+        track_idents.append(ident_interp)
+        track_indices.append(index_interp)
+        track_freqs.append(freqs_interp)
+
+    track_idents = np.concatenate(track_idents)
+    track_freqs = np.concatenate(track_freqs)
+    track_indices = np.concatenate(track_indices)
+
+    data.track_idents = track_idents
+    data.track_indices = track_indices
+    data.track_freqs = track_freqs
+    data.track_times = new_times
+
+    det = Detector(modelpath, data)
     det.detect()
 
 
