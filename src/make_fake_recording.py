@@ -151,6 +151,8 @@ def main(mode):
             recording = np.vstack((recording, noise_recording))
 
     recording = recording.T
+    outpath = pathlib.Path(conf.testing_data_path)
+    outpath.mkdir(parents=True, exist_ok=True)
 
     if mode == "default":
         for e in range(np.shape(recording)[1]):
@@ -197,12 +199,11 @@ def main(mode):
         trace_idxs = [np.arange(len(t)) for t in traces]
         fund_v = np.concatenate(traces)
         ident_v = np.concatenate(trace_ids)
+        times = time
         idx_v = np.concatenate(trace_idxs)
         raw = recording
+        embed()
         np.save(outpath / "raw.npy", raw)
-
-    outpath = pathlib.Path(conf.testing_data_path)
-    outpath.mkdir(parents=True, exist_ok=True)
 
     np.save(outpath / "fund_v.npy", fund_v)
     np.save(outpath / "ident_v.npy", ident_v)

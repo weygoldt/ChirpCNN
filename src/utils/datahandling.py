@@ -1,7 +1,7 @@
 import numpy as np
-from IPython import embed
 import torch
 import torch.nn.functional as F
+from IPython import embed
 
 from .logger import make_logger
 
@@ -46,15 +46,15 @@ def resize_tensor_image(image, length):
 
 
 def find_on_time(array, target, limit=True):
-    """Takes a time array and a target (e.g. timestamp) and returns an index 
+    """Takes a time array and a target (e.g. timestamp) and returns an index
     for a value of the array that matches the target most closely.
 
-    The time array must (a) contain unique values and (b) must be sorted from 
-    smallest to largest. If limit is True, the function checks for each target, 
-    if the difference between the target and the closest time on the time array 
-    is not larger than half of the distance between two time points at that 
-    place. When the distance exceed half the delta t, an error is returned. 
-    This also means that the time array must not nessecarily have a constant 
+    The time array must (a) contain unique values and (b) must be sorted from
+    smallest to largest. If limit is True, the function checks for each target,
+    if the difference between the target and the closest time on the time array
+    is not larger than half of the distance between two time points at that
+    place. When the distance exceed half the delta t, an error is returned.
+    This also means that the time array must not nessecarily have a constant
     delta t.
 
     Parameters

@@ -448,10 +448,10 @@ def main():
     modelpath = conf.save_dir
 
     # for trial of code
-    start = (3 * 60 * 60 + 6 * 60 + 38) * conf.samplerate
-    stop = start + 240 * conf.samplerate
-    data = DataSubset(data, start, stop)
-    data.track_times -= data.track_times[0]
+    # start = (3 * 60 * 60 + 6 * 60 + 38) * conf.samplerate
+    # stop = start + 240 * conf.samplerate
+    # data = DataSubset(data, start, stop)
+    # data.track_times -= data.track_times[0]
 
     # interpolate the track data
     track_freqs = []
@@ -498,7 +498,6 @@ def main():
 
     det = Detector(modelpath, data)
     chirp_times, chirp_ids = det.detect()
-    embed()
 
 
 if __name__ == "__main__":

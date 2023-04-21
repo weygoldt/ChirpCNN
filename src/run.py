@@ -17,7 +17,7 @@ def main():
 
     for i in range(conf.generations):
         logger.info(f"Generation {i}/{conf.generations}")
-        make_fake_recording.main()
+        make_fake_recording.main("default")
         training_data_from_recording.main()
 
     logger.info("Training model...")
