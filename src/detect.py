@@ -378,23 +378,24 @@ class Detector:
             chirps.extend(chunk_chirps)
 
             # plot
-            fig, ax = plt.subplots(1, 1, figsize=(10, 5))
-            specshow(
-                spec.cpu().numpy(),
-                spec_times,
-                spec_freqs,
-                ax,
-                aspect="auto",
-                origin="lower",
-            )
-            for chirp in chunk_chirps:
-                ax.scatter(chirp[0], chirp[1], color="red", s=10)
-            ax.set_ylim(0, 1000)
-            plt.savefig(f"../test/chirp_detection_{i}.png")
-            plt.cla()
-            plt.clf()
-            plt.close("all")
-            plt.close(fig)
+            if len(chunk_chirps) > 0:
+                fig, ax = plt.subplots(1, 1, figsize=(10, 5))
+                specshow(
+                    spec.cpu().numpy(),
+                    spec_times,
+                    spec_freqs,
+                    ax,
+                    aspect="auto",
+                    origin="lower",
+                )
+                for chirp in chunk_chirps:
+                    ax.scatter(chirp[0], chirp[1], color="red", s=10)
+                ax.set_ylim(0, 1000)
+                plt.savefig(f"../test/chirp_detection_{i}.png")
+                plt.cla()
+                plt.clf()
+                plt.close("all")
+                plt.close(fig)
 
             del detection_data
             del spec
@@ -448,10 +449,10 @@ def main():
     modelpath = conf.save_dir
 
     # for trial of code
-    start = (3 * 60 * 60 + 6 * 60 + 38) * conf.samplerate
-    stop = start + 240 * conf.samplerate
-    data = DataSubset(data, start, stop)
-    data.track_times -= data.track_times[0]
+    # start = (3 * 60 * 60 + 6 * 60 + 38) * conf.samplerate
+    # stop = start + 240 * conf.samplerate
+    # data = DataSubset(data, start, stop)
+    # data.track_times -= data.track_times[0]
 
     # interpolate the track data
     track_freqs = []
@@ -461,7 +462,8 @@ def main():
         data.track_times[0], data.track_times[-1], conf.stride
     )
     index_helper = np.arange(len(new_times))
-    for track_id in np.unique(data.track_idents):
+    ids = np.unique(data.track_idents[~np.isnan(data.track_idents)])
+    for track_id in ids:
         start_time = data.track_times[
             data.track_indices[data.track_idents == track_id][0]
         ]
@@ -479,7 +481,7 @@ def main():
         freqs_interp = f(times_full)
 
         index_interp = index_helper[
-            (times_full >= start_time) & (times_full <= stop_time)
+            (new_times >= start_time) & (new_times <= stop_time)
         ]
         ident_interp = np.ones(len(freqs_interp)) * track_id
 
