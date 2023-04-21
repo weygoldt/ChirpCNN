@@ -38,9 +38,6 @@ class NumpyLoader:
             attr_value = np.load(os.path.join(self.dir_path, npy_file))
             setattr(self, attr_name, attr_value)
 
-    def info(self):
-        pprint(vars(self))
-
     def __repr__(self) -> str:
         return f"NumpyLoader({self.dir_path})"
 
@@ -152,8 +149,13 @@ class NumpyDataset:
     def __init__(self, datapath: pathlib.Path) -> None:
         self.path = datapath
         file = os.path.join(datapath / "traces-grid1.raw")
-        self.raw = DataLoader(file, 60.0, 0, channel=-1)
-        self.samplerate = self.raw.samplerate
+        if os.path.exists(file):
+            self.raw = DataLoader(file, 60.0, 0, channel=-1)
+            self.samplerate = self.raw.samplerate
+        else:
+            self.raw = np.load(datapath / "raw.npy", allow_pickle=True)
+            self.samplerate = 20000.0
+
         self.track_times = np.load(datapath / "times.npy", allow_pickle=True)
         self.track_freqs = np.load(datapath / "fund_v.npy", allow_pickle=True)
         self.track_indices = np.load(datapath / "idx_v.npy", allow_pickle=True)

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import argparse
 import pathlib
 
 import matplotlib.pyplot as plt
@@ -30,7 +31,7 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 device = "cpu"
 
 
-def main():
+def main(mode):
     logger.info("Generating fake recording")
 
     nfft = freqres_to_nfft(conf.frequency_resolution, conf.samplerate)
@@ -138,46 +139,75 @@ def main():
 
     recording = recording / len(eodfs)
 
-    for e in range(conf.num_electrodes):
-        # draw random values to generate noise
+    # reshape to make electrode grid
+    original_recording = recording
+    for i in range(conf.num_electrodes):
         noise_std = np.random.uniform(conf.noise_stds[0], conf.noise_stds[1])
         noise = noise_std * np.random.randn(len(eod))
-        recording += noise
-        spec, _, _ = spectrogram(
-            recording, conf.samplerate, nfft, hop_length, trycuda=False
-        )
-
-        if e == 0:
-            spec = spec
+        noise_recording = original_recording + noise
+        if i == 0:
+            recording = noise_recording
         else:
-            spec += spec
+            recording = np.vstack((recording, noise_recording))
 
-    spec = decibel(spec, trycuda=False).numpy() / conf.num_electrodes
+    recording = recording.T
 
-    # get time and frequency axis
-    spec_times = np.arange(0, spec.shape[1]) * hop_length / conf.samplerate
-    frequencies = np.arange(0, spec.shape[0]) * conf.samplerate / nfft
+    if mode == "default":
+        for e in range(np.shape(recording)[1]):
+            spec, _, _ = spectrogram(
+                recording[:, e],
+                conf.samplerate,
+                nfft,
+                hop_length,
+                trycuda=False,
+            )
 
-    traces_cropped, trace_ids, trace_idx = [], [], []
-    spec_min, spec_max = np.min(spec_times), np.max(spec_times)
+            if e == 0:
+                spec = spec
+            else:
+                spec += spec
 
-    for fish, trace in enumerate(traces):
-        traces_cropped.append(trace[(time >= spec_min) & (time <= spec_max)])
-        trace_ids.append(np.ones_like(traces_cropped[-1]) * fish)
-        trace_idx.append(np.arange(len(traces_cropped[-1])))
+        spec = decibel(spec, trycuda=False).numpy() / conf.num_electrodes
 
-    time_cropped = time[(time >= spec_min) & (time <= spec_max)]
+        # get time and frequency axis
+        spec_times = np.arange(0, spec.shape[1]) * hop_length / conf.samplerate
+        frequencies = np.arange(0, spec.shape[0]) * conf.samplerate / nfft
+
+        traces_cropped, trace_ids, trace_idx = [], [], []
+        spec_min, spec_max = np.min(spec_times), np.max(spec_times)
+
+        for fish, trace in enumerate(traces):
+            traces_cropped.append(
+                trace[(time >= spec_min) & (time <= spec_max)]
+            )
+            trace_ids.append(np.ones_like(traces_cropped[-1]) * fish)
+            trace_idx.append(np.arange(len(traces_cropped[-1])))
+
+        time_cropped = time[(time >= spec_min) & (time <= spec_max)]
+
+        fund_v = np.concatenate(traces_cropped)
+        ident_v = np.concatenate(trace_ids)
+        idx_v = np.concatenate(trace_idx)
+        times = time_cropped
+        np.save(outpath / "fill_spec.npy", spec)
+        np.save(outpath / "fill_freqs.npy", frequencies)
+        np.save(outpath / "fill_times.npy", spec_times)
+    else:
+        trace_ids = [[i] * len(t) for i, t in enumerate(traces)]
+        trace_idxs = [np.arange(len(t)) for t in traces]
+        fund_v = np.concatenate(traces)
+        ident_v = np.concatenate(trace_ids)
+        idx_v = np.concatenate(trace_idxs)
+        raw = recording
+        np.save(outpath / "raw.npy", raw)
 
     outpath = pathlib.Path(conf.testing_data_path)
     outpath.mkdir(parents=True, exist_ok=True)
 
-    np.save(outpath / "fill_spec.npy", spec)
-    np.save(outpath / "fill_freqs.npy", frequencies)
-    np.save(outpath / "fill_times.npy", spec_times)
-    np.save(outpath / "fund_v.npy", np.concatenate(traces_cropped))
-    np.save(outpath / "ident_v.npy", np.concatenate(trace_ids))
-    np.save(outpath / "idx_v.npy", np.concatenate(trace_idx))
-    np.save(outpath / "times.npy", time_cropped)
+    np.save(outpath / "fund_v.npy", fund_v)
+    np.save(outpath / "ident_v.npy", ident_v)
+    np.save(outpath / "idx_v.npy", idx_v)
+    np.save(outpath / "times.npy", times)
     np.save(
         outpath / "correct_chirp_times.npy", np.concatenate(correct_chirp_times)
     )
@@ -187,8 +217,25 @@ def main():
     )
 
 
+def interface():
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--mode",
+        "-m",
+        type=str,
+        default="default",
+    )
+    args = parser.parse_args()
+    assert args.mode in [
+        "default",
+        "test",
+    ], "mode not recognized, use default or test"
+    return args
+
+
 if __name__ == "__main__":
-    main()
+    args = interface()
+    main(args.mode)
 
     spectrogram = np.load(conf.testing_data_path + "/fill_spec.npy")
     frequencies = np.load(conf.testing_data_path + "/fill_freqs.npy")

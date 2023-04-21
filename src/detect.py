@@ -169,14 +169,14 @@ def detect_chirps(
             # print(prob)
 
             # if label == 0:
-            # fig, ax = plt.subplots()
-            # ax.imshow(snippet[0][0].cpu().numpy(), origin="lower")
-            # ax.text(0.5, 0.5, f"{prob:.2f}", color="white", fontsize=20)
-            # plt.savefig(f"../test/chirp_{iter}.png")
-            # plt.cla()
-            # plt.clf()
-            # plt.close("all")
-            # plt.close(fig)
+            fig, ax = plt.subplots()
+            ax.imshow(snippet[0][0].cpu().numpy(), origin="lower")
+            ax.text(0.5, 0.5, f"{prob:.2f}", color="white", fontsize=20)
+            plt.savefig(f"../test/chirp_{iter}.png")
+            plt.cla()
+            plt.clf()
+            plt.close("all")
+            plt.close(fig)
 
             # save the predictions and the center time and frequency
             pred_labels.append(label)
@@ -378,23 +378,23 @@ class Detector:
             chirps.extend(chunk_chirps)
 
             # plot
-            fig, ax = plt.subplots(1, 1, figsize=(10, 5))
-            specshow(
-                spec.cpu().numpy(),
-                spec_times,
-                spec_freqs,
-                ax,
-                aspect="auto",
-                origin="lower",
-            )
-            for chirp in chunk_chirps:
-                ax.scatter(chirp[0], chirp[1], color="red", s=10)
-            ax.set_ylim(0, 1000)
-            plt.savefig(f"../test/chirp_detection_{i}.png")
-            plt.cla()
-            plt.clf()
-            plt.close("all")
-            plt.close(fig)
+            # fig, ax = plt.subplots(1, 1, figsize=(10, 5))
+            # specshow(
+            #     spec.cpu().numpy(),
+            #     spec_times,
+            #     spec_freqs,
+            #     ax,
+            #     aspect="auto",
+            #     origin="lower",
+            # )
+            # for chirp in chunk_chirps:
+            #     ax.scatter(chirp[0], chirp[1], color="red", s=10)
+            # ax.set_ylim(0, 1000)
+            # plt.savefig(f"../test/chirp_detection_{i}.png")
+            # plt.cla()
+            # plt.clf()
+            # plt.close("all")
+            # plt.close(fig)
 
             del detection_data
             del spec
@@ -496,10 +496,9 @@ def main():
     data.track_freqs = track_freqs
     data.track_times = new_times
 
-    embed()
-
     det = Detector(modelpath, data)
     chirp_times, chirp_ids = det.detect()
+    embed()
 
 
 if __name__ == "__main__":

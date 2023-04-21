@@ -101,7 +101,7 @@ class ChirpExtractor:
 
                 # Normalize snippet
                 snippet = norm_tensor(snippet)
-
+c
                 # Resize snippet
                 snippet = resize_tensor_image(snippet, conf.img_size_px)
 
