@@ -35,7 +35,7 @@ The black markers are the points were the detector found a chirp. So what the cu
 - [x] The classifier might be able to detect chirps well, but assigning them to the correct emitter is a seperate problem.
   - Note: Here I could borrow methods from the previous chirp detector, that was good at assignment but not so good with detection.
   - Current solution: If the a multiple chirps are detected simultaneously for multiple fish, discarding all chirps except for the one with the highest class probability is sufficient for now to correctly assing chirps. This of course biases the detector to not beeing able to detect simultaneous chirps. So this is **not fully solved**.
-- [ ] Understand why detection of real data is completely broken after switching to pytorch gpu accelerated spectrograms. Detection of fake data still works well. There is probably a processing step I either duplicated or left out somewhere. Need to find the time to dig in to this. Before switching, detection worked flawlessly. But had to switch to try out larger datasets.
+- [x] Understand why detection of real data is completely broken after switching to pytorch gpu accelerated spectrograms. Detection of fake data still works well. There is probably a processing step I either duplicated or left out somewhere. Need to find the time to dig in to this. Before switching, detection worked flawlessly. But had to switch to try out larger datasets.
 
 ## How to run this setup
 
@@ -115,8 +115,10 @@ After this pipline is finished, you will be rewarded by the plot above that show
 - [ ] Understand why training dataset spec computation fails on GPU. Implement generalized spec function that uses rolling windows automatically if array size becomes too large.
 - [ ] Instead of the peak prob use the probs to weight the timestamps and compute the mean of that. This should be more accurate. This should also further alleviate the problem of multiple detections of the same chirp.
 - [ ] Move hard coded time tolerance to config and clean and restructure config.
+- [ ] Currently noise is a large problem. I already added a bandpass filter around the frequency that is relevant in the recording. I should also compute the amplitude of the tracks in the recording by indexing the spectrogram matrix and threshold according to that value in the current snippet. That will not remove all but at least some noise that is left in the relevant frequency band.
 
 ## Project log 
+- 2023/04/21: On-the-fly spectrogram computation and subsequent chirp detection works. No need to compute extremely large spectrograms before hand anymore. Still some work to do with noise being classified as chirps. But works well in clean windows!
 - 2023/04/14: Probably solved the issue that the same chirp is detected twice for two fish. I just take group chirps that are less than 20 ms apart and use only the one with the highest probability reported by the model and discard the rest. Even fancier implementations could use things like the dip in the baseline envelope during a chirp to determine to which fish the chirp truly belongs to.
 - 2023/04/13: First time all chirps are correctly assigned on the real data snippet. Decraesed frequency resolution of the training dataset and made windows narrower.
 - 2023/04/12: First semi-successfull run on a snippet of real data. 

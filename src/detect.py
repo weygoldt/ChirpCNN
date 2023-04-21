@@ -23,6 +23,7 @@ from utils.datahandling import (
     resize_tensor_image,
 )
 from utils.filehandling import ConfLoader, DataSubset, load_data
+from utils.filters import bandpass_filter
 from utils.logger import make_logger
 from utils.plotstyle import PlotStyle
 from utils.spectrogram import (
@@ -287,6 +288,10 @@ class Detector:
         stride = int(conf.stride * spec_samplerate)
         if stride % 2 == 0:
             stride += 1
+        self.passband = (
+            np.min(self.data.track_freqs) - 100,
+            np.max(self.data.track_freqs) + 100,
+        )
 
         self.detection_parameters = {
             "model": load_model(modelpath, model),
@@ -335,8 +340,11 @@ class Detector:
 
             # compute the spectrogram for all electrodes
             for el in range(self.n_electrodes):
+                sig = bandpass_filter(
+                    chunk.raw[:, el], self.samplingrate, *self.passband
+                )
                 chunk_spec, _, _ = spectrogram(
-                    chunk.raw[:, el],
+                    sig.copy(),
                     self.samplingrate,
                     nfft=self.nfft,
                     hop_length=self.hop_len,
@@ -378,24 +386,24 @@ class Detector:
             chirps.extend(chunk_chirps)
 
             # plot
-            if len(chunk_chirps) > 0:
-                fig, ax = plt.subplots(1, 1, figsize=(10, 5))
-                specshow(
-                    spec.cpu().numpy(),
-                    spec_times,
-                    spec_freqs,
-                    ax,
-                    aspect="auto",
-                    origin="lower",
-                )
-                for chirp in chunk_chirps:
-                    ax.scatter(chirp[0], chirp[1], color="red", s=10)
-                ax.set_ylim(0, 1000)
-                plt.savefig(f"../test/chirp_detection_{i}.png")
-                plt.cla()
-                plt.clf()
-                plt.close("all")
-                plt.close(fig)
+            # if len(chunk_chirps) > 0:
+            #     fig, ax = plt.subplots(1, 1, figsize=(10, 5))
+            #     specshow(
+            #         spec.cpu().numpy(),
+            #         spec_times,
+            #         spec_freqs,
+            #         ax,
+            #         aspect="auto",
+            #         origin="lower",
+            #     )
+            #     for chirp in chunk_chirps:
+            #         ax.scatter(chirp[0], chirp[1], color="red", s=10)
+            #     ax.set_ylim(0, 1000)
+            #     plt.savefig(f"../test/chirp_detection_{i}.png")
+            #     plt.cla()
+            #     plt.clf()
+            #     plt.close("all")
+            #     plt.close(fig)
 
             del detection_data
             del spec
@@ -449,10 +457,10 @@ def main():
     modelpath = conf.save_dir
 
     # for trial of code
-    # start = (3 * 60 * 60 + 6 * 60 + 38) * conf.samplerate
-    # stop = start + 240 * conf.samplerate
-    # data = DataSubset(data, start, stop)
-    # data.track_times -= data.track_times[0]
+    start = (3 * 60 * 60 + 6 * 60 + 20) * conf.samplerate
+    stop = start + 600 * conf.samplerate
+    data = DataSubset(data, start, stop)
+    data.track_times -= data.track_times[0]
 
     # interpolate the track data
     track_freqs = []
