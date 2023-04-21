@@ -88,7 +88,7 @@ def classify(model, img):
         outputs = model(img)
         probs = F.softmax(outputs, dim=1)
         _, preds = torch.max(outputs, dim=1)
-    probs = probs.cpu().numpy()[0][1]
+    probs = probs.cpu().numpy()[0][0]
     preds = preds.cpu().numpy()[0]
     return probs, preds
 
@@ -143,7 +143,7 @@ def detect_chirps(
                 window_center_track = find_on_time(time, center_time, False)
 
             window_center_freq = track[window_center_track]
-            min_freq = window_center_freq - conf.freq_pad[0]
+            min_freq = window_center_freq + conf.freq_pad[0]
             max_freq = window_center_freq + conf.freq_pad[1]
             min_freq_idx = find_on_time(spec_freqs, min_freq)
             max_freq_idx = find_on_time(spec_freqs, max_freq)
@@ -169,14 +169,14 @@ def detect_chirps(
             # print(prob)
 
             # if label == 0:
-            fig, ax = plt.subplots()
-            ax.imshow(snippet[0][0].cpu().numpy(), origin="lower")
-            ax.text(0.5, 0.5, f"{prob:.2f}", color="white", fontsize=20)
-            plt.savefig(f"../test/chirp_{iter}.png")
-            plt.cla()
-            plt.clf()
-            plt.close("all")
-            plt.close(fig)
+            # fig, ax = plt.subplots()
+            # ax.imshow(snippet[0][0].cpu().numpy(), origin="lower")
+            # ax.text(0.5, 0.5, f"{prob:.2f}", color="white", fontsize=20)
+            # plt.savefig(f"../test/chirp_{iter}.png")
+            # plt.cla()
+            # plt.clf()
+            # plt.close("all")
+            # plt.close(fig)
 
             # save the predictions and the center time and frequency
             pred_labels.append(label)
@@ -378,23 +378,23 @@ class Detector:
             chirps.extend(chunk_chirps)
 
             # plot
-            # fig, ax = plt.subplots(1, 1, figsize=(10, 5))
-            # specshow(
-            #     spec.cpu().numpy(),
-            #     spec_times,
-            #     spec_freqs,
-            #     ax,
-            #     aspect="auto",
-            #     origin="lower",
-            # )
-            # for chirp in chunk_chirps:
-            #     ax.scatter(chirp[0], chirp[1], color="red", s=10)
-            # ax.set_ylim(0, 1000)
-            # plt.savefig(f"../test/chirp_detection_{i}.png")
-            # plt.cla()
-            # plt.clf()
-            # plt.close("all")
-            # plt.close(fig)
+            fig, ax = plt.subplots(1, 1, figsize=(10, 5))
+            specshow(
+                spec.cpu().numpy(),
+                spec_times,
+                spec_freqs,
+                ax,
+                aspect="auto",
+                origin="lower",
+            )
+            for chirp in chunk_chirps:
+                ax.scatter(chirp[0], chirp[1], color="red", s=10)
+            ax.set_ylim(0, 1000)
+            plt.savefig(f"../test/chirp_detection_{i}.png")
+            plt.cla()
+            plt.clf()
+            plt.close("all")
+            plt.close(fig)
 
             del detection_data
             del spec
@@ -448,10 +448,10 @@ def main():
     modelpath = conf.save_dir
 
     # for trial of code
-    # start = (3 * 60 * 60 + 6 * 60 + 38) * conf.samplerate
-    # stop = start + 240 * conf.samplerate
-    # data = DataSubset(data, start, stop)
-    # data.track_times -= data.track_times[0]
+    start = (3 * 60 * 60 + 6 * 60 + 38) * conf.samplerate
+    stop = start + 240 * conf.samplerate
+    data = DataSubset(data, start, stop)
+    data.track_times -= data.track_times[0]
 
     # interpolate the track data
     track_freqs = []

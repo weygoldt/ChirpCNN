@@ -54,4 +54,4 @@ num_electrodes: 11
 # Is repeated before the model is trained,
 # a new dataset is generated,
 # and the model is tested on that
-generations: 20
+generations: 50

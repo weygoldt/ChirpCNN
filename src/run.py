@@ -13,7 +13,7 @@ logger = make_logger(__name__)
 
 
 def main():
-    clean.main()
+#       clean.main()
 
     for i in range(conf.generations):
         logger.info(f"Generation {i}/{conf.generations}")
