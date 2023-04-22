@@ -9,8 +9,9 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 from IPython import embed
-from models.modelhandling import ChirpNet, load_model
 from scipy.interpolate import interp1d
+
+from models.modelhandling import ChirpNet, load_model
 from utils.datahandling import (
     cluster_peaks,
     find_on_time,
@@ -378,24 +379,24 @@ class Detector:
             chirps.extend(chunk_chirps)
 
             # plot
-            # if len(chunk_chirps) > 0:
-            #     fig, ax = plt.subplots(1, 1, figsize=(10, 5))
-            #     specshow(
-            #         spec.cpu().numpy(),
-            #         spec_times,
-            #         spec_freqs,
-            #         ax,
-            #         aspect="auto",
-            #         origin="lower",
-            #     )
-            #     for chirp in chunk_chirps:
-            #         ax.scatter(chirp[0], chirp[1], color="red", s=10)
-            #     ax.set_ylim(0, 1000)
-            #     plt.savefig(f"../test/chirp_detection_{i}.png")
-            #     plt.cla()
-            #     plt.clf()
-            #     plt.close("all")
-            #     plt.close(fig)
+            if len(chunk_chirps) > 0:
+                fig, ax = plt.subplots(1, 1, figsize=(10, 5))
+                specshow(
+                    spec.cpu().numpy(),
+                    spec_times,
+                    spec_freqs,
+                    ax,
+                    aspect="auto",
+                    origin="lower",
+                )
+                for chirp in chunk_chirps:
+                    ax.scatter(chirp[0], chirp[1], color="red", s=10)
+                ax.set_ylim(0, 1000)
+                plt.savefig(f"{conf.testing_data_path}/chirp_detection_{i}.png")
+                plt.cla()
+                plt.clf()
+                plt.close("all")
+                plt.close(fig)
 
             del detection_data
             del spec
@@ -450,10 +451,10 @@ def main():
     modelpath = conf.save_dir
 
     # for trial of code
-    # start = (3 * 60 * 60 + 6 * 60 + 20) * conf.samplerate
-    # stop = start + 600 * conf.samplerate
-    # data = DataSubset(data, start, stop)
-    # data.track_times -= data.track_times[0]
+    start = (3 * 60 * 60 + 6 * 60 + 20) * conf.samplerate
+    stop = start + 600 * conf.samplerate
+    data = DataSubset(data, start, stop)
+    data.track_times -= data.track_times[0]
 
     # interpolate the track data
     track_freqs = []
