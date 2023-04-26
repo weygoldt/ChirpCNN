@@ -11,7 +11,7 @@ import torch.nn.functional as F
 from IPython import embed
 from scipy.interpolate import interp1d
 
-from models.modelhandling import ChirpNet, load_model
+from models.modelhandling import ChirpNet, load_model, check_device
 from utils.datahandling import (
     cluster_peaks,
     find_on_time,
@@ -34,7 +34,7 @@ from utils.spectrogram import (
 
 logger = make_logger(__name__)
 conf = ConfLoader("config.yml")
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+device = check_device()
 model = ChirpNet
 ps = PlotStyle()
 

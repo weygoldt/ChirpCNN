@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 import torch.nn as nn
-from models.modelhandling import ChirpNet, ChirpNet2, SpectrogramDataset
+from models.modelhandling import ChirpNet, ChirpNet2, SpectrogramDataset, check_device
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 from utils.filehandling import ConfLoader
@@ -14,7 +14,8 @@ from utils.logger import make_logger
 from utils.plotstyle import PlotStyle
 
 ps = PlotStyle()
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+#device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+device = check_device()
 conf = ConfLoader("config.yml")
 logger = make_logger(__name__)
 

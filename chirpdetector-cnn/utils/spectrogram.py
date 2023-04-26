@@ -4,8 +4,9 @@ import numpy as np
 import torch
 from IPython import embed
 from torchaudio.transforms import AmplitudeToDB, Spectrogram
+from models.modelhandling import check_device
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+device = check_device()
 
 
 def next_power_of_two(num):

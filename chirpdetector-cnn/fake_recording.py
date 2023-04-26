@@ -9,6 +9,7 @@ import torch
 from IPython import embed
 
 from simulations.fish_signal import chirps, rises, wavefish_eods
+from models.modelhandling import check_device
 from utils.datahandling import find_on_time
 from utils.filehandling import ConfLoader
 from utils.logger import make_logger
@@ -24,8 +25,7 @@ conf = ConfLoader("config.yml")
 logger = make_logger(__name__)
 ps = PlotStyle()
 
-device = "cuda" if torch.cuda.is_available() else "cpu"
-device = "cpu"
+device = check_device()
 
 
 def main(mode):
