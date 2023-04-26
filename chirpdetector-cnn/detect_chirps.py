@@ -9,9 +9,8 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 from IPython import embed
-from scipy.interpolate import interp1d
-
 from models.modelhandling import ChirpNet, load_model
+from scipy.interpolate import interp1d
 from utils.datahandling import (
     cluster_peaks,
     find_on_time,
@@ -207,6 +206,8 @@ def detect_chirps(
         max_probs = np.asarray(max_probs)
         chirp_id = np.repeat(track_id, len(weighted_times))
 
+        logger.info("Checking if chirps have amplitude troughs...")
+
         logger.info(f"Found {len(weighted_times)} chirps")
 
         # put into touples for comparison across tracks
@@ -333,9 +334,10 @@ class Detector:
 
             # compute the spectrogram for all electrodes
             for el in range(self.n_electrodes):
-                sig = bandpass_filter(
-                    chunk.raw[:, el], self.samplingrate, *self.passband
-                )
+                sig = chunk.raw[:, el]
+                # sig = bandpass_filter(
+                #     chunk.raw[:, el], self.samplingrate, *self.passband
+                # )
                 chunk_spec, _, _ = spectrogram(
                     sig.copy(),
                     self.samplingrate,
@@ -390,8 +392,21 @@ class Detector:
                     origin="lower",
                 )
                 for chirp in chunk_chirps:
-                    ax.scatter(chirp[0], chirp[1], color="red", s=10)
-                ax.set_ylim(0, 1000)
+                    ax.scatter(
+                        chirp[0],
+                        chirp[1],
+                        facecolors="white",
+                        edgecolors="black",
+                        s=30,
+                    )
+                    ax.text(
+                        chirp[0] + 0.1,
+                        chirp[1] + 30,
+                        np.round(chirp[2], 2),
+                        fontsize=10,
+                        color="white",
+                    )
+                ax.set_ylim(400, 1200)
                 plt.savefig(f"{conf.testing_data_path}/chirp_detection_{i}.png")
                 plt.cla()
                 plt.clf()
@@ -451,10 +466,10 @@ def main():
     modelpath = conf.save_dir
 
     # for trial of code
-    start = (3 * 60 * 60 + 6 * 60 + 20) * conf.samplerate
-    stop = start + 600 * conf.samplerate
-    data = DataSubset(data, start, stop)
-    data.track_times -= data.track_times[0]
+    # start = (3 * 60 * 60 + 6 * 60 + 20) * conf.samplerate
+    # stop = start + 600 * conf.samplerate
+    # data = DataSubset(data, start, stop)
+    # data.track_times -= data.track_times[0]
 
     # interpolate the track data
     track_freqs = []

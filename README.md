@@ -22,9 +22,13 @@ In this project, I will build a simulated dataset using many chirp parameters an
 
 With the current synthetic dataset (n=15000), I reach a discrimination performance of 98%. But as soon as the frequency traces of chirping fish get close, the current version of the detector falsely assings the same chirp to multiple fish. The plot below illustrated the current state, the first try of detecting on non-artificial data.
 
-![current detector](assets/detection_.png)
+![current detector](assets/good_.png)
 
 The black markers are the points were the detector found a chirp. So what the current implementation solves, is reliable detection (on simulated data) but assignment is still an issue. As seen on the plot, when frequency bands are close to each other, one chirp is often detected on two frequency bands. I might be able so solve with an algorithmic approach, similarly to the non-cnn chirp detector.
+
+Another major issue is noise. I train the detector on artificial data and there is a limit to the variability of the noise I can easily simulate. So the detector is not very robust to noise. I will try to solve this by adding real noise to the training data. The following shows the detectors performance when the amplitude of the fish EODs approaches the noise level.
+
+![noise](assets/bad_.png)
 
 **UPDATE:** The chirps that are falsely detected twice for different fish can be sorted by the probability the network computes for each chirp. Simply only accepting the chirp with the highest probability in a given time window (currently 20 ms) completely resolves the issue of duplicates on the current test snippet.
 
@@ -137,6 +141,12 @@ To see what is going on there are two plotting snippets that are commented out i
 - [ ] Add a proper terminal interface that provides the most common actions such as training dataset generation, training and detection.
 - [ ] Implement a proper logging system that logs the most important parameters and results to a file.
 - [ ] Implement a proper performance metric for the full detector, not just the CNN. 
+- [ ] Handle the problem of brief broadband artifact that are detected as chirps. This can be done 3 ways:
+  - Incorporate theses kinds of artifacts into the training dataset. This is probably the most elegant solution.
+  - Increase the vertical window height so that all chirps fit the window and artifacts (which are always larger than the window) are discarded.
+  - Check if the detected chirps have an amplitude trough on the filtered baseline. If not, discard them. This is probably the least elegant but fastest solution.
+- [ ] Implement skipping areas where the amplitude of the frequency band is too low. This should remove some of the false positives.
+- [ ] Implement the sliding window starting at the start of the track instead of the start of the current spectrogram window. This should remove some of the false positives as well.
 
 ## Project log 
 - 2023/04/21: On-the-fly spectrogram computation and subsequent chirp detection works. No need to compute extremely large spectrograms before hand anymore. Still some work to do with noise being classified as chirps. But works well in clean windows!
