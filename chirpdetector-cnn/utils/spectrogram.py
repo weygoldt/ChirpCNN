@@ -174,5 +174,5 @@ def decibel(spec, trycuda=True):
     else:
         device = torch.device("cpu")
 
-    decibel_of = AmplitudeToDB(stype="power", top_db=80).to(device)
+    decibel_of = AmplitudeToDB(stype="power", top_db=45).to(device)
     return decibel_of(spec)
