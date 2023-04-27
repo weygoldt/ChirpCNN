@@ -189,9 +189,6 @@ def detect_chirps(
             # predict the label and probability of the snippet
             prob, label = classify(model, snippet)
 
-            if label == 0:
-                embed()
-
             # print(prob)
 
             # if label == 0:
