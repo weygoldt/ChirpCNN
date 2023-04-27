@@ -135,9 +135,7 @@ def detect_chirps(
                 continue
 
             # if skip if current window touches a blacklisted noise band
-            if noise_index[window_start]:
-                continue
-            if noise_index[window_start + window_size]:
+            if True in noise_index[window_start : window_start + window_size]:
                 continue
 
             # time axis indices
@@ -191,7 +189,7 @@ def detect_chirps(
             # predict the label and probability of the snippet
             prob, label = classify(model, snippet)
 
-            if (i == 28) and (label == 0):
+            if label == 0:
                 embed()
 
             # print(prob)
