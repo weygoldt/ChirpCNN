@@ -118,9 +118,24 @@ def detect_chirps(
         center_times = []
         center_freqs = []
 
+        # make blacklisted areas where vertical noise bands are too strong
+        threshold = conf.power_on_track_threshold - 5
+        noise_subset = spec[
+            spec_freqs < conf.vertical_noise_band_upper_freq_limit, :
+        ]
+        noise_profile = torch.mean(noise_subset, axis=0)
+        noise_index = np.zeros_like(noise_profile, dtype=bool)
+        noise_index[noise_profile > threshold] = True
+
         for i, window_start in enumerate(window_starts):
             # check again if there is data in this window
             if time[0] > spec_times[window_start + window_size]:
+                continue
+
+            # if skip if current window touches a blacklisted noise band
+            if noise_index[window_start]:
+                continue
+            if noise_index[window_start + window_size]:
                 continue
 
             # time axis indices
@@ -156,7 +171,9 @@ def detect_chirps(
             # skip to next iteration if the power on the spectrogram that lies
             # underneath the track is too low
             if mean < conf.power_on_track_threshold:
-                logger.info("Power on track too low, skipping classification")
+                logger.info(
+                    f"Power on track too low ({mean}), skipping classification"
+                )
                 continue
 
             # normalize snippet
@@ -171,6 +188,7 @@ def detect_chirps(
 
             # predict the label and probability of the snippet
             prob, label = classify(model, snippet)
+
             # print(prob)
 
             # if label == 0:
