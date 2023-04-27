@@ -435,7 +435,7 @@ class Detector:
                         fontsize=10,
                         color="white",
                     )
-                ax.set_ylim(400, 1200)
+                ax.set_ylim(0, 1200)
                 plt.savefig(f"{conf.testing_data_path}/chirp_detection_{i}.png")
                 plt.cla()
                 plt.clf()
