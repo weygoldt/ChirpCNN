@@ -90,6 +90,7 @@ def detect_chirps(
     model,
     stride,
     window_size,
+    i,
     spec,
     spec_freqs,
     spec_times,
@@ -189,6 +190,9 @@ def detect_chirps(
 
             # predict the label and probability of the snippet
             prob, label = classify(model, snippet)
+
+            if (i == 28) and (label == 0):
+                embed()
 
             # print(prob)
 
@@ -394,6 +398,7 @@ class Detector:
             # make a detection data dict
             # the spec is still a tensor!
             detection_data = {
+                "i": i,
                 "spec": spec,
                 "spec_freqs": spec_freqs,
                 "spec_times": spec_times,
@@ -551,8 +556,8 @@ def main():
 
     logger.info(f"Detected {len(chirp_times)} chirps for {len(ids)} fish.")
     logger.info(f"Saving detected chirps to {datapath}...")
-    np.save(datapath / "chirp_times.npy", chirp_times)
-    np.save(datapath / "chirp_ids.npy", chirp_ids)
+    # np.save(datapath / "chirp_times.npy", chirp_times)
+    # np.save(datapath / "chirp_ids.npy", chirp_ids)
 
 
 if __name__ == "__main__":
