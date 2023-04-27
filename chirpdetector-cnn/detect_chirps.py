@@ -9,7 +9,7 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 from IPython import embed
-from models.modelhandling import ChirpNet, load_model, check_device
+from models.modelhandling import ChirpNet, check_device, load_model
 from scipy.interpolate import interp1d
 from utils.datahandling import (
     cluster_peaks,
@@ -146,6 +146,18 @@ def detect_chirps(
             snippet = spec[
                 min_freq_idx:max_freq_idx, min_time_index:max_time_index
             ]
+            snippet_freqs = spec_freqs[min_freq_idx:max_freq_idx]
+
+            # compute the mean power around the center frequency
+            upper_idx = find_on_time(snippet_freqs, window_center_freq + 10)
+            lower_idx = find_on_time(snippet_freqs, window_center_freq - 10)
+            mean = torch.mean(snippet[lower_idx:upper_idx, :])
+
+            # skip to next iteration if the power on the spectrogram that lies
+            # underneath the track is too low
+            if mean < conf.power_on_track_threshold:
+                logger.info("Power on track too low, skipping classification")
+                continue
 
             # normalize snippet
             # still a tensor

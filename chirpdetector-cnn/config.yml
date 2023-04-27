@@ -49,3 +49,4 @@ min_chirp_dt: 0.04 # minimum time between chirps in s
 buffersize: 10 # how large the buffer is in s
 spectrogram_overlap: 1 # how much to overlap the spectrograms in the buffer
 num_electrodes: 11 # how many electrodes were recorded on
+power_on_track_threshold: -60 # the minimum power on the frequency track of a window in dB to be allowed to enter the classifier
