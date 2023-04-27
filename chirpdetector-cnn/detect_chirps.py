@@ -90,7 +90,7 @@ def detect_chirps(
     model,
     stride,
     window_size,
-    i,
+    outer_iter,
     spec,
     spec_freqs,
     spec_times,
@@ -120,7 +120,7 @@ def detect_chirps(
         center_freqs = []
 
         # make blacklisted areas where vertical noise bands are too strong
-        threshold = conf.power_on_track_threshold - 5
+        threshold = conf.power_on_track_threshold
         noise_subset = spec[
             spec_freqs < conf.vertical_noise_band_upper_freq_limit, :
         ]
@@ -189,17 +189,15 @@ def detect_chirps(
             # predict the label and probability of the snippet
             prob, label = classify(model, snippet)
 
-            # print(prob)
-
-            # if label == 0:
-            # fig, ax = plt.subplots()
-            # ax.imshow(snippet[0][0].cpu().numpy(), origin="lower")
-            # ax.text(0.5, 0.5, f"{prob:.2f}", color="white", fontsize=20)
-            # plt.savefig(f"../test/chirp_{iter}.png")
-            # plt.cla()
-            # plt.clf()
-            # plt.close("all")
-            # plt.close(fig)
+            # plot the snippet
+            fig, ax = plt.subplots()
+            ax.imshow(snippet[0][0].cpu().numpy(), origin="lower")
+            ax.text(0.5, 0.5, f"{prob:.2f}", color="white", fontsize=20)
+            plt.savefig(f"../anim_plots/{outer_iter}_{iter}.png")
+            plt.cla()
+            plt.clf()
+            plt.close("all")
+            plt.close(fig)
 
             # save the predictions and the center time and frequency
             pred_labels.append(label)
@@ -393,7 +391,7 @@ class Detector:
             # make a detection data dict
             # the spec is still a tensor!
             detection_data = {
-                "i": i,
+                "outer_iter": i,
                 "spec": spec,
                 "spec_freqs": spec_freqs,
                 "spec_times": spec_times,

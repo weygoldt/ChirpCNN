@@ -49,8 +49,8 @@ min_chirp_dt: 0.04 # minimum time between chirps in s
 buffersize: 10 # how large the buffer is in s
 spectrogram_overlap: 1 # how much to overlap the spectrograms in the buffer
 num_electrodes: 11 # how many electrodes were recorded on
-power_on_track_threshold: -70 # the minimum power on the frequency track of a window in dB to be allowed to enter the classifier
-blacklist_vertical_noise_bands: True # whether to blacklist vertical noise bands
+power_on_track_threshold: -75 # the minimum power on the frequency track of a window in dB to be allowed to enter the classifier
+# blacklist_vertical_noise_bands: True # whether to blacklist vertical noise bands
 vertical_noise_band_upper_freq_limit: 400 # vertical noise bands are evaluated below this frequency in Hz
 vertical_noise_band_time_padding: 0.2 # how much time padding to add to the vertical noise band in s
 min_chirp_prob: 0.85 # minimum probability of a chirp to be classified as a chirp
