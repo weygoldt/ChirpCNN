@@ -215,7 +215,7 @@ def detect_chirps(
         center_freqs = np.asarray(center_freqs)
 
         # get chirp clusters from the predictions
-        cluster_indices = cluster_peaks(pred_probs, 0.5)
+        cluster_indices = cluster_peaks(pred_probs, conf.min_chirp_prob)
 
         # compute the weighted average of the center times and frequencies
         # This is the first chirp sorting step!
