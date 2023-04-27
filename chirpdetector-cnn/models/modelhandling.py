@@ -8,6 +8,23 @@ import torch.optim as optim
 from torch.utils.data import Dataset
 from torchvision.transforms import ToTensor
 
+from utils.logger import make_logger
+logger = make_logger(__name__)
+
+def check_device():
+    # check if cuda is avavilable
+    if torch.cuda.is_available() is True:
+        device = torch.device('cuda')
+    # check if mps is available
+    elif torch.backends.mps.is_available() is True:
+        device = torch.device('mps')
+    else:
+        device = torch.device('cpu')
+
+    logger.info(f"Using device: {device}")
+    return device
+
+
 
 def load_model(modelpath, model):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")

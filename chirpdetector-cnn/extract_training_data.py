@@ -13,7 +13,7 @@ from IPython import embed
 from matplotlib.patches import Rectangle
 from torch.utils.data import DataLoader, TensorDataset
 
-from models.modelhandling import load_model
+from models.modelhandling import load_model, check_device
 from utils.datahandling import find_on_time, norm_tensor, resize_tensor_image
 from utils.filehandling import ConfLoader, NumpyLoader
 from utils.logger import make_logger
@@ -22,7 +22,7 @@ from utils.plotstyle import PlotStyle
 logger = make_logger(__name__)
 conf = ConfLoader("config.yml")
 ps = PlotStyle()
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+device = check_device()
 logger.info(f"Using device {device}")
 
 

@@ -11,6 +11,7 @@ import torch
 from IPython import embed
 from thunderfish.dataloader import DataLoader
 from torchaudio.transforms import AmplitudeToDB, Spectrogram
+from models.modelhandling import check_device
 
 from utils.filehandling import ConfLoader, NumpyDataset
 
@@ -80,7 +81,7 @@ def imshow(spec, time, freq):
 
 
 def convert(path):
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    device = check_device()
     data = NumpyDataset(path)
 
     buffersize = 20
