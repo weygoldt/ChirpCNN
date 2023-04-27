@@ -20,11 +20,15 @@ On these spectrograms, we can still see the "ghost" of a chirp: The chirp might 
 
 In this project, I will build a simulated dataset using many chirp parameters and will then try to train a simple convolutional neural network as a binary image classifier to detect these "ghosts" of chirps on spectrogram images.
 
-With the current synthetic dataset (n=15000), I reach a discrimination performance of 98%. But as soon as the frequency traces of chirping fish get close, the current version of the detector falsely assings the same chirp to multiple fish. The plot below illustrated the current state, the first try of detecting on non-artificial data.
+With the current synthetic dataset (n=15000), I reach a discrimination performance of 98%. But as soon as the frequency traces of chirping fish get close, the current version of the detector falsely assings the same chirp to multiple fish. The plot below illustrated the current state on real data.
 
-![current detector](assets/detection_.png)
+![current detector](assets/good_.png)
 
-The black markers are the points were the detector found a chirp. So what the current implementation solves, is reliable detection (on simulated data) but assignment is still an issue. As seen on the plot, when frequency bands are close to each other, one chirp is often detected on two frequency bands. I might be able so solve with an algorithmic approach, similarly to the non-cnn chirp detector.
+The black markers are the points were the detector found a chirp. So what the current implementation solves, is reliable detection (on simulated data) but assignment is still an issue. When frequency bands are close to each other, one chirp is often detected on two frequency bands. This is currently solved by only taking the chirp with the higthest probability in a given time window. The downside is, that this makes it impossible that the detector finds chirps that happen simultaneously in two fish.
+
+Another major issue is noise. I train the detector on artificial data and there is a limit to the variability of the noise I can easily simulate. So the detector is not very robust to noise. I will try to solve this by adding real noise to the training data. The following shows the detectors performance when the amplitude of the fish EODs approaches the noise level. Additionally, just increasing the lower cutoff in the decibel transformation of the power spectrogram solved many false positive detections.
+
+![noise](assets/bad_.png)
 
 **UPDATE:** The chirps that are falsely detected twice for different fish can be sorted by the probability the network computes for each chirp. Simply only accepting the chirp with the highest probability in a given time window (currently 20 ms) completely resolves the issue of duplicates on the current test snippet.
 
@@ -36,6 +40,7 @@ The black markers are the points were the detector found a chirp. So what the cu
   - Note: Here I could borrow methods from the previous chirp detector, that was good at assignment but not so good with detection.
   - Current solution: If the a multiple chirps are detected simultaneously for multiple fish, discarding all chirps except for the one with the highest class probability is sufficient for now to correctly assing chirps. This of course biases the detector to not beeing able to detect simultaneous chirps. So this is **not fully solved**.
 - [x] Understand why detection of real data is completely broken after switching to pytorch gpu accelerated spectrograms. Detection of fake data still works well. There is probably a processing step I either duplicated or left out somewhere. Need to find the time to dig in to this. Before switching, detection worked flawlessly. But had to switch to try out larger datasets.
+  - NOTE: Because the pytorch image interpolation function produces different results than opencv.
 
 ## How it works
 
@@ -136,10 +141,22 @@ To see what is going on there are two plotting snippets that are commented out i
 - [ ] Add a proper terminal interface that provides the most common actions such as training dataset generation, training and detection.
 - [ ] Implement a proper logging system that logs the most important parameters and results to a file.
 - [ ] Implement a proper performance metric for the full detector, not just the CNN. 
+- [ ] Handle the problem of brief broadband artifact that are detected as chirps. This can be done 3 ways:
+  - Incorporate theses kinds of artifacts into the training dataset. This is probably the most elegant solution.
+  - Increase the vertical window height so that all chirps fit the window and artifacts (which are always larger than the window) are discarded.
+  - Check if the detected chirps have an amplitude trough on the filtered baseline. If not, discard them. This is probably the least elegant but fastest solution.
+- [ ] Implement skipping areas where the amplitude of the frequency band is too low. This should remove some of the false positives.
+- [ ] Implement the sliding window starting at the start of the track instead of the start of the current spectrogram window. This should remove some of the false positives as well.
+- [ ] In the current training dataset are just either frequency bands with a chirp on them or without a chirp on them. But sometimes, the tracks that are used to slide across the frequency bands do not match perfectly, e.g. during a rise. In these cases, the detector often falsely finds chirps. Add windows in which there is no chirp and a misaligned track to the training dataset to prevent this. [This](assets/track_mismatch.png) shows a visualization of the issue.
 
 ## Project log 
+
 - 2023/04/21: On-the-fly spectrogram computation and subsequent chirp detection works. No need to compute extremely large spectrograms before hand anymore. Still some work to do with noise being classified as chirps. But works well in clean windows!
+
 - 2023/04/14: Probably solved the issue that the same chirp is detected twice for two fish. I just take group chirps that are less than 20 ms apart and use only the one with the highest probability reported by the model and discard the rest. Even fancier implementations could use things like the dip in the baseline envelope during a chirp to determine to which fish the chirp truly belongs to.
+
 - 2023/04/13: First time all chirps are correctly assigned on the real data snippet. Decraesed frequency resolution of the training dataset and made windows narrower.
+
 - 2023/04/12: First semi-successfull run on a snippet of real data. 
+
 - 2023/04/09: First successfull run of the detector on synthetic data.
