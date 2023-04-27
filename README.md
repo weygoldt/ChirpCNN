@@ -147,7 +147,7 @@ To see what is going on there are two plotting snippets that are commented out i
   - Check if the detected chirps have an amplitude trough on the filtered baseline. If not, discard them. This is probably the least elegant but fastest solution.
 - [ ] Implement skipping areas where the amplitude of the frequency band is too low. This should remove some of the false positives.
 - [ ] Implement the sliding window starting at the start of the track instead of the start of the current spectrogram window. This should remove some of the false positives as well.
-- [ ] In the current training dataset are just either frequency bands with a chirp on them or without a chirp on them. But sometimes, the tracks that are used to slide across the frequency bands do not match perfectly, e.g. during a rise. In these cases, the detector often falsely finds chirps. Add windows in which there is no chirp and a misaligned track to the training dataset to prevent this.
+- [ ] In the current training dataset are just either frequency bands with a chirp on them or without a chirp on them. But sometimes, the tracks that are used to slide across the frequency bands do not match perfectly, e.g. during a rise. In these cases, the detector often falsely finds chirps. Add windows in which there is no chirp and a misaligned track to the training dataset to prevent this. [This](assets/track_mismatch.png) shows a visualization of the issue.
 
 ## Project log 
 
