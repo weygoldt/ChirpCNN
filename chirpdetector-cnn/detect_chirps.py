@@ -124,6 +124,7 @@ def detect_chirps(
             spec_freqs < conf.vertical_noise_band_upper_freq_limit, :
         ]
         noise_profile = torch.mean(noise_subset, axis=0)
+        noise_profile = noise_profile.cpu().numpy()
         noise_index = np.zeros_like(noise_profile, dtype=bool)
         noise_index[noise_profile > threshold] = True
 
