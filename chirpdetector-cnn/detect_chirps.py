@@ -190,14 +190,14 @@ def detect_chirps(
             prob, label = classify(model, snippet)
 
             # plot the snippet
-            fig, ax = plt.subplots()
-            ax.imshow(snippet[0][0].cpu().numpy(), origin="lower")
-            ax.text(0.5, 0.5, f"{prob:.2f}", color="white", fontsize=20)
-            plt.savefig(f"../anim_plots/{outer_iter}_{iter}.png")
-            plt.cla()
-            plt.clf()
-            plt.close("all")
-            plt.close(fig)
+            # fig, ax = plt.subplots()
+            # ax.imshow(snippet[0][0].cpu().numpy(), origin="lower")
+            # ax.text(0.5, 0.5, f"{prob:.2f}", color="white", fontsize=20)
+            # plt.savefig(f"../anim_plots/{outer_iter}_{iter}.png")
+            # plt.cla()
+            # plt.clf()
+            # plt.close("all")
+            # plt.close(fig)
 
             # save the predictions and the center time and frequency
             pred_labels.append(label)
@@ -410,37 +410,37 @@ class Detector:
             chirps.extend(chunk_chirps)
 
             # plot
-            # if len(chunk_chirps) > 0:
-            fig, ax = plt.subplots(1, 1, figsize=(10, 5))
-            specshow(
-                spec.cpu().numpy(),
-                spec_times,
-                spec_freqs,
-                ax,
-                aspect="auto",
-                origin="lower",
-            )
-            for chirp in chunk_chirps:
-                ax.scatter(
-                    chirp[0],
-                    chirp[1],
-                    facecolors="white",
-                    edgecolors="black",
-                    s=30,
+            if len(chunk_chirps) > 0:
+                fig, ax = plt.subplots(1, 1, figsize=(10, 5))
+                specshow(
+                    spec.cpu().numpy(),
+                    spec_times,
+                    spec_freqs,
+                    ax,
+                    aspect="auto",
+                    origin="lower",
                 )
-                ax.text(
-                    chirp[0] + 0.1,
-                    chirp[1] + 30,
-                    np.round(chirp[2], 2),
-                    fontsize=10,
-                    color="white",
-                )
-            ax.set_ylim(0, 1200)
-            plt.savefig(f"{conf.testing_data_path}/chirp_detection_{i}.png")
-            plt.cla()
-            plt.clf()
-            plt.close("all")
-            plt.close(fig)
+                for chirp in chunk_chirps:
+                    ax.scatter(
+                        chirp[0],
+                        chirp[1],
+                        facecolors="white",
+                        edgecolors="black",
+                        s=30,
+                    )
+                    ax.text(
+                        chirp[0] + 0.1,
+                        chirp[1] + 30,
+                        np.round(chirp[2], 2),
+                        fontsize=10,
+                        color="white",
+                    )
+                ax.set_ylim(0, 1200)
+                plt.savefig(f"{conf.testing_data_path}/chirp_detection_{i}.png")
+                plt.cla()
+                plt.clf()
+                plt.close("all")
+                plt.close(fig)
 
             del detection_data
             del spec
