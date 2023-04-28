@@ -3,8 +3,8 @@ import math
 import numpy as np
 import torch
 from IPython import embed
-from torchaudio.transforms import AmplitudeToDB, Spectrogram
 from models.modelhandling import check_device
+from torchaudio.transforms import AmplitudeToDB, Spectrogram
 
 device = check_device()
 
@@ -175,5 +175,5 @@ def decibel(spec, trycuda=True):
     else:
         device = torch.device("cpu")
 
-    decibel_of = AmplitudeToDB(stype="power", top_db=45).to(device)
+    decibel_of = AmplitudeToDB(stype="power", top_db=50).to(device)
     return decibel_of(spec)

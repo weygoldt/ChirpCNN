@@ -75,6 +75,52 @@ def select_highest_prob_chirp(grouped_chirps):
     return best_chirps
 
 
+def interpolate(data):
+    track_freqs = []
+    track_idents = []
+    track_indices = []
+    new_times = np.arange(
+        data.track_times[0], data.track_times[-1], conf.stride
+    )
+    index_helper = np.arange(len(new_times))
+    ids = np.unique(data.track_idents[~np.isnan(data.track_idents)])
+    for track_id in ids:
+        start_time = data.track_times[
+            data.track_indices[data.track_idents == track_id][0]
+        ]
+        stop_time = data.track_times[
+            data.track_indices[data.track_idents == track_id][-1]
+        ]
+        times_full = new_times[
+            (new_times >= start_time) & (new_times <= stop_time)
+        ]
+        times_sampled = data.track_times[
+            data.track_indices[data.track_idents == track_id]
+        ]
+        freqs_sampled = data.track_freqs[data.track_idents == track_id]
+        f = interp1d(times_sampled, freqs_sampled, kind="cubic")
+        freqs_interp = f(times_full)
+
+        index_interp = index_helper[
+            (new_times >= start_time) & (new_times <= stop_time)
+        ]
+        ident_interp = np.ones(len(freqs_interp)) * track_id
+
+        track_idents.append(ident_interp)
+        track_indices.append(index_interp)
+        track_freqs.append(freqs_interp)
+
+    track_idents = np.concatenate(track_idents)
+    track_freqs = np.concatenate(track_freqs)
+    track_indices = np.concatenate(track_indices)
+
+    data.track_idents = track_idents
+    data.track_indices = track_indices
+    data.track_freqs = track_freqs
+    data.track_times = new_times
+    return data
+
+
 def classify(model, img):
     with torch.no_grad():
         # img = torch.from_numpy(img).to(device)
@@ -105,6 +151,17 @@ def detect_chirps(
     detect_chirps = []
     iter = 0
 
+    # make blacklisted areas where vertical noise bands are too strong
+    threshold = conf.vertical_noise_band_power_threshold
+    noise_subset = spec[
+        spec_freqs < conf.vertical_noise_band_upper_freq_limit, :
+    ]
+    noise_profile = torch.mean(noise_subset, axis=0)
+    noise_profile = noise_profile.cpu().numpy()
+    noise_index = np.zeros_like(noise_profile, dtype=bool)
+    noise_index[noise_profile > threshold] = True
+    lowamp_index = np.zeros_like(noise_profile, dtype=bool)
+
     for track_id in np.unique(track_idents):
         logger.info(f"Detecting chirps for track {track_id}")
         track = track_freqs[track_idents == track_id]
@@ -114,20 +171,13 @@ def detect_chirps(
         if time[0] > spec_times[-1]:
             continue
 
+        # make blacklisted areas where low amplitude is too low below
+        # the frequency track
+
         pred_labels = []
         pred_probs = []
         center_times = []
         center_freqs = []
-
-        # make blacklisted areas where vertical noise bands are too strong
-        threshold = conf.power_on_track_threshold
-        noise_subset = spec[
-            spec_freqs < conf.vertical_noise_band_upper_freq_limit, :
-        ]
-        noise_profile = torch.mean(noise_subset, axis=0)
-        noise_profile = noise_profile.cpu().numpy()
-        noise_index = np.zeros_like(noise_profile, dtype=bool)
-        noise_index[noise_profile > threshold] = True
 
         for i, window_start in enumerate(window_starts):
             # check again if there is data in this window
@@ -164,8 +214,8 @@ def detect_chirps(
             snippet_freqs = spec_freqs[min_freq_idx:max_freq_idx]
 
             # compute the mean power around the center frequency
-            upper_idx = find_on_time(snippet_freqs, window_center_freq + 10)
-            lower_idx = find_on_time(snippet_freqs, window_center_freq - 10)
+            upper_idx = find_on_time(snippet_freqs, window_center_freq + 5)
+            lower_idx = find_on_time(snippet_freqs, window_center_freq - 5)
             mean = torch.mean(snippet[lower_idx:upper_idx, :])
 
             # skip to next iteration if the power on the spectrogram that lies
@@ -174,7 +224,7 @@ def detect_chirps(
                 logger.info(
                     f"Power on track too low ({mean}), skipping classification"
                 )
-                continue
+                lowamp_index[window_start : window_start + window_size] = True
 
             # normalize snippet
             # still a tensor
@@ -234,7 +284,7 @@ def detect_chirps(
         max_probs = np.asarray(max_probs)
         chirp_id = np.repeat(track_id, len(weighted_times))
 
-        logger.info("Checking if chirps have amplitude troughs...")
+        # logger.info("Removing chirps that are in low power areas ...")
 
         logger.info(f"Found {len(weighted_times)} chirps")
 
@@ -253,7 +303,7 @@ def detect_chirps(
 
     # if there are no chirps, return an empty list
     if len(detect_chirps) == 0:
-        return []
+        return [], [], []
 
     detected_chirps = detected_chirps[detected_chirps[:, 0].argsort()]
 
@@ -270,7 +320,7 @@ def detect_chirps(
 
     logger.info(f"{len(chirps)} survived the sorting process")
 
-    return chirps
+    return chirps, noise_index, lowamp_index
 
 
 class Detector:
@@ -402,7 +452,7 @@ class Detector:
             }
 
             # detect the chirps for the current chunk
-            chunk_chirps = detect_chirps(
+            chunk_chirps, noise, lowamp = detect_chirps(
                 **detection_data, **self.detection_parameters
             )
 
@@ -411,7 +461,7 @@ class Detector:
 
             # plot
             if len(chunk_chirps) > 0:
-                fig, ax = plt.subplots(1, 1, figsize=(10, 5))
+                fig, ax = plt.subplots(1, 1, figsize=(20, 10))
                 specshow(
                     spec.cpu().numpy(),
                     spec_times,
@@ -420,20 +470,35 @@ class Detector:
                     aspect="auto",
                     origin="lower",
                 )
+                ax.plot(
+                    spec_times,
+                    (noise * 1000) + 100,
+                    color=ps.gblue1,
+                    linewidth=2,
+                )
+                ax.plot(
+                    spec_times,
+                    (lowamp * 1000) + 100,
+                    color=ps.gblue3,
+                    linewidth=2,
+                )
                 for chirp in chunk_chirps:
                     ax.scatter(
                         chirp[0],
                         chirp[1],
                         facecolors="white",
                         edgecolors="black",
-                        s=30,
+                        s=50,
                     )
                     ax.text(
-                        chirp[0] + 0.1,
-                        chirp[1] + 30,
+                        chirp[0],
+                        chirp[1] + 50,
                         np.round(chirp[2], 2),
-                        fontsize=10,
+                        fontsize=14,
                         color="white",
+                        rotation="vertical",
+                        va="bottom",
+                        ha="center",
                     )
                 ax.set_ylim(0, 1200)
                 plt.savefig(f"{conf.testing_data_path}/chirp_detection_{i}.png")
@@ -488,9 +553,8 @@ def interface():
     return args
 
 
-def main():
-    args = interface()
-    datapath = pathlib.Path(args.path)
+def main(path):
+    datapath = pathlib.Path(path)
     data = load_data(datapath)
     modelpath = conf.save_dir
 
@@ -500,61 +564,21 @@ def main():
     # data = DataSubset(data, start, stop)
     # data.track_times -= data.track_times[0]
 
-    # interpolate the track data
-    track_freqs = []
-    track_idents = []
-    track_indices = []
-    new_times = np.arange(
-        data.track_times[0], data.track_times[-1], conf.stride
-    )
-    index_helper = np.arange(len(new_times))
-    ids = np.unique(data.track_idents[~np.isnan(data.track_idents)])
-    for track_id in ids:
-        start_time = data.track_times[
-            data.track_indices[data.track_idents == track_id][0]
-        ]
-        stop_time = data.track_times[
-            data.track_indices[data.track_idents == track_id][-1]
-        ]
-        times_full = new_times[
-            (new_times >= start_time) & (new_times <= stop_time)
-        ]
-        times_sampled = data.track_times[
-            data.track_indices[data.track_idents == track_id]
-        ]
-        freqs_sampled = data.track_freqs[data.track_idents == track_id]
-        f = interp1d(times_sampled, freqs_sampled, kind="cubic")
-        freqs_interp = f(times_full)
-
-        index_interp = index_helper[
-            (new_times >= start_time) & (new_times <= stop_time)
-        ]
-        ident_interp = np.ones(len(freqs_interp)) * track_id
-
-        track_idents.append(ident_interp)
-        track_indices.append(index_interp)
-        track_freqs.append(freqs_interp)
-
-    track_idents = np.concatenate(track_idents)
-    track_freqs = np.concatenate(track_freqs)
-    track_indices = np.concatenate(track_indices)
-
-    data.track_idents = track_idents
-    data.track_indices = track_indices
-    data.track_freqs = track_freqs
-    data.track_times = new_times
-
+    data = interpolate(data)
     det = Detector(modelpath, data)
     chirp_times, chirp_ids = det.detect()
 
-    logger.info(f"Detected {len(chirp_times)} chirps for {len(ids)} fish.")
+    logger.info(
+        f"Detected {len(chirp_times)} chirps in {np.unique(chirp_ids)} fish."
+    )
     logger.info(f"Saving detected chirps to {datapath}...")
-    # np.save(datapath / "chirp_times.npy", chirp_times)
-    # np.save(datapath / "chirp_ids.npy", chirp_ids)
+    np.save(datapath / "chirp_times.npy", chirp_times)
+    np.save(datapath / "chirp_ids.npy", chirp_ids)
 
 
 if __name__ == "__main__":
     t0 = time.time()
-    main()
+    args = interface()
+    main(args.path)
     t1 = time.time()
     print(f"Time elapsed: {t1 - t0:.2f} s")
