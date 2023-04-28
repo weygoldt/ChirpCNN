@@ -457,7 +457,7 @@ class Detector:
 
             # plot
             if len(chunk_chirps) > 0:
-                fig, ax = plt.subplots(1, 1, figsize=(30, 20))
+                fig, ax = plt.subplots(1, 1, figsize=(20, 10))
                 specshow(
                     spec.cpu().numpy(),
                     spec_times,
@@ -470,7 +470,7 @@ class Detector:
                     spec_times,
                     (noise * 1100) + 100,
                     color="white",
-                    linewidth=1.5,
+                    linewidth=3,
                 )
                 for chirp in chunk_chirps:
                     ax.scatter(
@@ -478,13 +478,13 @@ class Detector:
                         chirp[1],
                         facecolors="white",
                         edgecolors="black",
-                        s=30,
+                        s=50,
                     )
                     ax.text(
                         chirp[0] + 0.1,
                         chirp[1] + 30,
                         np.round(chirp[2], 2),
-                        fontsize=10,
+                        fontsize=20,
                         color="white",
                     )
                 ax.set_ylim(0, 1200)
