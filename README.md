@@ -154,6 +154,8 @@ To see what is going on there are two plotting snippets that are commented out i
 
 ## Project log 
 
+- 2023/04/28: With some denoising and thresholding the minimum power of the frequency band I got the detector performance quite hight on real data. I cannot quantify it yet but the false positives are decreased to approximately 10%.
+
 - 2023/04/21: On-the-fly spectrogram computation and subsequent chirp detection works. No need to compute extremely large spectrograms before hand anymore. Still some work to do with noise being classified as chirps. But works well in clean windows!
 
 - 2023/04/14: Probably solved the issue that the same chirp is detected twice for two fish. I just take group chirps that are less than 20 ms apart and use only the one with the highest probability reported by the model and discard the rest. Even fancier implementations could use things like the dip in the baseline envelope during a chirp to determine to which fish the chirp truly belongs to.
