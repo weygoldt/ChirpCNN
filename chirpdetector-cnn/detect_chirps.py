@@ -160,6 +160,7 @@ def detect_chirps(
     noise_profile = noise_profile.cpu().numpy()
     noise_index = np.zeros_like(noise_profile, dtype=bool)
     noise_index[noise_profile > threshold] = True
+    lowamp_index = np.zeros_like(noise_profile, dtype=bool)
 
     for track_id in np.unique(track_idents):
         logger.info(f"Detecting chirps for track {track_id}")
@@ -210,8 +211,8 @@ def detect_chirps(
             snippet_freqs = spec_freqs[min_freq_idx:max_freq_idx]
 
             # compute the mean power around the center frequency
-            upper_idx = find_on_time(snippet_freqs, window_center_freq + 10)
-            lower_idx = find_on_time(snippet_freqs, window_center_freq - 10)
+            upper_idx = find_on_time(snippet_freqs, window_center_freq + 5)
+            lower_idx = find_on_time(snippet_freqs, window_center_freq - 5)
             mean = torch.mean(snippet[lower_idx:upper_idx, :])
 
             # skip to next iteration if the power on the spectrogram that lies
@@ -220,6 +221,7 @@ def detect_chirps(
                 logger.info(
                     f"Power on track too low ({mean}), skipping classification"
                 )
+                lowamp_index[window_start : window_start + window_size] = True
                 continue
 
             # normalize snippet
@@ -299,7 +301,7 @@ def detect_chirps(
 
     # if there are no chirps, return an empty list
     if len(detect_chirps) == 0:
-        return [], []
+        return [], [], []
 
     detected_chirps = detected_chirps[detected_chirps[:, 0].argsort()]
 
@@ -316,7 +318,7 @@ def detect_chirps(
 
     logger.info(f"{len(chirps)} survived the sorting process")
 
-    return chirps, noise_index
+    return chirps, noise_index, lowamp_index
 
 
 class Detector:
@@ -448,7 +450,7 @@ class Detector:
             }
 
             # detect the chirps for the current chunk
-            chunk_chirps, noise = detect_chirps(
+            chunk_chirps, noise, lowamp = detect_chirps(
                 **detection_data, **self.detection_parameters
             )
 
@@ -468,9 +470,15 @@ class Detector:
                 )
                 ax.plot(
                     spec_times,
-                    (noise * 1100) + 100,
-                    color="white",
-                    linewidth=3,
+                    (noise * 1000) + 100,
+                    color=ps.gblue1,
+                    linewidth=2,
+                )
+                ax.plot(
+                    spec_times,
+                    (lowamp * 1000) + 100,
+                    color=ps.gblue3,
+                    linewidth=2,
                 )
                 for chirp in chunk_chirps:
                     ax.scatter(
@@ -481,11 +489,14 @@ class Detector:
                         s=50,
                     )
                     ax.text(
-                        chirp[0] + 0.1,
+                        chirp[0],
                         chirp[1] + 30,
                         np.round(chirp[2], 2),
-                        fontsize=20,
+                        fontsize=14,
                         color="white",
+                        rotation="vertical",
+                        va="bottom",
+                        ha="center",
                     )
                 ax.set_ylim(0, 1200)
                 plt.savefig(f"{conf.testing_data_path}/chirp_detection_{i}.png")
@@ -556,7 +567,7 @@ def main():
     det = Detector(modelpath, data)
     chirp_times, chirp_ids = det.detect()
 
-    logger.info(f"Detected {len(chirp_times)} chirps for {len(ids)} fish.")
+    logger.info(f"Detected {len(chirp_times)} chirps in total.")
     logger.info(f"Saving detected chirps to {datapath}...")
     # np.save(datapath / "chirp_times.npy", chirp_times)
     # np.save(datapath / "chirp_ids.npy", chirp_ids)
