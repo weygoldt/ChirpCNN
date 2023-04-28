@@ -134,6 +134,7 @@ class DataSubset:
         # convert to numpy arrays
         tracks = np.concatenate(tracks)
         indices = np.concatenate(indices)
+        embed()
         indices -= indices[0]
         idents = np.concatenate(idents)
         time = data.track_times[

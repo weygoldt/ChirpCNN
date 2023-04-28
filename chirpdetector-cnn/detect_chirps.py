@@ -344,7 +344,7 @@ class Detector:
                 idx2 = sint((i + 1) * self.chunksize + self.spectrogram_overlap)
 
             # check if start of the chunk is before the end of the data
-            last_chunk_time = idx1 / self.samplingrate
+            first_chunk_time = idx1 / self.samplingrate
             first_track_time = self.data.track_times[0]
 
             # compute the time of the spectrogram
@@ -355,7 +355,7 @@ class Detector:
                 np.arange(0, self.nfft / 2 + 1) * self.samplingrate / self.nfft
             )
 
-            if last_chunk_time < first_track_time:
+            if first_chunk_time < first_track_time:
                 continue
 
             chunk = DataSubset(self.data, idx1, idx2)
