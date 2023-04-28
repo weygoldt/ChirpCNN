@@ -457,7 +457,7 @@ class Detector:
 
             # plot
             if len(chunk_chirps) > 0:
-                fig, ax = plt.subplots(1, 1, figsize=(10, 5))
+                fig, ax = plt.subplots(1, 1, figsize=(30, 20))
                 specshow(
                     spec.cpu().numpy(),
                     spec_times,

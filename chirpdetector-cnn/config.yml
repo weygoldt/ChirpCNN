@@ -53,4 +53,4 @@ power_on_track_threshold: -75 # the minimum power on the frequency track of a wi
 # blacklist_vertical_noise_bands: True # whether to blacklist vertical noise bands
 vertical_noise_band_upper_freq_limit: 400 # vertical noise bands are evaluated below this frequency in Hz
 vertical_noise_band_time_padding: 0.2 # how much time padding to add to the vertical noise band in s
-min_chirp_prob: 0.85 # minimum probability of a chirp to be classified as a chirp
+min_chirp_prob: 0.80 # minimum probability of a chirp to be classified as a chirp
