@@ -466,7 +466,12 @@ class Detector:
                     aspect="auto",
                     origin="lower",
                 )
-                ax.plot(spec_times, noise * 1200, color="white", linewidth=1.5)
+                ax.plot(
+                    spec_times,
+                    (noise * 1100) + 100,
+                    color="white",
+                    linewidth=1.5,
+                )
                 for chirp in chunk_chirps:
                     ax.scatter(
                         chirp[0],
