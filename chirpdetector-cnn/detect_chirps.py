@@ -225,7 +225,6 @@ def detect_chirps(
                     f"Power on track too low ({mean}), skipping classification"
                 )
                 lowamp_index[window_start : window_start + window_size] = True
-                continue
 
             # normalize snippet
             # still a tensor
