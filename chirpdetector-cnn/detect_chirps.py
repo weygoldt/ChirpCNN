@@ -152,7 +152,7 @@ def detect_chirps(
     iter = 0
 
     # make blacklisted areas where vertical noise bands are too strong
-    threshold = conf.power_on_track_threshold
+    threshold = conf.vertical_noise_band_power_threshold
     noise_subset = spec[
         spec_freqs < conf.vertical_noise_band_upper_freq_limit, :
     ]
@@ -170,6 +170,9 @@ def detect_chirps(
         # check if the track has data in this window
         if time[0] > spec_times[-1]:
             continue
+
+        # make blacklisted areas where low amplitude is too low below
+        # the frequency track
 
         pred_labels = []
         pred_probs = []
@@ -282,7 +285,7 @@ def detect_chirps(
         max_probs = np.asarray(max_probs)
         chirp_id = np.repeat(track_id, len(weighted_times))
 
-        logger.info("Checking if chirps have amplitude troughs...")
+        # logger.info("Removing chirps that are in low power areas ...")
 
         logger.info(f"Found {len(weighted_times)} chirps")
 
@@ -490,7 +493,7 @@ class Detector:
                     )
                     ax.text(
                         chirp[0],
-                        chirp[1] + 30,
+                        chirp[1] + 50,
                         np.round(chirp[2], 2),
                         fontsize=14,
                         color="white",
@@ -551,9 +554,8 @@ def interface():
     return args
 
 
-def main():
-    args = interface()
-    datapath = pathlib.Path(args.path)
+def main(path):
+    datapath = pathlib.Path(path)
     data = load_data(datapath)
     modelpath = conf.save_dir
 
@@ -567,14 +569,17 @@ def main():
     det = Detector(modelpath, data)
     chirp_times, chirp_ids = det.detect()
 
-    logger.info(f"Detected {len(chirp_times)} chirps in total.")
+    logger.info(
+        f"Detected {len(chirp_times)} chirps in {np.unique(chirp_ids)} fish."
+    )
     logger.info(f"Saving detected chirps to {datapath}...")
-    # np.save(datapath / "chirp_times.npy", chirp_times)
-    # np.save(datapath / "chirp_ids.npy", chirp_ids)
+    np.save(datapath / "chirp_times.npy", chirp_times)
+    np.save(datapath / "chirp_ids.npy", chirp_ids)
 
 
 if __name__ == "__main__":
     t0 = time.time()
-    main()
+    args = interface()
+    main(args.path)
     t1 = time.time()
     print(f"Time elapsed: {t1 - t0:.2f} s")
