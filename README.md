@@ -151,6 +151,7 @@ To see what is going on there are two plotting snippets that are commented out i
 - [ ] Remove chirps in lower power area after the track_id loop in the detector function.
 - [ ] Train network on chirps with lower power but higher contrast.
 - [ ] Add cuda to training dataset generation.
+- [ ] Follow [this](https://machinelearningmastery.com/building-a-binary-classification-model-in-pytorch/) tutorial for ROC and k-fold crossvalidation
 
 ## Project log 
 
