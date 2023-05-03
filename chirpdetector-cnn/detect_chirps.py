@@ -413,9 +413,7 @@ class Detector:
                 continue
 
             # compute the spectrogram for all electrodes
-            print(chunk.raw.shape)
             for el in range(self.n_electrodes):
-                print(el)
                 sig = chunk.raw[:, el]
                 # sig = bandpass_filter(
                 #     chunk.raw[:, el], self.samplingrate, *self.passband
