@@ -136,7 +136,6 @@ def detect_chirps(
     model,
     stride,
     window_size,
-    outer_iter,
     spec,
     spec_freqs,
     spec_times,
@@ -409,6 +408,9 @@ class Detector:
                 continue
 
             chunk = DataSubset(self.data, idx1, idx2)
+            if chunk.hasdata is False:
+                logger.info("No data in chunk, skipping...")
+                continue
 
             # compute the spectrogram for all electrodes
             for el in range(self.n_electrodes):
@@ -441,7 +443,6 @@ class Detector:
             # make a detection data dict
             # the spec is still a tensor!
             detection_data = {
-                "outer_iter": i,
                 "spec": spec,
                 "spec_freqs": spec_freqs,
                 "spec_times": spec_times,

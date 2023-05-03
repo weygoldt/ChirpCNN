@@ -134,12 +134,16 @@ class DataSubset:
         # convert to numpy arrays
         tracks = np.concatenate(tracks)
         indices = np.concatenate(indices)
-        embed()
-        indices -= indices[0]
         idents = np.concatenate(idents)
         time = data.track_times[
             (data.track_times >= start_t) & (data.track_times <= stop_t)
         ]
+        if len(time) == 0:
+            self.hasdata = False
+        else:
+            self.hasdata = True
+
+        indices -= indices[0]
         self.track_freqs = tracks
         self.track_idents = idents
         self.track_indices = indices
