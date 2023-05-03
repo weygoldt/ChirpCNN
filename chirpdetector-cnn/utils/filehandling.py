@@ -142,8 +142,8 @@ class DataSubset:
             self.hasdata = False
         else:
             self.hasdata = True
+            indices -= indices[0]
 
-        indices -= indices[0]
         self.track_freqs = tracks
         self.track_idents = idents
         self.track_indices = indices
