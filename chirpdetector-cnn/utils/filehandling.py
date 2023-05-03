@@ -138,7 +138,7 @@ class DataSubset:
         time = data.track_times[
             (data.track_times >= start_t) & (data.track_times <= stop_t)
         ]
-        if len(time) == 0:
+        if len(indices) == 0:
             self.hasdata = False
         else:
             self.hasdata = True
