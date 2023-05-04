@@ -136,6 +136,7 @@ def detect_chirps(
     model,
     stride,
     window_size,
+    outer_iter,
     spec,
     spec_freqs,
     spec_times,
@@ -239,14 +240,14 @@ def detect_chirps(
             prob, label = classify(model, snippet)
 
             # plot the snippet
-            # fig, ax = plt.subplots()
-            # ax.imshow(snippet[0][0].cpu().numpy(), origin="lower")
-            # ax.text(0.5, 0.5, f"{prob:.2f}", color="white", fontsize=20)
-            # plt.savefig(f"../anim_plots/{outer_iter}_{iter}.png")
-            # plt.cla()
-            # plt.clf()
-            # plt.close("all")
-            # plt.close(fig)
+            fig, ax = plt.subplots()
+            ax.imshow(snippet[0][0].cpu().numpy(), origin="lower")
+            ax.text(0.5, 0.5, f"{prob:.2f}", color="white", fontsize=20)
+            plt.savefig(f"../anim_plots/{outer_iter}_{iter}.png")
+            plt.cla()
+            plt.clf()
+            plt.close("all")
+            plt.close(fig)
 
             # save the predictions and the center time and frequency
             pred_labels.append(label)
@@ -445,6 +446,7 @@ class Detector:
             # make a detection data dict
             # the spec is still a tensor!
             detection_data = {
+                "outer_iter": i,
                 "spec": spec,
                 "spec_freqs": spec_freqs,
                 "spec_times": spec_times,
