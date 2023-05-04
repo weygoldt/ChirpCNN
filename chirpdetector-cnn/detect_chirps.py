@@ -414,6 +414,7 @@ class Detector:
                 continue
 
             # compute the spectrogram for all electrodes
+            print(self.n_electrodes)
             for el in range(self.n_electrodes):
                 sig = chunk.raw[:, el]
                 # sig = bandpass_filter(
