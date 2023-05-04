@@ -182,10 +182,12 @@ def detect_chirps(
         for i, window_start in enumerate(window_starts):
             # check again if there is data in this window
             if time[0] > spec_times[window_start + window_size]:
+                logger.info("No data in window, skipping classification")
                 continue
 
             # if skip if current window touches a blacklisted noise band
             if True in noise_index[window_start : window_start + window_size]:
+                logger.info("Noise band in window, skipping classification")
                 continue
 
             # time axis indices
