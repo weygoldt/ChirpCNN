@@ -35,7 +35,10 @@ def resize_tensor_image(image, length):
         image = image.unsqueeze(0)
 
     # Perform resizing using torch.nn.functional.interpolate
-    resized_image = F.interpolate(image, size=(length, length), mode="area")
+    try:
+        resized_image = F.interpolate(image, size=(length, length), mode="area")
+    except:
+        embed()
 
     return resized_image
 

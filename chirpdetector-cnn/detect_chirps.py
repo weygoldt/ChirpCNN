@@ -333,7 +333,7 @@ class Detector:
         self.samplingrate = conf.samplerate
 
         # how many electrodes were used
-        self.n_electrodes = conf.num_electrodes
+        # self.n_electrodes = conf.num_electrodes
 
         # how many samples to shift the spectrogram window
         self.chunksize = conf.samplerate * conf.buffersize
@@ -350,6 +350,7 @@ class Detector:
 
         # load the dataset
         self.data = dataset
+        self.n_electrodes = self.data.raw.shape[1]
 
         # create parameters for the detector
         spec_samplerate = conf.samplerate / self.hop_len
@@ -461,7 +462,6 @@ class Detector:
             chirps.extend(chunk_chirps)
 
             # plot
-            # if len(chunk_chirps) > 0:
             fig, ax = plt.subplots(1, 1, figsize=(20, 10))
             specshow(
                 spec.cpu().numpy(),
@@ -483,24 +483,25 @@ class Detector:
                 color=ps.gblue3,
                 linewidth=2,
             )
-            for chirp in chunk_chirps:
-                ax.scatter(
-                    chirp[0],
-                    chirp[1],
-                    facecolors="white",
-                    edgecolors="black",
-                    s=50,
-                )
-                ax.text(
-                    chirp[0],
-                    chirp[1] + 50,
-                    np.round(chirp[2], 2),
-                    fontsize=14,
-                    color="white",
-                    rotation="vertical",
-                    va="bottom",
-                    ha="center",
-                )
+            if len(chunk_chirps) > 0:
+                for chirp in chunk_chirps:
+                    ax.scatter(
+                        chirp[0],
+                        chirp[1],
+                        facecolors="white",
+                        edgecolors="black",
+                        s=50,
+                    )
+                    ax.text(
+                        chirp[0],
+                        chirp[1] + 50,
+                        np.round(chirp[2], 2),
+                        fontsize=14,
+                        color="white",
+                        rotation="vertical",
+                        va="bottom",
+                        ha="center",
+                    )
             ax.set_ylim(0, 1200)
             plt.savefig(f"{conf.testing_data_path}/chirp_detection_{i}.png")
             plt.cla()
