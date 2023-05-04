@@ -471,19 +471,19 @@ class Detector:
                 aspect="auto",
                 origin="lower",
             )
-            ax.plot(
-                spec_times,
-                (noise * 1000) + 100,
-                color=ps.gblue1,
-                linewidth=2,
-            )
-            ax.plot(
-                spec_times,
-                (lowamp * 1000) + 100,
-                color=ps.gblue3,
-                linewidth=2,
-            )
             if len(chunk_chirps) > 0:
+                ax.plot(
+                    spec_times,
+                    (noise * 1000) + 100,
+                    color=ps.gblue1,
+                    linewidth=2,
+                )
+                ax.plot(
+                    spec_times,
+                    (lowamp * 1000) + 100,
+                    color=ps.gblue3,
+                    linewidth=2,
+                )
                 for chirp in chunk_chirps:
                     ax.scatter(
                         chirp[0],
