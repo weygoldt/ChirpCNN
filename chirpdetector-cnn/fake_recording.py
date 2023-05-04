@@ -7,9 +7,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 from IPython import embed
-
-from simulations.fish_signal import chirps, rises, wavefish_eods
 from models.modelhandling import check_device
+from simulations.fish_signal import chirps, rises, wavefish_eods
 from utils.datahandling import find_on_time
 from utils.filehandling import ConfLoader
 from utils.logger import make_logger
@@ -72,6 +71,31 @@ def main(mode):
             chirp_kurtoses,
             chirp_contrasts,
         )
+
+        # add random noise to the eod amplitude
+        noise_std = np.random.uniform(conf.noise_stds[0], conf.noise_stds[1])
+        noise = np.random.normal(0, noise_std, size=chirp_trace.shape)
+        amplitude_modulation += noise
+
+        # add periods where the EOD amplitude randomly drops to zero
+        num_zeros = np.random.randint(conf.num_zeros[0], conf.num_zeros[1])
+        zero_times = np.random.uniform(0, time[-1], size=num_zeros)
+        zero_durations = np.random.uniform(
+            conf.chirp_durations[0],
+            conf.chirp_durations[1] * 10,
+            size=num_zeros,
+        )
+        _, zero_amplitude_modulation = chirps(
+            0,
+            conf.samplerate,
+            conf.simulation_duration_rec,
+            zero_times,
+            np.zeros_like(zero_times),
+            zero_durations,
+            chirp_kurtoses,
+            np.ones_like(zero_times),
+        )
+        amplitude_modulation *= zero_amplitude_modulation
 
         num_rises = np.random.randint(conf.num_rises[0], conf.num_rises[1])
         rise_times = np.random.uniform(
@@ -139,11 +163,16 @@ def main(mode):
         else:
             recording = np.vstack((recording, noise_recording))
 
+    # add some non-stationary white noise
+    noise_std = np.random.uniform(conf.noise_stds[0], conf.noise_stds[1])
+    noise = noise_std * np.random.randn(len(eod))
+
     recording = recording.T
     outpath = pathlib.Path(conf.testing_data_path)
     outpath.mkdir(parents=True, exist_ok=True)
 
     if mode == "default":
+        print(np.min(recording), np.max(recording))
         for e in range(np.shape(recording)[1]):
             spec, _, _ = spectrogram(
                 recording[:, e],
@@ -159,6 +188,7 @@ def main(mode):
                 spec += spec
 
         spec = decibel(spec, trycuda=False).numpy() / conf.num_electrodes
+        print(np.min(spec), np.max(spec))
 
         # get time and frequency axis
         spec_times = np.arange(0, spec.shape[1]) * hop_length / conf.samplerate
@@ -268,7 +298,7 @@ if __name__ == "__main__":
         )
 
     ax.set_xlim(spec_times[0], spec_times[-1])
-    # ax.set_ylim(np.min(traces) - 100, np.max(traces) + 300)
+    ax.set_ylim(np.min(traces) - 100, np.max(traces) + 300)
     ax.set_xlabel("Time (s)")
     ax.set_ylabel("Frequency (Hz)")
     plt.savefig("../assets/chirps.png")

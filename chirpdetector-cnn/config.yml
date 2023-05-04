@@ -10,17 +10,23 @@ samplerate: 20000 # sampling rate of the simulated and real data
 num_fish: [1, 10] # how many fish will be simulated 
 num_chirps: [10, 30] # how many chirps will be simulated
 num_rises: [0, 3] # how many rises will be simulated
-noise_stds: [0, 0.01] # standard deviation of the noise
+noise_stds: [0, 0.02] # standard deviation of the noise
 num_electrodes: 11 # how many electrodes will be simulated
 eodfs: [300, 1500] # range of the simulated eodfs
-chirp_sizes: [20, 150] # range of the simulated chirp sizes in Hz
-chirp_durations: [0.005, 0.1] # range of the simulated chirp durations in s
+chirp_sizes: [20, 200] # range of the simulated chirp sizes in Hz
+chirp_durations: [0.005, 0.2] # range of the simulated chirp durations in s
 chirp_kurtoses: [0.6, 1.4] # range of the simulated chirp kurtoses (peak shape)
 chirp_contrasts: [0.0, 1.0] # range of the simulated chirp contrasts (amplitude trough)
 rise_sizes: [10, 100] # range of the simulated rise sizes in Hz
 rise_rise_taus: [0.1, 1.5] # range of the simulated rise rise taus in s (how fast the rise starts)
 rise_decay_taus: [2, 15] # range of the simulated rise decay taus in s (how fast the rise ends)
 # frequency_track_samplerate: 3
+num_zeros: [0, 10] # how many times the amplitude can randomly drop to zero
+motion_envelope_f: [0.001, 0.01] # frequency of the motion envelope in Hz
+motion_envelope_a: [0.01, 0.2] # amplitude decrease of the motion envelope in Hz
+vertical_noise_bands: [0, 6] # how many vertical noise bands will be simulated
+vertical_noise_band_widths: [0.01, 4] # range of the simulated vertical noise band widths in seconds 
+vertical_noise_band_stds: [0.1, 0.5] # range of the simulated vertical noise band standard deviations in Hz
 
 # STFT SPECTROGRAM ------
 frequency_resolution: 6  # df = fs / nfft

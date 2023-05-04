@@ -162,6 +162,8 @@ def detect_chirps(
     noise_index[noise_profile > threshold] = True
     lowamp_index = np.zeros_like(noise_profile, dtype=bool)
 
+    embed()
+
     for track_id in np.unique(track_idents):
         logger.info(f"Detecting chirps for track {track_id}")
         track = track_freqs[track_idents == track_id]
