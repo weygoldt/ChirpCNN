@@ -243,14 +243,14 @@ def detect_chirps(
             prob, label = classify(model, snippet)
 
             # plot the snippet
-            fig, ax = plt.subplots()
-            ax.imshow(snippet[0][0].cpu().numpy(), origin="lower")
-            ax.text(0.5, 0.5, f"{prob:.2f}", color="white", fontsize=20)
-            plt.savefig(f"../anim_plots/{outer_iter}_{iter}.png")
-            plt.cla()
-            plt.clf()
-            plt.close("all")
-            plt.close(fig)
+            # fig, ax = plt.subplots()
+            # ax.imshow(snippet[0][0].cpu().numpy(), origin="lower")
+            # ax.text(0.5, 0.5, f"{prob:.2f}", color="white", fontsize=20)
+            # plt.savefig(f"../anim_plots/{outer_iter}_{iter}.png")
+            # plt.cla()
+            # plt.clf()
+            # plt.close("all")
+            # plt.close(fig)
 
             # save the predictions and the center time and frequency
             pred_labels.append(label)
@@ -258,6 +258,8 @@ def detect_chirps(
             center_times.append(center_time)
             center_freqs.append(window_center_freq)
             iter += 1
+
+        embed()
 
         # convert to numpy arrays
         pred_labels = np.asarray(pred_labels)
@@ -571,10 +573,10 @@ def main(path):
     modelpath = conf.save_dir
 
     # for trial of code
-    # start = (3 * 60 * 60 + 6 * 60 + 20) * conf.samplerate
-    # stop = start + 600 * conf.samplerate
-    # data = DataSubset(data, start, stop)
-    # data.track_times -= data.track_times[0]
+    start = (3 * 60 * 60 + 6 * 60 + 40) * conf.samplerate
+    stop = start + 600 * conf.samplerate
+    data = DataSubset(data, start, stop)
+    data.track_times -= data.track_times[0]
 
     data = interpolate(data)
     det = Detector(modelpath, data)
