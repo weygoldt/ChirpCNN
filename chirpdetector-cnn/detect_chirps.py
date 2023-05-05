@@ -9,7 +9,8 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 from IPython import embed
-from models.modelhandling import ChirpNet, check_device, load_model
+from models.audioclassifier import AudioClassifier
+from models.modelhandling import check_device, load_model
 from scipy.interpolate import interp1d
 from utils.datahandling import (
     cluster_peaks,
@@ -34,7 +35,7 @@ from utils.spectrogram import (
 logger = make_logger(__name__)
 conf = ConfLoader("config.yml")
 device = check_device()
-model = ChirpNet
+model = AudioClassifier
 ps = PlotStyle()
 
 
@@ -161,8 +162,6 @@ def detect_chirps(
     noise_index = np.zeros_like(noise_profile, dtype=bool)
     noise_index[noise_profile > threshold] = True
     lowamp_index = np.zeros_like(noise_profile, dtype=bool)
-
-    embed()
 
     for track_id in np.unique(track_idents):
         logger.info(f"Detecting chirps for track {track_id}")
