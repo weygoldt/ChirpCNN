@@ -10,7 +10,7 @@ class AudioClassifier(nn.Module):
 
         # First Convolution Block with Relu and Batch Norm. Use Kaiming Initialization
         self.conv1 = nn.Conv2d(
-            2, 8, kernel_size=(5, 5), stride=(2, 2), padding=(2, 2)
+            1, 8, kernel_size=(5, 5), stride=(2, 2), padding=(2, 2)
         )
         self.relu1 = nn.ReLU()
         self.bn1 = nn.BatchNorm2d(8)
