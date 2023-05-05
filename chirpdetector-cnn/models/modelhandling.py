@@ -19,6 +19,9 @@ def check_device():
     return device
 
 
+device = check_device()
+
+
 def load_model(modelpath, model):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     mod = model().to(device)
