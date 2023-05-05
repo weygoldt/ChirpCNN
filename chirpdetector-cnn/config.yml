@@ -13,14 +13,13 @@ num_rises: [0, 3] # how many rises will be simulated
 noise_stds: [0, 0.02] # standard deviation of the noise
 num_electrodes: 11 # how many electrodes will be simulated
 eodfs: [300, 1500] # range of the simulated eodfs
-chirp_sizes: [20, 200] # range of the simulated chirp sizes in Hz
+chirp_sizes: [80, 200] # range of the simulated chirp sizes in Hz
 chirp_durations: [0.005, 0.2] # range of the simulated chirp durations in s
 chirp_kurtoses: [0.6, 1.4] # range of the simulated chirp kurtoses (peak shape)
 chirp_contrasts: [0.0, 1.0] # range of the simulated chirp contrasts (amplitude trough)
 rise_sizes: [10, 100] # range of the simulated rise sizes in Hz
 rise_rise_taus: [0.1, 1.5] # range of the simulated rise rise taus in s (how fast the rise starts)
 rise_decay_taus: [2, 15] # range of the simulated rise decay taus in s (how fast the rise ends)
-# frequency_track_samplerate: 3
 num_zeros: [0, 3] # how many times the amplitude can randomly drop to zero
 motion_envelope_f: [0.001, 0.01] # frequency of the motion envelope in Hz
 motion_envelope_a: [0.01, 0.2] # amplitude decrease of the motion envelope in Hz
@@ -35,8 +34,8 @@ frequency_resolution: 6  # df = fs / nfft
 overlap_fraction: 0.99  # hanning window overlap
  
 # ROI EXTRACTION ------
-time_pad: 0.15 # window size before and after chirp
-freq_pad: [-100, 200] # window size below and above the chirp
+time_pad: 0.11 # window size before and after chirp
+freq_pad: [-50, 200] # window size below and above the chirp
 img_size_px: 128 # size of the extracted image in pixels. The image will must be square
 
 # CNN MODEL ------
@@ -48,7 +47,7 @@ save_dir: "models/model.pt" # where to save the trained model
 plot_dir: "../assets" # where to save the training plots
 
 # TRAINING DATASET ------
-generations: 2 # how often to generate a new training dataset and extract chirps
+generations: 30 # how often to generate a new training dataset and extract chirps
 
 # DETECTOR CONFIGURATION ------
 detection_data_path: "../testing_data" # where the testing data will be stored

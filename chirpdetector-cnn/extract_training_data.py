@@ -11,9 +11,8 @@ import numpy as np
 import torch
 from IPython import embed
 from matplotlib.patches import Rectangle
+from models.modelhandling import check_device, load_model
 from torch.utils.data import DataLoader, TensorDataset
-
-from models.modelhandling import load_model, check_device
 from utils.datahandling import find_on_time, norm_tensor, resize_tensor_image
 from utils.filehandling import ConfLoader, NumpyLoader
 from utils.logger import make_logger
@@ -124,7 +123,6 @@ class ChirpExtractor:
             )
 
             snippets = np.asarray(snippets)
-            spec_chirp_times = self.data.fill_times[spec_chirp_idx]
 
             chirppath = pathlib.Path(f"{conf.training_data_path}/chirp")
             chirppath.mkdir(parents=True, exist_ok=True)
