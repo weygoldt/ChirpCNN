@@ -10,9 +10,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 from IPython import embed
-from matplotlib.patches import Rectangle
-from models.modelhandling import check_device, load_model
-from torch.utils.data import DataLoader, TensorDataset
+from models.modelhandling import check_device
 from utils.datahandling import find_on_time, norm_tensor, resize_tensor_image
 from utils.filehandling import ConfLoader, NumpyLoader
 from utils.logger import make_logger
