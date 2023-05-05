@@ -2,8 +2,8 @@
 
 import detect_chirps as detect_chirps
 import extract_training_data
-import fake_recording as fake_recording
 import train_model as train_model
+from fake_recording import fake_recording
 from utils.filehandling import ConfLoader
 from utils.logger import make_logger
 
@@ -14,17 +14,8 @@ logger = make_logger(__name__)
 def main():
     for i in range(conf.generations):
         logger.info(f"Generation {i}/{conf.generations}")
-        fake_recording.main("default")
+        fake_recording()
         extract_training_data.main()
-
-    # logger.info("Training model...")
-    # train_model.main()
-
-    # logger.info("Creating new dataset ...")
-    # fake_recording.main("test")
-
-    # logger.info("Detecting chirps ...")
-    # detect_chirps.main()
 
 
 if __name__ == "__main__":
