@@ -244,14 +244,14 @@ def detect_chirps(
             prob = 1 - prob
 
             # plot the snippet
-            # fig, ax = plt.subplots()
-            # ax.imshow(snippet[0][0].cpu().numpy(), origin="lower")
-            # ax.text(0.5, 0.5, f"{prob:.2f}", color="white", fontsize=20)
-            # plt.savefig(f"../anim_plots/{outer_iter}_{iter}.png")
-            # plt.cla()
-            # plt.clf()
-            # plt.close("all")
-            # plt.close(fig)
+            fig, ax = plt.subplots()
+            ax.imshow(snippet[0][0].cpu().numpy(), origin="lower")
+            ax.text(0.5, 0.5, f"{prob:.2f}", color="white", fontsize=20)
+            plt.savefig(f"../anim_plots/{outer_iter}_{iter}.png")
+            plt.cla()
+            plt.clf()
+            plt.close("all")
+            plt.close(fig)
 
             # save the predictions and the center time and frequency
             pred_labels.append(label)
