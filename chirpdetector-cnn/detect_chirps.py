@@ -153,15 +153,15 @@ def detect_chirps(
     iter = 0
 
     # make blacklisted areas where vertical noise bands are too strong
-    threshold = conf.vertical_noise_band_power_threshold
-    noise_subset = spec[
-        spec_freqs < conf.vertical_noise_band_upper_freq_limit, :
-    ]
-    noise_profile = torch.mean(noise_subset, axis=0)
-    noise_profile = noise_profile.cpu().numpy()
-    noise_index = np.zeros_like(noise_profile, dtype=bool)
-    noise_index[noise_profile > threshold] = True
-    lowamp_index = np.zeros_like(noise_profile, dtype=bool)
+    # threshold = conf.vertical_noise_band_power_threshold
+    # noise_subset = spec[
+    #     spec_freqs < conf.vertical_noise_band_upper_freq_limit, :
+    # ]
+    # noise_profile = torch.mean(noise_subset, axis=0)
+    # noise_profile = noise_profile.cpu().numpy()
+    # noise_index = np.zeros_like(noise_profile, dtype=bool)
+    # noise_index[noise_profile > threshold] = True
+    # lowamp_index = np.zeros_like(noise_profile, dtype=bool)
 
     for track_id in np.unique(track_idents):
         logger.info(f"Detecting chirps for track {track_id}")
@@ -187,9 +187,9 @@ def detect_chirps(
                 continue
 
             # if skip if current window touches a blacklisted noise band
-            if True in noise_index[window_start : window_start + window_size]:
-                logger.info("Noise band in window, skipping classification")
-                continue
+            # if True in noise_index[window_start : window_start + window_size]:
+            #     logger.info("Noise band in window, skipping classification")
+            #     continue
 
             # time axis indices
             min_time_index = window_start
@@ -214,20 +214,20 @@ def detect_chirps(
             snippet = spec[
                 min_freq_idx:max_freq_idx, min_time_index:max_time_index
             ]
-            snippet_freqs = spec_freqs[min_freq_idx:max_freq_idx]
+            # snippet_freqs = spec_freqs[min_freq_idx:max_freq_idx]
 
             # compute the mean power around the center frequency
-            upper_idx = find_on_time(snippet_freqs, window_center_freq + 5)
-            lower_idx = find_on_time(snippet_freqs, window_center_freq - 5)
-            mean = torch.mean(snippet[lower_idx:upper_idx, :])
+            # upper_idx = find_on_time(snippet_freqs, window_center_freq + 5)
+            # lower_idx = find_on_time(snippet_freqs, window_center_freq - 5)
+            # mean = torch.mean(snippet[lower_idx:upper_idx, :])
 
             # skip to next iteration if the power on the spectrogram that lies
             # underneath the track is too low
-            if mean < conf.power_on_track_threshold:
-                logger.info(
-                    f"Power on track too low ({mean}), skipping classification"
-                )
-                lowamp_index[window_start : window_start + window_size] = True
+            # if mean < conf.power_on_track_threshold:
+            #     logger.info(
+            #         f"Power on track too low ({mean}), skipping classification"
+            #     )
+            #     lowamp_index[window_start : window_start + window_size] = True
 
             # normalize snippet
             # still a tensor
@@ -306,7 +306,8 @@ def detect_chirps(
 
     # if there are no chirps, return an empty list
     if len(detect_chirps) == 0:
-        return [], [], []
+        return []
+    # [], []
 
     detected_chirps = detected_chirps[detected_chirps[:, 0].argsort()]
 
@@ -323,7 +324,10 @@ def detect_chirps(
 
     logger.info(f"{len(chirps)} survived the sorting process")
 
-    return chirps, noise_index, lowamp_index
+    return (chirps,)
+
+
+# noise_index, lowamp_index
 
 
 class Detector:
@@ -460,7 +464,7 @@ class Detector:
             }
 
             # detect the chirps for the current chunk
-            chunk_chirps, noise, lowamp = detect_chirps(
+            chunk_chirps = detect_chirps(
                 **detection_data, **self.detection_parameters
             )
 
@@ -478,18 +482,18 @@ class Detector:
                 origin="lower",
             )
             if len(chunk_chirps) > 0:
-                ax.plot(
-                    spec_times,
-                    (noise * 1000) + 100,
-                    color=ps.gblue1,
-                    linewidth=2,
-                )
-                ax.plot(
-                    spec_times,
-                    (lowamp * 1000) + 100,
-                    color=ps.gblue3,
-                    linewidth=2,
-                )
+                # ax.plot(
+                #     spec_times,
+                #     (noise * 1000) + 100,
+                #     color=ps.gblue1,
+                #     linewidth=2,
+                # )
+                # ax.plot(
+                #     spec_times,
+                #     (lowamp * 1000) + 100,
+                #     color=ps.gblue3,
+                #     linewidth=2,
+                # )
                 for chirp in chunk_chirps:
                     ax.scatter(
                         chirp[0],

@@ -41,8 +41,6 @@ def viz(dataloader, classes, save=False, path="dataset.png"):
 
 
 def main():
-    save = True
-
     # Initialize dataset and set up dataloaders
     dataset = SpectrogramDataset(conf.training_data_path)
     classes = dataset.class_labels
@@ -79,9 +77,8 @@ def main():
     inference(model, test_loader)
 
     # Save the model
-    if save:
-        logger.info(f"Saving model to {conf.save_dir}")
-        torch.save(model.state_dict(), conf.save_dir)
+    logger.info(f"Saving model to {conf.save_dir}")
+    torch.save(model.state_dict(), conf.save_dir)
 
 
 if __name__ == "__main__":
