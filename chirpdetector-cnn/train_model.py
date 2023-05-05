@@ -76,7 +76,7 @@ def main():
     training(model, train_loader, num_epochs)
 
     # test the model
-    inference(model, test_loader, classes)
+    inference(model, test_loader)
 
     # Save the model
     if save:
