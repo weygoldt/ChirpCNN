@@ -4,6 +4,7 @@ real_data
 anim
 test
 data
+chirpdetector-cnn/models/model.pt
 .vscode
 .python-version
 

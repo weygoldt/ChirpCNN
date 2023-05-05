@@ -241,6 +241,7 @@ def detect_chirps(
 
             # predict the label and probability of the snippet
             prob, label = classify(model, snippet)
+            prob = 1 - prob
 
             # plot the snippet
             # fig, ax = plt.subplots()
@@ -258,8 +259,6 @@ def detect_chirps(
             center_times.append(center_time)
             center_freqs.append(window_center_freq)
             iter += 1
-
-        embed()
 
         # convert to numpy arrays
         pred_labels = np.asarray(pred_labels)
@@ -326,7 +325,7 @@ def detect_chirps(
 
     logger.info(f"{len(chirps)} survived the sorting process")
 
-    return (chirps,)
+    return chirps
 
 
 # noise_index, lowamp_index
