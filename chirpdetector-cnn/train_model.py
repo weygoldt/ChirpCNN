@@ -102,7 +102,6 @@ def main():
                 val_dl=test_loader,
                 criterion=criterion,
             )
-            embed()
 
             train_loss = train_loss / len(train_loader.sampler)
             train_acc = train_correct / len(train_loader.sampler) * 100
