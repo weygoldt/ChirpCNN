@@ -65,7 +65,6 @@ def training(model, train_dl, num_epochs):
             # forward + backward + optimize
             outputs = model(inputs)
             loss = criterion(outputs, labels)
-            loss_tracker.append(loss)
             loss.backward()
             optimizer.step()
             scheduler.step()
@@ -84,6 +83,7 @@ def training(model, train_dl, num_epochs):
                     "[%d, %5d] loss: %.3f"
                     % (epoch + 1, i + 1, running_loss / 10)
                 )
+            loss_tracker.append(loss.cpu().numpy())
 
         # Print stats at the end of the epoch
         num_batches = len(train_dl)
