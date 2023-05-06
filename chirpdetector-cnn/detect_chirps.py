@@ -329,7 +329,7 @@ class Detector:
 
         # load the dataset
         self.data = dataset
-        self.n_electrodes = self.data.raw.shape[1]
+        self.n_electrodes = self.data.n_electrodes
 
         # create parameters for the detector
         spec_samplerate = conf.samplerate / self.hop_len

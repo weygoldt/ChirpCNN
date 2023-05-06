@@ -341,6 +341,9 @@ def fake_recording():
     np.save(outpath / "correct_chirp_time_ids.npy", correct_chirp_time_ids)
 
     # TODO: Maybe add the vertical noise bands to blacklisted times?
+    # TODO: Randomly downmodulate the overall amplitude of some tracks
+    # TODO: Add multielectrode simulation
+    
 
 
 def main():
