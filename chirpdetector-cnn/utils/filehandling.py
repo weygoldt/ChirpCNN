@@ -163,7 +163,7 @@ class NumpyDataset:
         else:
             self.raw = np.load(datapath / "raw.npy", allow_pickle=True)
             self.samplerate = 20000.0
-            if np.shape(self.raw) > 1:
+            if len(np.shape(self.raw)) > 1:
                 self.num_electrodes = self.raw.shape[1]
             else:
                 self.num_electrodes = 1
