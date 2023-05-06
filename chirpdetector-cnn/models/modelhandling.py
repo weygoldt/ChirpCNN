@@ -1,5 +1,6 @@
 import os
 
+import matplotlib.pyplot as plt
 import numpy as np
 import torch
 import torch.nn as nn
@@ -43,6 +44,7 @@ def training(model, train_dl, num_epochs):
     )
 
     # Repeat for each epoch
+    loss_tracker = []
     for epoch in range(num_epochs):
         running_loss = 0.0
         correct_prediction = 0
@@ -63,6 +65,7 @@ def training(model, train_dl, num_epochs):
             # forward + backward + optimize
             outputs = model(inputs)
             loss = criterion(outputs, labels)
+            loss_tracker.append(loss)
             loss.backward()
             optimizer.step()
             scheduler.step()
@@ -89,6 +92,10 @@ def training(model, train_dl, num_epochs):
         print(f"Epoch: {epoch}, Loss: {avg_loss:.2f}, Accuracy: {acc:.2f}")
 
     print("Finished Training")
+    plt.plot(loss_tracker)
+    plt.title("training loss")
+    plt.xlabel("batch")
+    plt.show()
 
 
 def inference(model, val_dl):
