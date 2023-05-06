@@ -300,7 +300,7 @@ def parse_dataset(datapath):
     window_starts = np.random.randint(start_index, stop_index, n_windows)
 
     logger.info(f"Parsing recording ...")
-    for i, start in enumerate(window_starts[8:]):
+    for i, start in enumerate(window_starts):
         logger.info(f"Processing window {i+1}/{n_windows}")
 
         stop = start + window_size
