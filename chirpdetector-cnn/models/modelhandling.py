@@ -45,6 +45,8 @@ def training(model, train_dl, num_epochs):
 
     # Repeat for each epoch
     loss_tracker = []
+    epoch_loss_tracker = []
+    epoch_acc_tracker = []
     for epoch in range(num_epochs):
         running_loss = 0.0
         correct_prediction = 0
@@ -90,11 +92,19 @@ def training(model, train_dl, num_epochs):
         avg_loss = running_loss / num_batches
         acc = correct_prediction / total_prediction
         print(f"Epoch: {epoch}, Loss: {avg_loss:.2f}, Accuracy: {acc:.2f}")
+        epoch_loss_tracker.append(avg_loss.cpu().detach().numpy())
+        epoch_acc_tracker.append(acc.cpi().detach().numpy())
 
     print("Finished Training")
     plt.plot(loss_tracker)
     plt.title("training loss")
     plt.xlabel("batch")
+    plt.show()
+
+    plt.plot(epoch_loss_tracker)
+    plt.plot(epoch_acc_tracker)
+    plt.title("epoch loss and accuracy")
+    plt.xlabel("epoch")
     plt.show()
 
 
