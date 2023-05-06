@@ -139,7 +139,7 @@ class ChirpExtractor:
                 )
             ]:
                 np.save(nochirppath / str(uuid.uuid1()), snip)
-            logger.info(f"Saved {len(number_of_nochirps)} non chirps")
+            logger.info(f"Saved {number_of_nochirps} non chirps")
 
 
 def main():

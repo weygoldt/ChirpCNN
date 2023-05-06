@@ -4,7 +4,14 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 import torch.nn as nn
-from torch.utils.data import Dataset
+from torch.utils.data import (
+    ConcatDataset,
+    DataLoader,
+    Dataset,
+    SubsetRandomSampler,
+    TensorDataset,
+    random_split,
+)
 from utils.logger import make_logger
 
 logger = make_logger(__name__)
@@ -31,108 +38,174 @@ def load_model(modelpath, model):
     return mod
 
 
-def training(model, train_dl, num_epochs):
-    # Loss Function, Optimizer and Scheduler
-    criterion = nn.CrossEntropyLoss()
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
-    scheduler = torch.optim.lr_scheduler.OneCycleLR(
-        optimizer,
-        max_lr=0.001,
-        steps_per_epoch=int(len(train_dl)),
-        epochs=num_epochs,
-        anneal_strategy="linear",
-    )
-
-    # Repeat for each epoch
-    loss_tracker = []
-    epoch_loss_tracker = []
-    epoch_acc_tracker = []
-    for epoch in range(num_epochs):
-        running_loss = 0.0
-        correct_prediction = 0
-        total_prediction = 0
-
-        # Repeat for each batch in the training set
-        for i, data in enumerate(train_dl):
-            # Get the input features and target labels, and put them on the GPU
-            inputs, labels = data[0].to(device), data[1].to(device)
-
-            # Normalize the inputs
-            inputs_m, inputs_s = inputs.mean(), inputs.std()
-            inputs = (inputs - inputs_m) / inputs_s
-
-            # Zero the parameter gradients
-            optimizer.zero_grad()
-
-            # forward + backward + optimize
-            outputs = model(inputs)
-            loss = criterion(outputs, labels)
-            loss.backward()
-            optimizer.step()
-            scheduler.step()
-
-            # Keep stats for Loss and Accuracy
-            running_loss += loss.item()
-
-            # Get the predicted class with the highest score
-            _, prediction = torch.max(outputs, 1)
-            # Count of predictions that matched the target label
-            correct_prediction += (prediction == labels).sum().item()
-            total_prediction += prediction.shape[0]
-
-            if i % 10 == 0:  # print every 10 mini-batches
-                print(
-                    "[%d, %5d] loss: %.3f"
-                    % (epoch + 1, i + 1, running_loss / 10)
-                )
-            loss_tracker.append(loss.cpu().detach().numpy())
-
-        # Print stats at the end of the epoch
-        num_batches = len(train_dl)
-        avg_loss = running_loss / num_batches
-        acc = correct_prediction / total_prediction
-        print(f"Epoch: {epoch}, Loss: {avg_loss:.2f}, Accuracy: {acc:.2f}")
-        epoch_loss_tracker.append(avg_loss)
-        epoch_acc_tracker.append(acc)
-
-    print("Finished Training")
-    plt.plot(loss_tracker)
-    plt.title("training loss")
-    plt.xlabel("batch")
-    plt.show()
-
-    plt.plot(epoch_loss_tracker)
-    plt.plot(epoch_acc_tracker)
-    plt.title("epoch loss and accuracy")
-    plt.xlabel("epoch")
-    plt.show()
-
-
-def inference(model, val_dl):
+def train_epoch(model, train_dl, optimizer, criterion, scheduler):
+    running_loss = 0.0
     correct_prediction = 0
     total_prediction = 0
 
-    # Disable gradient updates
+    # Repeat for each batch in the training set
+    for i, data in enumerate(train_dl):
+        inputs, labels = data[0].to(device), data[1].to(device)
+
+        # TODO: normalize the inputs
+        # normalize the inputs
+        # inputs_m, inputs_s = inputs.mean(), inputs.std()
+        # inputs = (inputs - inputs_m) / inputs_s
+
+        # Zero the parameter gradients
+        optimizer.zero_grad()
+
+        # forward + backward + optimize
+        outputs = model(inputs)
+        loss = criterion(outputs, labels)
+        loss.backward()
+        optimizer.step()
+        scheduler.step()
+
+        # Keep stats for Loss and Accuracy
+        running_loss += loss.item()
+
+        # get predicted class
+        _, prediction = torch.max(outputs, 1)
+
+        # count predictions that match the target label
+        correct_prediction += torch.sum(prediction == labels).item()
+        total_prediction += prediction.shape[0]
+
+        # print statistics every 10 batches
+        if i % 10 == 0:
+            logger.info(
+                f"Batch {i} Loss: {running_loss / (i + 1):.3f} Accuracy: {correct_prediction / total_prediction:.3f}"
+            )
+
+        return running_loss, correct_prediction
+
+
+def validate_epoch(model, val_dl, criterion):
+    valid_loss, val_correct = 0.0, 0
+    model.eval()
     with torch.no_grad():
-        for data in val_dl:
-            # Get the input features and target labels, and put them on the GPU
-            inputs, labels = data[0].to(device), data[1].to(device)
+        for images, labels in val_dl:
+            images, labels = images.to(device), labels.to(device)
+            output = model(images)
+            loss = criterion(output, labels)
+            valid_loss += loss.item() * images.size(0)
+            scores, predictions = torch.max(output.data, 1)
+            val_correct += (predictions == labels).sum().item()
 
-            # Normalize the inputs
-            inputs_m, inputs_s = inputs.mean(), inputs.std()
-            inputs = (inputs - inputs_m) / inputs_s
+    return valid_loss, val_correct
 
-            # Get predictions
-            outputs = model(inputs)
 
-            # Get the predicted class with the highest score
-            _, prediction = torch.max(outputs, 1)
-            # Count of predictions that matched the target label
-            correct_prediction += (prediction == labels).sum().item()
-            total_prediction += prediction.shape[0]
+# def training(model, train_dl, validation_dl, num_epochs):
+#     # Loss Function, Optimizer and Scheduler
+#     criterion = nn.CrossEntropyLoss()
+#     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
+#     scheduler = torch.optim.lr_scheduler.OneCycleLR(
+#         optimizer,
+#         max_lr=0.001,
+#         steps_per_epoch=int(len(train_dl)),
+#         epochs=num_epochs,
+#         anneal_strategy="linear",
+#     )
 
-    acc = correct_prediction / total_prediction
-    print(f"Accuracy: {acc:.2f}, Total items: {total_prediction}")
+#     # Repeat for each epoch
+#     loss_tracker = []
+#     epoch_loss_tracker = []
+#     epoch_acc_tracker = []
+#     for epoch in range(num_epochs):
+#         running_loss = 0.0
+#         correct_prediction = 0
+#         total_prediction = 0
+
+#         train_loss, train_correct = train_epoch(
+#             model, train_dl, optimizer, criterion, scheduler
+#         )
+
+#         valid_loss, val_correct = validate_epoch(
+#             model, validation_dl, criterion
+#         )
+
+# # Repeat for each batch in the training set
+# for i, data in enumerate(train_dl):
+#     # Get the input features and target labels, and put them on the GPU
+#     inputs, labels = data[0].to(device), data[1].to(device)
+
+#     # # Normalize the inputs
+#     # inputs_m, inputs_s = inputs.mean(), inputs.std()
+#     # inputs = (inputs - inputs_m) / inputs_s
+
+#     # Zero the parameter gradients
+#     optimizer.zero_grad()
+
+#     # forward + backward + optimize
+#     outputs = model(inputs)
+#     loss = criterion(outputs, labels)
+#     loss.backward()
+#     optimizer.step()
+#     scheduler.step()
+
+#     # Keep stats for Loss and Accuracy
+#     running_loss += loss.item()
+
+#     # Get the predicted class with the highest score
+#     _, prediction = torch.max(outputs, 1)
+#     # Count of predictions that matched the target label
+#     correct_prediction += (prediction == labels).sum().item()
+#     total_prediction += prediction.shape[0]
+
+#     if i % 10 == 0:  # print every 10 mini-batches
+#         print(
+#             "[%d, %5d] loss: %.3f"
+#             % (epoch + 1, i + 1, running_loss / 10)
+#         )
+#     loss_tracker.append(loss.cpu().detach().numpy())
+
+# Print stats at the end of the epoch
+#     num_batches = len(train_dl)
+#     avg_loss = running_loss / num_batches
+#     acc = correct_prediction / total_prediction
+#     print(f"Epoch: {epoch}, Loss: {avg_loss:.2f}, Accuracy: {acc:.2f}")
+#     epoch_loss_tracker.append(avg_loss)
+#     epoch_acc_tracker.append(acc)
+
+# print("Finished Training")
+# plt.plot(loss_tracker)
+# plt.title("training loss")
+# plt.xlabel("batch")
+# plt.show()
+
+# plt.plot(epoch_loss_tracker)
+# plt.plot(epoch_acc_tracker)
+# plt.title("epoch loss and accuracy")
+# plt.xlabel("epoch")
+# plt.show()
+
+
+# def inference(model, val_dl):
+#     correct_prediction = 0
+#     total_prediction = 0
+
+#     # Disable gradient updates
+#     with torch.no_grad():
+#         for data in val_dl:
+#             # Get the input features and target labels, and put them on the GPU
+#             inputs, labels = data[0].to(device), data[1].to(device)
+
+#             # Normalize the inputs
+#             inputs_m, inputs_s = inputs.mean(), inputs.std()
+#             inputs = (inputs - inputs_m) / inputs_s
+
+#             # Get predictions
+#             outputs = model(inputs)
+
+#             # Get the predicted class with the highest score
+#             _, prediction = torch.max(outputs, 1)
+#             # Count of predictions that matched the target label
+#             correct_prediction += (prediction == labels).sum().item()
+#             total_prediction += prediction.shape[0]
+
+#     acc = correct_prediction / total_prediction
+#     print(f"Accuracy: {acc:.2f}, Total items: {total_prediction}")
 
 
 class SpectrogramDataset(Dataset):
