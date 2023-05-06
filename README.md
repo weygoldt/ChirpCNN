@@ -155,6 +155,10 @@ To see what is going on there are two plotting snippets that are commented out i
 
 ## Project log 
 
+- 2023/05/06: Succesfull tests with new architecture on real data. Added k-fold crossvalidation to the training loop. Working on generating hybrid training datasets by combining simulations with real data.
+
+- 2023/05/05: Succesfully switched to a deeper architecture specifically designed for audio deep learning.
+
 - 2023/04/28: With some denoising and thresholding the minimum power of the frequency band I got the detector performance quite hight on real data. I cannot quantify it yet but the false positives are decreased to approximately 10%.
 
 - 2023/04/21: On-the-fly spectrogram computation and subsequent chirp detection works. No need to compute extremely large spectrograms before hand anymore. Still some work to do with noise being classified as chirps. But works well in clean windows!
