@@ -113,7 +113,7 @@ class DataSubset:
         self.raw = data.raw[start:stop, :]
         start_t = start / self.samplerate
         stop_t = stop / self.samplerate
-        self.n_elecs = data.n_electrodes
+        self.n_electrodes = data.n_electrodes
         tracks = []
         indices = []
         idents = []
