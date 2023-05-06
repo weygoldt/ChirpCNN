@@ -162,6 +162,8 @@ def main():
         )
     )
 
+    # TODO: Add loss and accuracy plots, see here: https://github.com/eugeniaring/Medium-Articles/blob/main/Pytorch/KCV_mnist.ipynb
+
 
 if __name__ == "__main__":
     main()
