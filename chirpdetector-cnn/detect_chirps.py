@@ -152,17 +152,6 @@ def detect_chirps(
     detect_chirps = []
     iter = 0
 
-    # make blacklisted areas where vertical noise bands are too strong
-    # threshold = conf.vertical_noise_band_power_threshold
-    # noise_subset = spec[
-    #     spec_freqs < conf.vertical_noise_band_upper_freq_limit, :
-    # ]
-    # noise_profile = torch.mean(noise_subset, axis=0)
-    # noise_profile = noise_profile.cpu().numpy()
-    # noise_index = np.zeros_like(noise_profile, dtype=bool)
-    # noise_index[noise_profile > threshold] = True
-    # lowamp_index = np.zeros_like(noise_profile, dtype=bool)
-
     for track_id in np.unique(track_idents):
         logger.info(f"Detecting chirps for track {track_id}")
         track = track_freqs[track_idents == track_id]
@@ -185,11 +174,6 @@ def detect_chirps(
             if time[0] > spec_times[window_start + window_size]:
                 logger.info("No data in window, skipping classification")
                 continue
-
-            # if skip if current window touches a blacklisted noise band
-            # if True in noise_index[window_start : window_start + window_size]:
-            #     logger.info("Noise band in window, skipping classification")
-            #     continue
 
             # time axis indices
             min_time_index = window_start
@@ -214,20 +198,6 @@ def detect_chirps(
             snippet = spec[
                 min_freq_idx:max_freq_idx, min_time_index:max_time_index
             ]
-            # snippet_freqs = spec_freqs[min_freq_idx:max_freq_idx]
-
-            # compute the mean power around the center frequency
-            # upper_idx = find_on_time(snippet_freqs, window_center_freq + 5)
-            # lower_idx = find_on_time(snippet_freqs, window_center_freq - 5)
-            # mean = torch.mean(snippet[lower_idx:upper_idx, :])
-
-            # skip to next iteration if the power on the spectrogram that lies
-            # underneath the track is too low
-            # if mean < conf.power_on_track_threshold:
-            #     logger.info(
-            #         f"Power on track too low ({mean}), skipping classification"
-            #     )
-            #     lowamp_index[window_start : window_start + window_size] = True
 
             # normalize snippet
             # still a tensor
@@ -244,14 +214,14 @@ def detect_chirps(
             prob = 1 - prob
 
             # plot the snippet
-            fig, ax = plt.subplots()
-            ax.imshow(snippet[0][0].cpu().numpy(), origin="lower")
-            ax.text(0.5, 0.5, f"{prob:.2f}", color="white", fontsize=20)
-            plt.savefig(f"../anim_plots/{outer_iter}_{iter}.png")
-            plt.cla()
-            plt.clf()
-            plt.close("all")
-            plt.close(fig)
+            # fig, ax = plt.subplots()
+            # ax.imshow(snippet[0][0].cpu().numpy(), origin="lower")
+            # ax.text(0.5, 0.5, f"{prob:.2f}", color="white", fontsize=20)
+            # plt.savefig(f"../anim_plots/{outer_iter}_{iter}.png")
+            # plt.cla()
+            # plt.clf()
+            # plt.close("all")
+            # plt.close(fig)
 
             # save the predictions and the center time and frequency
             pred_labels.append(label)
@@ -414,10 +384,13 @@ class Detector:
                 np.arange(0, self.nfft / 2 + 1) * self.samplingrate / self.nfft
             )
 
+            # skip if the chunk is before the first track
             if first_chunk_time < first_track_time:
                 continue
 
             chunk = DataSubset(self.data, idx1, idx2)
+
+            # check if the chunk has data
             if chunk.hasdata is False:
                 logger.info("No data in chunk, skipping...")
                 continue
@@ -425,10 +398,10 @@ class Detector:
             # compute the spectrogram for all electrodes
             print(self.n_electrodes)
             for el in range(self.n_electrodes):
+                # get the signal for the current electrode
                 sig = chunk.raw[:, el]
-                # sig = bandpass_filter(
-                #     chunk.raw[:, el], self.samplingrate, *self.passband
-                # )
+
+                # compute the spectrogram for the current electrode
                 chunk_spec, _, _ = spectrogram(
                     sig.copy(),
                     self.samplingrate,
@@ -483,18 +456,6 @@ class Detector:
                 origin="lower",
             )
             if len(chunk_chirps) > 0:
-                # ax.plot(
-                #     spec_times,
-                #     (noise * 1000) + 100,
-                #     color=ps.gblue1,
-                #     linewidth=2,
-                # )
-                # ax.plot(
-                #     spec_times,
-                #     (lowamp * 1000) + 100,
-                #     color=ps.gblue3,
-                #     linewidth=2,
-                # )
                 for chirp in chunk_chirps:
                     ax.scatter(
                         chirp[0],
