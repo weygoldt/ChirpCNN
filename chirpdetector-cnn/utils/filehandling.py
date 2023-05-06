@@ -159,7 +159,7 @@ class NumpyDataset:
         if os.path.exists(file):
             self.raw = DataLoader(file, 60.0, 0, channel=-1)
             self.samplerate = self.raw.samplerate
-            self.n_electrodes = self.raw.num_electrodes
+            self.n_electrodes = self.raw.shape[1]
         else:
             self.raw = np.load(datapath / "raw.npy", allow_pickle=True)
             self.samplerate = 20000.0
