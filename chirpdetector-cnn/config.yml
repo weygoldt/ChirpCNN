@@ -1,3 +1,5 @@
+random_seed: 42 # random seed for reproducibility
+
 # SYNTHETIC DATASETS ------
 training_data_path: "../training_data" # were the training data will be stored
 testing_data_path: "../testing_data" # were a single dataset for testing will be stored
@@ -7,7 +9,7 @@ samplerate: 20000 # sampling rate of the simulated and real data
 # The following parameters are boundaries for the random generation of the
 # simulated data. The actual values will be sampled from a uniform distribution
 # between the lower and upper bound. 
-num_fish: [5, 15] # how many fish will be simulated 
+num_fish: [3, 12] # how many fish will be simulated 
 num_chirps: [10, 30] # how many chirps will be simulated
 num_rises: [0, 3] # how many rises will be simulated
 noise_stds: [0, 0.02] # standard deviation of the noise
@@ -18,11 +20,12 @@ chirp_durations: [0.005, 0.2] # range of the simulated chirp durations in s
 chirp_kurtoses: [0.6, 1.4] # range of the simulated chirp kurtoses (peak shape)
 chirp_contrasts: [0.0, 1.0] # range of the simulated chirp contrasts (amplitude trough)
 rise_sizes: [10, 100] # range of the simulated rise sizes in Hz
-rise_rise_taus: [0.1, 1.5] # range of the simulated rise rise taus in s (how fast the rise starts)
+rise_rise_taus: [0.1, 0.5] # range of the simulated rise rise taus in s (how fast the rise starts)
 rise_decay_taus: [2, 15] # range of the simulated rise decay taus in s (how fast the rise ends)
-num_zeros: [0, 3] # how many times the amplitude can randomly drop to zero
-motion_envelope_f: [0.001, 0.01] # frequency of the motion envelope in Hz
-motion_envelope_a: [0.01, 0.2] # amplitude decrease of the motion envelope in Hz
+num_zeros: [0, 10] # how many times the amplitude can randomly drop to zero
+amp_scale: [0.4, 1] # how much the amplitude can randomly scales
+motion_envelope_f: [0.05, 0.01] # frequency of the motion envelope in Hz
+motion_envelope_a: [0.01, 0.3] # amplitude decrease of the motion envelope in Hz
 vertical_noise_bands: [1, 5] # how many vertical noise bands will be simulated
 vertical_noise_band_widths: [0.01, 8] # range of the simulated vertical noise band widths in seconds 
 vertical_noise_band_stds: [0.1, 3] # range of the simulated vertical noise band standard deviations in Hz
@@ -62,3 +65,7 @@ spectrogram_overlap: 1 # how much to overlap the spectrograms in the buffer
 # vertical_noise_band_time_padding: 0.2 # how much time padding to add to the vertical noise band in s
 # vertical_noise_band_power_threshold: -80 # the minimum power of a vertical noise band in dB to be classified as a vertical noise band
 min_chirp_prob: 0.85 # minimum probability of a chirp to be classified as a chirp
+
+
+# Config for hybrid dataset
+windows_per_recording: 5 # how many windows to extract from each recording

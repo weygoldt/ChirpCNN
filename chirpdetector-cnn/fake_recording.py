@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
 
+"""
+Generate a simulated recording with chirps, rises, amplitude drops,
+motion envelope and noise.
+"""
+
 import pathlib
 
 import matplotlib.pyplot as plt
@@ -205,12 +210,17 @@ def add_background_noise(recording):
     return recording
 
 
-def natural_scale(recording):
-    mu = 0
-    std = np.random.uniform(
-        conf.natural_std_range[0], conf.natural_std_range[1]
-    )
-    recording = scale(recording, mu, std)
+def natural_scale(recording, stats=None):
+    if stats is None:
+        mu = 0
+        std = np.random.uniform(
+            conf.natural_std_range[0], conf.natural_std_range[1]
+        )
+        recording = scale(recording, mu, std)
+    else:
+        mu = stats["mu"]
+        std = stats["std"]
+        recording = scale(recording, mu, std)
 
     return recording
 

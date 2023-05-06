@@ -359,6 +359,8 @@ class Detector:
         # number of chunks needed to process the whole dataset
         n_chunks = np.ceil(self.data.raw.shape[0] / self.chunksize).astype(int)
 
+        # TODO: Mask high amplitude vertical noise bands again
+
         chirps = []
         for i in range(n_chunks):
             logger.info(f"Processing chunk {i + 1} of {n_chunks}...")
