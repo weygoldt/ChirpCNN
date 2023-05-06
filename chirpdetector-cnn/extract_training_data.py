@@ -1,9 +1,6 @@
 #!/usr/bin/env python3
 
-# import argparse
 import pathlib
-
-# import shutil
 import uuid
 
 import matplotlib.pyplot as plt
@@ -135,11 +132,14 @@ class ChirpExtractor:
             nochirppath = pathlib.Path(f"{conf.training_data_path}/nochirp")
             nochirppath.mkdir(parents=True, exist_ok=True)
 
+            number_of_nochirps = len(spec_chirp_idx) * 3
             for snip in snippets[
-                np.random.choice(len(snippets), len(spec_chirp_idx * 3))
+                np.random.choice(
+                    len(snippets), number_of_nochirps, replace=False
+                )
             ]:
                 np.save(nochirppath / str(uuid.uuid1()), snip)
-            logger.info(f"Saved {len(spec_chirp_idx)} non chirps")
+            logger.info(f"Saved {len(number_of_nochirps)} non chirps")
 
 
 def main():

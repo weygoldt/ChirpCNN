@@ -77,6 +77,9 @@ def select_highest_prob_chirp(grouped_chirps):
 
 
 def interpolate(data):
+    """
+    Interpolate the tracked frequencies to a regular sampling
+    """
     track_freqs = []
     track_idents = []
     track_indices = []
@@ -123,8 +126,10 @@ def interpolate(data):
 
 
 def classify(model, img):
+    """
+    Classify a spectrogram image
+    """
     with torch.no_grad():
-        # img = torch.from_numpy(img).to(device)
         outputs = model(img)
         probs = F.softmax(outputs, dim=1)
         _, preds = torch.max(outputs, dim=1)
