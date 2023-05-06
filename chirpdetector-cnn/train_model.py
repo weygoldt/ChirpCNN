@@ -99,7 +99,7 @@ def main():
             )
             test_loss, test_correct = validate_epoch(
                 model=model,
-                test_dl=test_loader,
+                val_dl=test_loader,
                 criterion=criterion,
             )
 
