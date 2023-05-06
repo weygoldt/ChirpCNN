@@ -102,6 +102,7 @@ def main():
                 val_dl=test_loader,
                 criterion=criterion,
             )
+            embed()
 
             train_loss = train_loss / len(train_loader.sampler)
             train_acc = train_correct / len(train_loader.sampler) * 100
@@ -128,7 +129,7 @@ def main():
     avg_train_acc = np.mean(history["train_acc"])
     avg_test_acc = np.mean(history["test_acc"])
 
-    print("Performance of {} fold cross validation".format(k))
+    print("Performance of {} fold cross validation".format(kfolds))
     print(
         "Average Training Loss: {:.4f} \t Average Test Loss: {:.4f} \t Average Training Acc: {:.3f} \t Average Test Acc: {:.3f}".format(
             avg_train_loss, avg_test_loss, avg_train_acc, avg_test_acc
