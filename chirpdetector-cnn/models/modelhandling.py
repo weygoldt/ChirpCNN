@@ -39,13 +39,10 @@ def load_model(modelpath, model):
 
 
 def train_epoch(model, train_dl, optimizer, criterion, scheduler):
-    running_loss = 0.0
-    correct_prediction = 0
-    total_prediction = 0
-
-    # Repeat for each batch in the training set
-    for i, data in enumerate(train_dl):
-        inputs, labels = data[0].to(device), data[1].to(device)
+    train_loss, correct_prediction = 0.0, 0.0
+    model.train()
+    for inputs, labels in train_dl:
+        inputs, labels = inputs.to(device), labels.to(device)
 
         # TODO: normalize the inputs
         # normalize the inputs
@@ -63,22 +60,15 @@ def train_epoch(model, train_dl, optimizer, criterion, scheduler):
         scheduler.step()
 
         # Keep stats for Loss and Accuracy
-        running_loss += loss.item()
+        train_loss += loss.item() * inputs.size(0)
 
         # get predicted class
         _, prediction = torch.max(outputs, 1)
 
         # count predictions that match the target label
         correct_prediction += torch.sum(prediction == labels).item()
-        total_prediction += prediction.shape[0]
 
-        # print statistics every 10 batches
-        if i % 10 == 0:
-            logger.info(
-                f"Batch {i} Loss: {running_loss / (i + 1):.3f} Accuracy: {correct_prediction / total_prediction:.3f}"
-            )
-
-        return running_loss, correct_prediction
+    return train_loss, correct_prediction
 
 
 def validate_epoch(model, val_dl, criterion):
@@ -90,7 +80,7 @@ def validate_epoch(model, val_dl, criterion):
             output = model(images)
             loss = criterion(output, labels)
             valid_loss += loss.item() * images.size(0)
-            scores, predictions = torch.max(output.data, 1)
+            _, predictions = torch.max(output.data, 1)
             val_correct += (predictions == labels).sum().item()
 
     return valid_loss, val_correct
