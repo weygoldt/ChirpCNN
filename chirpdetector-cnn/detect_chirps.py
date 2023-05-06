@@ -538,7 +538,8 @@ def main(path):
     modelpath = conf.save_dir
 
     # for trial of code
-    start = (3 * 60 * 60 + 6 * 60 + 40) * conf.samplerate
+    # good chirp times for data: 2022-06-02-10_00
+    start = (3 * 60 * 60 + 6 * 60 + 43.5) * data.raw_rate
     stop = start + 600 * conf.samplerate
     data = DataSubset(data, start, stop)
     data.track_times -= data.track_times[0]
