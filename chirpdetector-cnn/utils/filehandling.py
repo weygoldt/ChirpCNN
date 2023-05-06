@@ -159,14 +159,14 @@ class NumpyDataset:
         if os.path.exists(file):
             self.raw = DataLoader(file, 60.0, 0, channel=-1)
             self.samplerate = self.raw.samplerate
-            self.num_electrodes = self.raw.num_electrodes
+            self.n_electrodes = self.raw.num_electrodes
         else:
             self.raw = np.load(datapath / "raw.npy", allow_pickle=True)
             self.samplerate = 20000.0
             if len(np.shape(self.raw)) > 1:
-                self.num_electrodes = self.raw.shape[1]
+                self.n_electrodes = self.raw.shape[1]
             else:
-                self.num_electrodes = 1
+                self.n_electrodes = 1
 
         self.track_times = np.load(datapath / "times.npy", allow_pickle=True)
         self.track_freqs = np.load(datapath / "fund_v.npy", allow_pickle=True)

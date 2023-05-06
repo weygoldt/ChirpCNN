@@ -343,7 +343,7 @@ def fake_recording():
     # TODO: Maybe add the vertical noise bands to blacklisted times?
     # TODO: Randomly downmodulate the overall amplitude of some tracks
     # TODO: Add multielectrode simulation
-    
+    # TODO: Blacklist areas around the chirp for negative training
 
 
 def main():

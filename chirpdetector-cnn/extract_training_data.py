@@ -136,7 +136,7 @@ class ChirpExtractor:
             nochirppath.mkdir(parents=True, exist_ok=True)
 
             for snip in snippets[
-                np.random.choice(len(snippets), len(spec_chirp_idx))
+                np.random.choice(len(snippets), len(spec_chirp_idx * 3))
             ]:
                 np.save(nochirppath / str(uuid.uuid1()), snip)
             logger.info(f"Saved {len(spec_chirp_idx)} non chirps")
