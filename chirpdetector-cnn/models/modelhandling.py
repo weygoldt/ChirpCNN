@@ -83,7 +83,7 @@ def training(model, train_dl, num_epochs):
                     "[%d, %5d] loss: %.3f"
                     % (epoch + 1, i + 1, running_loss / 10)
                 )
-            loss_tracker.append(loss.cpu().numpy())
+            loss_tracker.append(loss.cpu().detach().numpy())
 
         # Print stats at the end of the epoch
         num_batches = len(train_dl)
