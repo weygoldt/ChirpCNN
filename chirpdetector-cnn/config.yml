@@ -50,8 +50,10 @@ train_size: 0.8 # fraction of the training data to use for training
 save_dir: "models/model.pt" # where to save the trained model
 plot_dir: "../assets" # where to save the training plots
 
-# TRAINING DATASET ------
-generations: 30 # how often to generate a new training dataset and extract chirps
+# TRAINING ------
+generations: 30 # how often to generate a new simulated training dataset and extract chirps
+windows_per_recording: 10 # how many windows to extract from each recording for a hybrid dataset
+training_dataset_bias: 2 # how many times more nochirp windows than chirp windows to use for training
 
 # DETECTOR CONFIGURATION ------
 detection_data_path: "../testing_data" # where the testing data will be stored
@@ -68,4 +70,3 @@ min_chirp_prob: 0.85 # minimum probability of a chirp to be classified as a chir
 
 
 # Config for hybrid dataset
-windows_per_recording: 5 # how many windows to extract from each recording
