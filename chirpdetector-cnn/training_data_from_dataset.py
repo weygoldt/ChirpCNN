@@ -90,7 +90,7 @@ class HybridRec(FakeRec):
             ax.scatter(chirpt, np.ones_like(chirpt) * f[0], color="red", s=10)
 
         ax.set_ylim(conf.eodfs[0] - 100, conf.eodfs[1] + 100)
-        plt.savefig(path / "hybrid.png")
+        plt.savefig(path)
         logger.info(f"Saved hybrid recording plot to {path}")
 
         plt.cla()
@@ -299,7 +299,7 @@ def parse_dataset(datapath):
 
     window_starts = np.random.randint(start_index, stop_index, n_windows)
 
-    logger.info(f"Parsing recording ...")
+    logger.info(f"Parsing recording {datapath}...")
     for i, start in enumerate(window_starts):
         logger.info(f"Processing window {i+1}/{n_windows}")
 
@@ -326,7 +326,7 @@ def parse_dataset(datapath):
         path = Path(conf.testing_data_path)
         path.mkdir(parents=True, exist_ok=True)
         hybrid.plot(path)
-        hybrid.save(path)
+        hybrid.save(path / f"hybrid_{i}.png")
 
         # run the data extractor on the hybrid recording
         extract_data()
