@@ -325,8 +325,8 @@ def parse_dataset(datapath):
         # save and plot
         path = Path(conf.testing_data_path)
         path.mkdir(parents=True, exist_ok=True)
-        hybrid.plot(path)
-        hybrid.save(path / f"{i}.png")
+        hybrid.plot(path / f"hybrid_{i}.png")
+        hybrid.save(path)
 
         # run the data extractor on the hybrid recording
         extract_data()
