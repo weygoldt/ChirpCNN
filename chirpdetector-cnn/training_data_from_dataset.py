@@ -71,7 +71,7 @@ class HybridRec(FakeRec):
         logger.info(f"Saved hybrid recording to {path}")
 
     def plot(self, path):
-        fig, ax = plt.subplots(figsize=(20, 10))
+        fig, ax = plt.subplots(figsize=(20, 10), constrained_layout=True)
         specshow(
             self.spec,
             self.spec_times,
