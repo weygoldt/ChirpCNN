@@ -54,6 +54,7 @@ def main():
     batch_size = conf.batch_size
     learning_rate = conf.learning_rate
     kfolds = conf.kfolds
+    torch.manual_seed(42)
     splits = KFold(n_splits=kfolds, shuffle=True, random_state=42)
     history = {
         "train_loss": [],
@@ -62,6 +63,7 @@ def main():
         "test_acc": [],
     }
 
+    foldperf = {}
     for fold, (train_idx, val_idx) in enumerate(
         splits.split(np.arange(len(dataset)))
     ):
@@ -123,6 +125,8 @@ def main():
             history["train_acc"].append(train_acc)
             history["test_acc"].append(test_acc)
 
+        foldperf["fold{}".format(fold + 1)] = history
+
     avg_train_loss = np.mean(history["train_loss"])
     avg_test_loss = np.mean(history["test_loss"])
     avg_train_acc = np.mean(history["train_acc"])
@@ -142,6 +146,21 @@ def main():
     embed()
     logger.info(f"Saving model to {conf.save_dir}")
     torch.save(model.state_dict(), conf.save_dir)
+
+    testl_f, tl_f, testa_f, ta_f = [], [], [], []
+    for f in range(1, kfolds + 1):
+        tl_f.append(np.mean(foldperf["fold{}".format(f)]["train_loss"]))
+        testl_f.append(np.mean(foldperf["fold{}".format(f)]["test_loss"]))
+
+        ta_f.append(np.mean(foldperf["fold{}".format(f)]["train_acc"]))
+        testa_f.append(np.mean(foldperf["fold{}".format(f)]["test_acc"]))
+
+    print("Performance of {} fold cross validation".format(k))
+    print(
+        "Average Training Loss: {:.3f} \t Average Test Loss: {:.3f} \t Average Training Acc: {:.2f} \t Average Test Acc: {:.2f}".format(
+            np.mean(tl_f), np.mean(testl_f), np.mean(ta_f), np.mean(testa_f)
+        )
+    )
 
 
 if __name__ == "__main__":

@@ -167,6 +167,7 @@ class NumpyDataset:
                 self.n_electrodes = self.raw.shape[1]
             else:
                 self.n_electrodes = 1
+                self.raw = self.raw[:, np.newaxis]
 
         self.track_times = np.load(datapath / "times.npy", allow_pickle=True)
         self.track_freqs = np.load(datapath / "fund_v.npy", allow_pickle=True)
