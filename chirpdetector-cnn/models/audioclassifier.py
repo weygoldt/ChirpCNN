@@ -2,13 +2,15 @@ import torch
 import torch.nn as nn
 from torch.nn import init
 
+# The model architecture is based on https://gist.github.com/ketanhdoshi/9bce0a7099e18a88246ae15c4b857eb2#file-sound_classification_model-py
+# TODO: Need to try a pretrained model next time I play with this
+
 
 class AudioClassifier(nn.Module):
     def __init__(self):
         super().__init__()
         conv_layers = []
 
-        # First Convolution Block with Relu and Batch Norm. Use Kaiming Initialization
         self.conv1 = nn.Conv2d(
             1, 8, kernel_size=(5, 5), stride=(2, 2), padding=(2, 2)
         )
@@ -18,7 +20,6 @@ class AudioClassifier(nn.Module):
         self.conv1.bias.data.zero_()
         conv_layers += [self.conv1, self.relu1, self.bn1]
 
-        # Second Convolution Block
         self.conv2 = nn.Conv2d(
             8, 16, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1)
         )
@@ -28,7 +29,6 @@ class AudioClassifier(nn.Module):
         self.conv2.bias.data.zero_()
         conv_layers += [self.conv2, self.relu2, self.bn2]
 
-        # Second Convolution Block
         self.conv3 = nn.Conv2d(
             16, 32, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1)
         )
@@ -38,7 +38,6 @@ class AudioClassifier(nn.Module):
         self.conv3.bias.data.zero_()
         conv_layers += [self.conv3, self.relu3, self.bn3]
 
-        # Second Convolution Block
         self.conv4 = nn.Conv2d(
             32, 64, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1)
         )

@@ -152,6 +152,7 @@ To see what is going on there are two plotting snippets that are commented out i
 - [ ] Train network on chirps with lower power but higher contrast.
 - [ ] Add cuda to training dataset generation.
 - [ ] Follow [this](https://machinelearningmastery.com/building-a-binary-classification-model-in-pytorch/) tutorial for ROC and k-fold crossvalidation
+- [ ] Also try out a ResNet in future like so: https://medium.com/@hasithsura/audio-classification-d37a82d6715 or like so https://towardsdatascience.com/audio-classification-with-deep-learning-in-python-cf752b22ba07
 
 ## Project log 
 

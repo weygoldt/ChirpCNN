@@ -44,7 +44,7 @@ img_size_px: 128 # size of the extracted image in pixels. The image will must be
 # CNN MODEL ------
 num_epochs: 10 # how many epochs to train the model
 batch_size: 10 # how many images to train on at once
-kfolds: 10 # how many folds to use for cross validation
+kfolds: 5 # how many folds to use for cross validation
 learning_rate: 0.001 # learning rate of the optimizer
 train_size: 0.8 # fraction of the training data to use for training
 save_dir: "models/model.pt" # where to save the trained model

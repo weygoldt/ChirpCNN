@@ -77,6 +77,13 @@ def main():
         test_loader = DataLoader(
             dataset, batch_size=batch_size, sampler=test_sampler
         )
+        if fold == 0:
+            viz(
+                train_loader,
+                classes,
+                save=True,
+                path=conf.plot_dir + "/dataset.png",
+            )
 
         model = AudioClassifier().to(device)
 
@@ -141,9 +148,6 @@ def main():
 
     # viz(train_loader, classes, save=True, path=conf.plot_dir + "/dataset.png")
 
-    # Save the model
-
-    embed()
     logger.info(f"Saving model to {conf.save_dir}")
     torch.save(model.state_dict(), conf.save_dir)
 
@@ -151,7 +155,6 @@ def main():
     for f in range(1, kfolds + 1):
         tl_f.append(np.mean(foldperf["fold{}".format(f)]["train_loss"]))
         testl_f.append(np.mean(foldperf["fold{}".format(f)]["test_loss"]))
-
         ta_f.append(np.mean(foldperf["fold{}".format(f)]["train_acc"]))
         testa_f.append(np.mean(foldperf["fold{}".format(f)]["test_acc"]))
 
@@ -162,7 +165,67 @@ def main():
         )
     )
 
-    # TODO: Add loss and accuracy plots, see here: https://github.com/eugeniaring/Medium-Articles/blob/main/Pytorch/KCV_mnist.ipynb
+    diz_ep = {
+        "train_loss_ep": [],
+        "test_loss_ep": [],
+        "train_acc_ep": [],
+        "test_acc_ep": [],
+    }
+
+    for i in range(num_epochs):
+        diz_ep["train_loss_ep"].append(
+            np.mean(
+                [
+                    foldperf["fold{}".format(f + 1)]["train_loss"][i]
+                    for f in range(k)
+                ]
+            )
+        )
+        diz_ep["test_loss_ep"].append(
+            np.mean(
+                [
+                    foldperf["fold{}".format(f + 1)]["test_loss"][i]
+                    for f in range(k)
+                ]
+            )
+        )
+        diz_ep["train_acc_ep"].append(
+            np.mean(
+                [
+                    foldperf["fold{}".format(f + 1)]["train_acc"][i]
+                    for f in range(k)
+                ]
+            )
+        )
+        diz_ep["test_acc_ep"].append(
+            np.mean(
+                [
+                    foldperf["fold{}".format(f + 1)]["test_acc"][i]
+                    for f in range(k)
+                ]
+            )
+        )
+        # Plot losses
+        plt.figure(figsize=(20, 10))
+        plt.semilogy(diz_ep["train_loss_ep"], label="Train")
+        plt.semilogy(diz_ep["test_loss_ep"], label="Test")
+        plt.xlabel("Epoch")
+        plt.ylabel("Loss")
+        plt.legend()
+        plt.title("CNN loss")
+        plt.show()
+
+        # Plot accuracies
+        plt.figure(figsize=(20, 10))
+        plt.semilogy(diz_ep["train_acc_ep"], label="Train")
+        plt.semilogy(diz_ep["test_acc_ep"], label="Test")
+        plt.xlabel("Epoch")
+        plt.ylabel("Accuracy")
+        plt.legend()
+        plt.title("CNN accuracy")
+        plt.show()
+
+        # TODO: Add ROC curve
 
 
 if __name__ == "__main__":
