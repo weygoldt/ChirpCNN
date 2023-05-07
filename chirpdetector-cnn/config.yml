@@ -24,10 +24,10 @@ rise_rise_taus: [0.1, 0.5] # range of the simulated rise rise taus in s (how fas
 rise_decay_taus: [2, 15] # range of the simulated rise decay taus in s (how fast the rise ends)
 num_zeros: [0, 10] # how many times the amplitude can randomly drop to zero
 amp_scale: [0.4, 1] # how much the amplitude can randomly scales
-motion_envelope_f: [0.05, 0.01] # frequency of the motion envelope in Hz
-motion_envelope_a: [0.01, 0.3] # amplitude decrease of the motion envelope in Hz
+motion_envelope_f: [0.05, 0.01] # frequency of the motion envelope in Hz, I use a sinusoidal for the motion envelope
+motion_envelope_a: [0.01, 0.3] # amplitude decrease of the motion envelope in Hz, i.e. amp of sin
 vertical_noise_bands: [1, 5] # how many vertical noise bands will be simulated
-vertical_noise_band_widths: [0.01, 8] # range of the simulated vertical noise band widths in seconds 
+vertical_noise_band_widths: [0.005, 8] # range of the simulated vertical noise band widths in seconds 
 vertical_noise_band_stds: [0.1, 3] # range of the simulated vertical noise band standard deviations in Hz
 background_noise_stds: [0.01, 0.5] # range of the simulated background noise standard deviations in Hz
 natural_std_range: [0.0001, 0.001] # to scale the signal to a natural range
