@@ -170,6 +170,8 @@ def main():
         "test_acc_ep": [],
     }
 
+    # TODO: Clean up this mess
+
     for i in range(num_epochs):
         diz_ep["train_loss_ep"].append(
             np.mean(
