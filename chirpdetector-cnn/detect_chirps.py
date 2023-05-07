@@ -174,9 +174,23 @@ def detect_chirps(
         center_times = []
         center_freqs = []
 
-        # window_ranges = window_starts[:, np.newaxis] + np.arange(window_size)
-        # center_time_indices = window_ranges[:, int(window_size / 2)]
-        # center_times = spec_times[center_time_indices]
+        """ I am trying to vectorize this for loop so I can scale instead of norm
+        and it will run faster
+
+        window_ranges = window_starts[:, np.newaxis] + np.arange(window_size)
+        center_time_indices = window_ranges[:, int(window_size / 2)]
+        center_times = spec_times[center_time_indices]
+
+        window_center_track = np.asarray(
+            [find_on_time(time, t, False) for t in center_times]
+        )
+
+        window_center_freq = track[window_center_track]
+
+        window_center_freq_on_spec = np.asarray(
+            [find_on_time(spec_freqs, f) for f in window_center_freq]
+        )
+        """
 
         for i, window_start in enumerate(window_starts):
             # check again if there is data in this window
@@ -407,7 +421,6 @@ class Detector:
                 continue
 
             # compute the spectrogram for all electrodes
-            print(self.n_electrodes)
             for el in range(self.n_electrodes):
                 # get the signal for the current electrode
                 sig = chunk.raw[:, el]

@@ -115,32 +115,32 @@ class DataSubset:
         stop_t = stop / self.samplerate
         self.n_electrodes = data.n_electrodes
         tracks = []
-        powers = []
+        # powers = []
         indices = []
         idents = []
         for track_id in np.unique(
             data.track_idents[~np.isnan(data.track_idents)]
         ):
             track = data.track_freqs[data.track_idents == track_id]
-            power = data.track_powers[data.track_idents == track_id, :]
+            # power = data.track_powers[data.track_idents == track_id, :]
             time = data.track_times[
                 data.track_indices[data.track_idents == track_id]
             ]
             index = data.track_indices[data.track_idents == track_id]
 
             track = track[(time >= start_t) & (time <= stop_t)]
-            power = power[(time >= start_t) & (time <= stop_t), :]
+            # power = power[(time >= start_t) & (time <= stop_t), :]
             index = index[(time >= start_t) & (time <= stop_t)]
             ident = np.repeat(track_id, len(track))
 
             tracks.append(track)
-            powers.append(power)
+            # powers.append(power)
             indices.append(index)
             idents.append(ident)
 
         # convert to numpy arrays
         tracks = np.concatenate(tracks)
-        powers = np.concatenate(powers)
+        # powers = np.concatenate(powers)
         indices = np.concatenate(indices)
         idents = np.concatenate(idents)
         time = data.track_times[
@@ -153,7 +153,7 @@ class DataSubset:
             indices -= indices[0]
 
         self.track_freqs = tracks
-        self.track_powers = powers
+        # self.track_powers = powers
         self.track_idents = idents
         self.track_indices = indices
         self.track_times = time
@@ -182,12 +182,12 @@ class NumpyDataset:
         self.track_freqs = np.load(datapath / "fund_v.npy", allow_pickle=True)
         self.track_indices = np.load(datapath / "idx_v.npy", allow_pickle=True)
         self.track_idents = np.load(datapath / "ident_v.npy", allow_pickle=True)
-        self.track_powers = np.load(datapath / "sign_v.npy", allow_pickle=True)
+        # self.track_powers = np.load(datapath / "sign_v.npy", allow_pickle=True)
 
-        if len(self.track_powers) != len(self.track_freqs):
-            raise ValueError(
-                "Number of tracks and number of powers do not match! Fix dataset!"
-            )
+        # if len(self.track_powers) != len(self.track_freqs):
+        #     raise ValueError(
+        #         "Number of tracks and number of powers do not match! Fix dataset!"
+        #     )
 
     def __repr__(self) -> str:
         return f"NumpyDataset({self.file})"
