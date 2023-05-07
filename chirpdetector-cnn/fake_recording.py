@@ -62,7 +62,11 @@ def zero_envelope(time):
     num_zeros = np.random.randint(conf.num_zeros[0], conf.num_zeros[1])
     zero_times = np.random.uniform(0, time[-1], size=num_zeros)
     zero_durations = np.random.uniform(
-        conf.chirp_durations[0], conf.chirp_durations[1] * 20, size=num_zeros
+        conf.zero_durations[0], conf.zero_durations[1], size=num_zeros
+    )
+
+    zero_modulation = 1 - np.random.uniform(
+        conf.zero_modulations[0], conf.zero_modulations[1], size=num_zeros
     )
     _, zero_envelope = chirps(
         0,
@@ -74,7 +78,7 @@ def zero_envelope(time):
         np.random.uniform(
             conf.chirp_kurtoses[0], conf.chirp_kurtoses[1], size=num_zeros
         ),
-        np.ones_like(zero_times),
+        zero_modulation,
     )
     blacklist = np.ones_like(time, dtype=bool)
     blacklist[zero_envelope < 1] = False
