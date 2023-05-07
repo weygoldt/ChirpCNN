@@ -493,26 +493,26 @@ class Detector:
             chirps.extend(chunk_chirps)
 
             # plot
-            if len(chunk_chirps) > 0:
-                fig, ax = plt.subplots(
-                    1, 1, figsize=(20, 10), constrained_layout=True
-                )
-                specshow(
-                    spec.cpu().numpy(),
+            fig, ax = plt.subplots(
+                1, 1, figsize=(20, 10), constrained_layout=True
+            )
+            specshow(
+                spec.cpu().numpy(),
+                spec_times,
+                spec_freqs,
+                ax,
+                aspect="auto",
+                origin="lower",
+            )
+            if len(noise_index) > 0:
+                ax.fill_between(
                     spec_times,
-                    spec_freqs,
-                    ax,
-                    aspect="auto",
-                    origin="lower",
+                    np.zeros(spec_times.shape),
+                    noise_index * 2000,
+                    color=ps.black,
+                    alpha=0.6,
                 )
-                if len(noise_index) > 0:
-                    ax.fill_between(
-                        spec_times,
-                        np.zeros(spec_times.shape),
-                        noise_index * 2000,
-                        color=ps.black,
-                        alpha=0.6,
-                    )
+            if len(chunk_chirps) > 0:
                 for chirp in chunk_chirps:
                     ax.scatter(
                         chirp[0],
@@ -531,12 +531,12 @@ class Detector:
                         va="bottom",
                         ha="center",
                     )
-                ax.set_ylim(0, 1200)
-                plt.savefig(f"{conf.testing_data_path}/chirp_detection_{i}.png")
-                plt.cla()
-                plt.clf()
-                plt.close("all")
-                plt.close(fig)
+            ax.set_ylim(0, 1200)
+            plt.savefig(f"{conf.testing_data_path}/chirp_detection_{i}.png")
+            plt.cla()
+            plt.clf()
+            plt.close("all")
+            plt.close(fig)
 
             del detection_data
             del spec
