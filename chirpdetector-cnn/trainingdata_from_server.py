@@ -9,6 +9,9 @@ import pathlib
 
 import pandas as pd
 from training_data_from_dataset import parse_dataset
+from utils.logger import make_logger
+
+logger = make_logger(__name__)
 
 
 def main():
@@ -25,7 +28,8 @@ def main():
     # and strip the FUCKING QUOTATION MARKS
     recs = [datapath / p.strip("“”") for p in meta.recording.values]
 
-    for rec in recs:
+    for i, rec in enumerate(recs):
+        logger.info(f"Processing recording {i+1}/{len(recs+1)}")
         parse_dataset(rec)
 
 
