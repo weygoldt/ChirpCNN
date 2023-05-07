@@ -43,7 +43,7 @@ img_size_px: 128 # size of the extracted image in pixels. The image will must be
 
 # CNN MODEL ------
 num_epochs: 10 # how many epochs to train the model
-batch_size: 10 # how many images to train on at once
+batch_size: 100 # how many images to train on at once
 kfolds: 5 # how many folds to use for cross validation
 learning_rate: 0.001 # learning rate of the optimizer
 train_size: 0.8 # fraction of the training data to use for training
@@ -52,7 +52,7 @@ plot_dir: "../assets" # where to save the training plots
 
 # TRAINING ------
 generations: 30 # how often to generate a new simulated training dataset and extract chirps
-windows_per_recording: 10 # how many windows to extract from each recording for a hybrid dataset
+windows_per_recording: 5 # how many windows to extract from each recording for a hybrid dataset
 training_dataset_bias: 2 # how many times more nochirp windows than chirp windows to use for training
 
 # DETECTOR CONFIGURATION ------
@@ -69,4 +69,4 @@ spectrogram_overlap: 1 # how much to overlap the spectrograms in the buffer
 min_chirp_prob: 0.7 # minimum probability of a chirp to be classified as a chirp
 
 
-# Config for hybrid dataset
+upper_spectrum_limit: 2000 # upper frequency limit of the spectrogram in Hz

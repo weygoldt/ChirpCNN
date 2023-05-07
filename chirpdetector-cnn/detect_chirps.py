@@ -222,9 +222,10 @@ def detect_chirps(
                 min_freq_idx:max_freq_idx, min_time_index:max_time_index
             ]
 
+            # this became redundant after scaling to 0 mean and 1 std
             # normalize snippet
             # still a tensor
-            snippet = norm_tensor(snippet)
+            # snippet = norm_tensor(snippet)
 
             # rezise to square as tensor
             snippet = resize_tensor_image(snippet, conf.img_size_px)
@@ -448,6 +449,15 @@ class Detector:
             # .. still a tensor
             spec = decibel(spec)
 
+            # cut off everything outside the upper frequency limit
+            # the spec is still a tensor
+            spec = spec[spec_freqs <= conf.upper_spectrum_limit, :]
+            spec_freqs = spec_freqs[spec_freqs <= conf.upper_spectrum_limit]
+
+            # normalize the spectrogram to zero mean and unit variance
+            # the spec is still a tensor
+            spec = (spec - spec.mean()) / spec.std()
+
             # make a detection data dict
             # the spec is still a tensor!
             detection_data = {
@@ -558,10 +568,10 @@ def main(path):
 
     # for trial of code
     # good chirp times for data: 2022-06-02-10_00
-    start = (3 * 60 * 60 + 6 * 60 + 43.5) * conf.samplerate
-    stop = start + 600 * conf.samplerate
-    data = DataSubset(data, start, stop)
-    data.track_times -= data.track_times[0]
+    # start = (3 * 60 * 60 + 6 * 60 + 43.5) * conf.samplerate
+    # stop = start + 600 * conf.samplerate
+    # data = DataSubset(data, start, stop)
+    # data.track_times -= data.track_times[0]
 
     data = interpolate(data)
     det = Detector(modelpath, data)

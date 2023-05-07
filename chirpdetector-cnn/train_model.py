@@ -205,25 +205,25 @@ def main():
                 ]
             )
         )
-        # Plot losses
-        fig, ax = plt.subplots(1, 2, figsize=(30, 20))
-        ax[0].semilogy(diz_ep["train_loss_ep"], label="Train")
-        ax[0].semilogy(diz_ep["test_loss_ep"], label="Test")
-        ax[0].set_xlabel("Epoch")
-        ax[0].set_ylabel("Loss")
-        ax[0].legend()
-        ax[0].set_title("CNN loss")
+    # Plot losses
+    fig, ax = plt.subplots(1, 2, figsize=(30, 20))
+    ax[0].semilogy(diz_ep["train_loss_ep"], label="Train")
+    ax[0].semilogy(diz_ep["test_loss_ep"], label="Test")
+    ax[0].set_xlabel("Epoch")
+    ax[0].set_ylabel("Loss")
+    ax[0].legend()
+    ax[0].set_title("CNN loss")
 
-        # Plot accuracies
-        ax[1].semilogy(diz_ep["train_acc_ep"], label="Train")
-        ax[1].semilogy(diz_ep["test_acc_ep"], label="Test")
-        ax[1].set_xlabel("Epoch")
-        ax[1].set_ylabel("Accuracy")
-        ax[1].legend()
-        ax[1].set_title("CNN accuracy")
-        plt.show()
+    # Plot accuracies
+    ax[1].semilogy(diz_ep["train_acc_ep"], label="Train")
+    ax[1].semilogy(diz_ep["test_acc_ep"], label="Test")
+    ax[1].set_xlabel("Epoch")
+    ax[1].set_ylabel("Accuracy")
+    ax[1].legend()
+    ax[1].set_title("CNN accuracy")
+    plt.show()
 
-        # TODO: Add ROC curve
+    # TODO: Add ROC curve
 
 
 if __name__ == "__main__":

@@ -19,6 +19,8 @@ ps = PlotStyle()
 device = check_device()
 logger.info(f"Using device {device}")
 
+# TODO: Rewrite data extraction to use the same 10 s steps as the detection loop
+
 
 class ChirpExtractor:
     def __init__(self, dataset):
@@ -53,6 +55,21 @@ class ChirpExtractor:
         window_start_indices = np.arange(
             first_index, last_index - self.window_size, self.stride, dtype=int
         )
+
+        # get spectrogram mean and std for normalization
+        # mu, std = self.data.fill_spec.mean(), self.data.fill_spec.std()
+
+        # cut off unused frequencies
+        self.data.fill_spec = self.data.fill_spec[
+            self.data.fill_freqs <= conf.upper_spectrum_limit, :
+        ]
+        self.data.fill_freqs = self.data.fill_freqs[
+            self.data.fill_freqs <= conf.upper_spectrum_limit
+        ]
+
+        # normalize spectrogram
+        mu, std = self.data.fill_spec.mean(), self.data.fill_spec.std()
+        self.data.fill_spec = (self.data.fill_spec - mu) / std
 
         for track_id in np.unique(self.data.ident_v):
             logger.info(f"Processing track {track_id}...")
@@ -95,7 +112,8 @@ class ChirpExtractor:
                 snippet = torch.from_numpy(snippet)
 
                 # Normalize snippet
-                snippet = norm_tensor(snippet)
+                # snippet = norm_tensor(snippet)
+                # snippet = (snippet - mu) / std
 
                 # Resize snippet
                 snippet = resize_tensor_image(snippet, conf.img_size_px)
