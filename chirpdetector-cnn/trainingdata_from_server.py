@@ -29,7 +29,7 @@ def main():
     recs = [datapath / p.strip("“”") for p in meta.recording.values]
 
     for i, rec in enumerate(recs):
-        logger.info(f"Processing recording {i+1}/{len(recs+1)}")
+        logger.info(f"Processing recording {i+1}/{len(recs)+1}")
         parse_dataset(rec)
 
 
