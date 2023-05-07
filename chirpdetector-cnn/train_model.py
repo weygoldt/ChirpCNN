@@ -221,6 +221,7 @@ def main():
     ax[1].set_ylabel("Accuracy")
     ax[1].legend()
     ax[1].set_title("CNN accuracy")
+    plt.savefig("../training_data/losses.png")
     plt.show()
 
     # TODO: Add ROC curve
