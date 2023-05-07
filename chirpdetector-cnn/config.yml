@@ -22,7 +22,7 @@ chirp_contrasts: [0.0, 1.0] # range of the simulated chirp contrasts (amplitude 
 rise_sizes: [10, 100] # range of the simulated rise sizes in Hz
 rise_rise_taus: [0.1, 0.5] # range of the simulated rise rise taus in s (how fast the rise starts)
 rise_decay_taus: [2, 15] # range of the simulated rise decay taus in s (how fast the rise ends)
-num_zeros: [0, 10] # how many times the amplitude can randomly drop to zero
+num_zeros: [20, 50] # how many times the amplitude can randomly drop to zero
 amp_scale: [0.4, 1] # how much the amplitude can randomly scales
 motion_envelope_f: [0.05, 0.01] # frequency of the motion envelope in Hz, I use a sinusoidal for the motion envelope
 motion_envelope_a: [0.01, 0.3] # amplitude decrease of the motion envelope in Hz, i.e. amp of sin
