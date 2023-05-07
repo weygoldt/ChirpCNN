@@ -157,6 +157,14 @@ def detect_chirps(
     detect_chirps = []
     iter = 0
 
+    # make blacklisted areas where vertical noise bands are too strong
+    threshold = spec.std().cpu().numpy()
+    noise_subset = spec[spec_freqs < 300]
+    noise_profile = torch.mean(noise_subset, axis=0)
+    noise_profile = noise_profile.cpu().numpy()
+    noise_index = np.zeros_like(noise_profile, dtype=bool)
+    noise_index[noise_profile > threshold] = True
+
     for track_id in np.unique(track_idents):
         logger.info(f"Detecting chirps for track {track_id}")
         track = track_freqs[track_idents == track_id]
@@ -196,6 +204,11 @@ def detect_chirps(
             # check again if there is data in this window
             if time[0] > spec_times[window_start + window_size]:
                 logger.info("No data in window, skipping classification")
+                continue
+
+            # if skip if current window touches a blacklisted noise band
+            if True in noise_index[window_start : window_start + window_size]:
+                logger.info("Noise band in window, skipping classification")
                 continue
 
             # time axis indices
@@ -301,7 +314,7 @@ def detect_chirps(
 
     # if there are no chirps, return an empty list
     if len(detect_chirps) == 0:
-        return []
+        return [], noise_index
     # [], []
 
     detected_chirps = detected_chirps[detected_chirps[:, 0].argsort()]
@@ -319,7 +332,7 @@ def detect_chirps(
 
     logger.info(f"{len(chirps)} survived the sorting process")
 
-    return chirps
+    return chirps, noise_index
 
 
 # noise_index, lowamp_index
@@ -472,7 +485,7 @@ class Detector:
             }
 
             # detect the chirps for the current chunk
-            chunk_chirps = detect_chirps(
+            chunk_chirps, noise_index = detect_chirps(
                 **detection_data, **self.detection_parameters
             )
 
@@ -480,16 +493,26 @@ class Detector:
             chirps.extend(chunk_chirps)
 
             # plot
-            fig, ax = plt.subplots(1, 1, figsize=(20, 10))
-            specshow(
-                spec.cpu().numpy(),
-                spec_times,
-                spec_freqs,
-                ax,
-                aspect="auto",
-                origin="lower",
-            )
             if len(chunk_chirps) > 0:
+                fig, ax = plt.subplots(
+                    1, 1, figsize=(20, 10), constrained_layout=True
+                )
+                specshow(
+                    spec.cpu().numpy(),
+                    spec_times,
+                    spec_freqs,
+                    ax,
+                    aspect="auto",
+                    origin="lower",
+                )
+                if len(noise_index) > 0:
+                    ax.fill_between(
+                        spec_times,
+                        np.zeros(spec_times.shape),
+                        noise_index * 2000,
+                        color=ps.black,
+                        alpha=0.6,
+                    )
                 for chirp in chunk_chirps:
                     ax.scatter(
                         chirp[0],
@@ -508,12 +531,12 @@ class Detector:
                         va="bottom",
                         ha="center",
                     )
-            ax.set_ylim(0, 1200)
-            plt.savefig(f"{conf.testing_data_path}/chirp_detection_{i}.png")
-            plt.cla()
-            plt.clf()
-            plt.close("all")
-            plt.close(fig)
+                ax.set_ylim(0, 1200)
+                plt.savefig(f"{conf.testing_data_path}/chirp_detection_{i}.png")
+                plt.cla()
+                plt.clf()
+                plt.close("all")
+                plt.close(fig)
 
             del detection_data
             del spec
@@ -568,7 +591,7 @@ def main(path):
 
     # for trial of code
     # good chirp times for data: 2022-06-02-10_00
-    # start = (3 * 60 * 60 + 6 * 60 + 43.5) * conf.samplerate
+    # start = (3 * 60 * 60 + 6 * 60 + 20) * conf.samplerate
     # stop = start + 600 * conf.samplerate
     # data = DataSubset(data, start, stop)
     # data.track_times -= data.track_times[0]

@@ -16,7 +16,7 @@ noise_stds: [0, 0.02] # standard deviation of the noise
 num_electrodes: 11 # how many electrodes will be simulated
 eodfs: [300, 1500] # range of the simulated eodfs
 chirp_sizes: [80, 200] # range of the simulated chirp sizes in Hz
-chirp_durations: [0.005, 0.2] # range of the simulated chirp durations in s
+chirp_durations: [0.005, 0.1] # range of the simulated chirp durations in s
 chirp_kurtoses: [0.6, 1.4] # range of the simulated chirp kurtoses (peak shape)
 chirp_contrasts: [0.0, 1.0] # range of the simulated chirp contrasts (amplitude trough)
 rise_sizes: [10, 100] # range of the simulated rise sizes in Hz
@@ -43,7 +43,7 @@ img_size_px: 128 # size of the extracted image in pixels. The image will must be
 
 # CNN MODEL ------
 num_epochs: 10 # how many epochs to train the model
-batch_size: 100 # how many images to train on at once
+batch_size: 1000 # how many images to train on at once
 kfolds: 5 # how many folds to use for cross validation
 learning_rate: 0.001 # learning rate of the optimizer
 train_size: 0.8 # fraction of the training data to use for training
@@ -66,7 +66,7 @@ spectrogram_overlap: 1 # how much to overlap the spectrograms in the buffer
 # vertical_noise_band_upper_freq_limit: 400 # vertical noise bands are evaluated below this frequency in Hz
 # vertical_noise_band_time_padding: 0.2 # how much time padding to add to the vertical noise band in s
 # vertical_noise_band_power_threshold: -80 # the minimum power of a vertical noise band in dB to be classified as a vertical noise band
-min_chirp_prob: 0.7 # minimum probability of a chirp to be classified as a chirp
+min_chirp_prob: 0.95 # minimum probability of a chirp to be classified as a chirp
 
 
 upper_spectrum_limit: 2000 # upper frequency limit of the spectrogram in Hz
