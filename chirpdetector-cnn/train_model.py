@@ -146,8 +146,6 @@ def main():
         )
     )
 
-    # viz(train_loader, classes, save=True, path=conf.plot_dir + "/dataset.png")
-
     logger.info(f"Saving model to {conf.save_dir}")
     torch.save(model.state_dict(), conf.save_dir)
 
@@ -158,7 +156,7 @@ def main():
         ta_f.append(np.mean(foldperf["fold{}".format(f)]["train_acc"]))
         testa_f.append(np.mean(foldperf["fold{}".format(f)]["test_acc"]))
 
-    print("Performance of {} fold cross validation".format(k))
+    print("Performance of {} fold cross validation".format(kfolds))
     print(
         "Average Training Loss: {:.3f} \t Average Test Loss: {:.3f} \t Average Training Acc: {:.2f} \t Average Test Acc: {:.2f}".format(
             np.mean(tl_f), np.mean(testl_f), np.mean(ta_f), np.mean(testa_f)
@@ -177,7 +175,7 @@ def main():
             np.mean(
                 [
                     foldperf["fold{}".format(f + 1)]["train_loss"][i]
-                    for f in range(k)
+                    for f in range(kfolds)
                 ]
             )
         )
@@ -185,7 +183,7 @@ def main():
             np.mean(
                 [
                     foldperf["fold{}".format(f + 1)]["test_loss"][i]
-                    for f in range(k)
+                    for f in range(kfolds)
                 ]
             )
         )
@@ -193,7 +191,7 @@ def main():
             np.mean(
                 [
                     foldperf["fold{}".format(f + 1)]["train_acc"][i]
-                    for f in range(k)
+                    for f in range(kfolds)
                 ]
             )
         )
@@ -201,7 +199,7 @@ def main():
             np.mean(
                 [
                     foldperf["fold{}".format(f + 1)]["test_acc"][i]
-                    for f in range(k)
+                    for f in range(kfolds)
                 ]
             )
         )

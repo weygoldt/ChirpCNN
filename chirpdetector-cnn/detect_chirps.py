@@ -174,6 +174,10 @@ def detect_chirps(
         center_times = []
         center_freqs = []
 
+        # window_ranges = window_starts[:, np.newaxis] + np.arange(window_size)
+        # center_time_indices = window_ranges[:, int(window_size / 2)]
+        # center_times = spec_times[center_time_indices]
+
         for i, window_start in enumerate(window_starts):
             # check again if there is data in this window
             if time[0] > spec_times[window_start + window_size]:
