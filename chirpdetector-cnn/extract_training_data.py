@@ -12,7 +12,6 @@ processed in the detection loop (standardized, resized, ...).
 import pathlib
 import uuid
 
-import matplotlib.pyplot as plt
 import numpy as np
 import torch
 from IPython import embed
