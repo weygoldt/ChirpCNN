@@ -5,6 +5,8 @@ Generate a simulated recording with chirps, rises, amplitude drops,
 motion envelope and noise.
 """
 
+# TODO: Implement undershoot after chirp in thunderfish and here
+
 import pathlib
 
 import matplotlib.pyplot as plt
