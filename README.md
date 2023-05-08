@@ -158,6 +158,8 @@ To see what is going on there are two plotting snippets that are commented out i
 
 ## Project log 
 
+- 2023/05/08: Succesfull tests with training on large hybrid dataset. New dataset combined with better data normalization alleviated issues with detections during amplitude drops. Vertical white noise bands with the same duration as chirps are still a problem. Explicitly added them to the training dataset now. Awaiting how this changes performance.
+
 - 2023/05/06: Succesfull tests with new architecture on real data. Added k-fold crossvalidation to the training loop. Working on generating hybrid training datasets by combining simulations with real data.
 
 - 2023/05/05: Succesfully switched to a deeper architecture specifically designed for audio deep learning.
