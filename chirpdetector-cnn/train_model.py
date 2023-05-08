@@ -2,7 +2,9 @@
 
 """
 Uses data saved in the training data path specified in the conf.yml to train 
-the convolutional neural network to detect chirps.
+the convolutional neural network to detect chirps. Model is saved to the specified
+path. Uses k-fold cross validation to evaluate the model. After finished,
+prints perfomance metric to terminal and plots accuracy, loss curves, and ROC curves.
 """
 
 import matplotlib.pyplot as plt
@@ -17,6 +19,7 @@ from models.modelhandling import (
     train_epoch,
     validate_epoch,
 )
+from sklearn.metrics import roc_curve
 from sklearn.model_selection import KFold
 from torch.utils.data import DataLoader, SubsetRandomSampler
 from utils.filehandling import ConfLoader
@@ -116,7 +119,7 @@ def main():
                 optimizer=optimizer,
                 scheduler=scheduler,
             )
-            test_loss, test_correct = validate_epoch(
+            test_loss, test_correct, output, labels = validate_epoch(
                 model=model,
                 val_dl=test_loader,
                 criterion=criterion,
@@ -159,19 +162,14 @@ def main():
     logger.info(f"Saving model to {conf.save_dir}")
     torch.save(model.state_dict(), conf.save_dir)
 
+    logger.info("Testing last time on test set for ROC curve")
+
     testl_f, tl_f, testa_f, ta_f = [], [], [], []
     for f in range(1, kfolds + 1):
         tl_f.append(np.mean(foldperf["fold{}".format(f)]["train_loss"]))
         testl_f.append(np.mean(foldperf["fold{}".format(f)]["test_loss"]))
         ta_f.append(np.mean(foldperf["fold{}".format(f)]["train_acc"]))
         testa_f.append(np.mean(foldperf["fold{}".format(f)]["test_acc"]))
-
-    print("Performance of {} fold cross validation".format(kfolds))
-    print(
-        "Average Training Loss: {:.3f} \t Average Test Loss: {:.3f} \t Average Training Acc: {:.2f} \t Average Test Acc: {:.2f}".format(
-            np.mean(tl_f), np.mean(testl_f), np.mean(ta_f), np.mean(testa_f)
-        )
-    )
 
     diz_ep = {
         "train_loss_ep": [],
@@ -216,7 +214,9 @@ def main():
             )
         )
     # Plot losses
-    fig, ax = plt.subplots(1, 2, figsize=(20, 10), contstrained_layout=True)
+    fig, ax = plt.subplots(
+        1, 3, figsize=(30 * ps.cm, 10 * ps.cm), contstrained_layout=True
+    )
     ax[0].semilogy(diz_ep["train_loss_ep"], label="Train")
     ax[0].semilogy(diz_ep["test_loss_ep"], label="Test")
     ax[0].set_xlabel("Epoch")
@@ -231,6 +231,24 @@ def main():
     ax[1].set_ylabel("Accuracy")
     ax[1].legend()
     ax[1].set_title("CNN accuracy")
+
+    # Plot ROC curve
+    ax[2].plot(
+        [0, 1],
+        [0, 1],
+        linestyle="--",
+        lw=1,
+        color="black",
+        label="Chance",
+        alpha=0.8,
+    )
+
+    fpr, tpr, thresholds = roc_curve(labels, output)
+    ax[3].plot(fpr, tpr)
+    ax[3].title("Receiver Operating Characteristics")
+    ax[3].xlabel("False Positive Rate")
+    ax[3].ylabel("True Positive Rate")
+
     plt.savefig("../testing_data/losses.png")
     plt.show()
 

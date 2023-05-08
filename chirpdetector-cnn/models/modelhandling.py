@@ -83,7 +83,7 @@ def validate_epoch(model, val_dl, criterion):
             _, predictions = torch.max(output.data, 1)
             val_correct += (predictions == labels).sum().item()
 
-    return valid_loss, val_correct
+    return valid_loss, val_correct, output, labels
 
 
 # def training(model, train_dl, validation_dl, num_epochs):

@@ -22,7 +22,6 @@ from utils.datahandling import (
     cluster_peaks,
     find_on_time,
     merge_duplicates,
-    norm_tensor,
     resize_tensor_image,
 )
 from utils.filehandling import ConfLoader, DataSubset, load_data
@@ -508,7 +507,8 @@ class Detector:
             # plot
             if len(chunk_chirps) > 0:
                 fig, ax = plt.subplots(
-                    1, 1, figsize=(20, 10), constrained_layout=True
+                    figsize=(30 * ps.cm, 10 * ps.cm),
+                    constrained_layout=True,
                 )
                 specshow(
                     spec.cpu().numpy(),
