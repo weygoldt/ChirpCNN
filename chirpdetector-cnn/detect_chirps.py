@@ -501,26 +501,26 @@ class Detector:
             chirps.extend(chunk_chirps)
 
             # plot
-            fig, ax = plt.subplots(
-                1, 1, figsize=(20, 10), constrained_layout=True
-            )
-            specshow(
-                spec.cpu().numpy(),
-                spec_times,
-                spec_freqs,
-                ax,
-                aspect="auto",
-                origin="lower",
-            )
-            if len(noise_index) > 0:
-                ax.fill_between(
-                    spec_times,
-                    np.zeros(spec_times.shape),
-                    noise_index * 2000,
-                    color=ps.black,
-                    alpha=0.6,
-                )
             if len(chunk_chirps) > 0:
+                fig, ax = plt.subplots(
+                    1, 1, figsize=(20, 10), constrained_layout=True
+                )
+                specshow(
+                    spec.cpu().numpy(),
+                    spec_times,
+                    spec_freqs,
+                    ax,
+                    aspect="auto",
+                    origin="lower",
+                )
+                if len(noise_index) > 0:
+                    ax.fill_between(
+                        spec_times,
+                        np.zeros(spec_times.shape),
+                        noise_index * 2000,
+                        color=ps.black,
+                        alpha=0.6,
+                    )
                 for chirp in chunk_chirps:
                     ax.scatter(
                         chirp[0],
@@ -539,20 +539,23 @@ class Detector:
                         va="bottom",
                         ha="center",
                     )
-            ax.set_ylim(0, 1200)
-            plt.savefig(
-                f"{conf.testing_data_path}/{str(self.data.path.name)}_{i}.png"
-            )
-            plt.cla()
-            plt.clf()
-            plt.close("all")
-            plt.close(fig)
+                ax.set_ylim(0, 1200)
+                plt.savefig(
+                    f"{conf.testing_data_path}/{str(self.data.path.name)}_{i}.png"
+                )
+                plt.cla()
+                plt.clf()
+                plt.close("all")
+                plt.close(fig)
 
             del detection_data
             del spec
 
         # reformat the detected chirps
         chirps = np.array(chirps)
+        if len(chirps) == 0:
+            return None, None
+
         chirp_times = chirps[:, 0]
         chirp_ids = chirps[:, -1]
 
@@ -601,14 +604,18 @@ def main(path):
 
     # for trial of code
     # good chirp times for data: 2022-06-02-10_00
-    # start = (3 * 60 * 60 + 6 * 60 + 20) * conf.samplerate
-    # stop = start + 600 * conf.samplerate
-    # data = DataSubset(data, start, stop)
-    # data.track_times -= data.track_times[0]
+    start = (3 * 60 * 60 + 6 * 60 + 20) * conf.samplerate
+    stop = start + 600 * conf.samplerate
+    data = DataSubset(data, start, stop)
+    data.track_times -= data.track_times[0]
 
     data = interpolate(data)
     det = Detector(modelpath, data)
     chirp_times, chirp_ids = det.detect()
+
+    if chirp_times is None:
+        logger.info("No chirps detected.")
+        return
 
     logger.info(
         f"Detected {len(chirp_times)} chirps in {np.unique(chirp_ids)} fish."
