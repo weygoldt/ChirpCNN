@@ -3,6 +3,8 @@
 """
 Augment real recordings with fake recordings to create a hybrid dataset
 which should improve the performance of the model on real recordings.
+Takes a single existing dataset with a raw file and the wavetracker arrays 
+and adds simulated fish on top of it based on parameters from the conf.yml file.
 """
 
 from dataclasses import dataclass

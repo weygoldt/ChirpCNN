@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
 
+"""
+Deletes all data in the training data directory.
+"""
+
 import pathlib
 import shutil
 

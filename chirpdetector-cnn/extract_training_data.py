@@ -1,5 +1,14 @@
 #!/usr/bin/env python3
 
+"""
+Takes an artificial or already labeled dataset that must contain chirp times 
+for each fish locations of the critical vertical noise bands and extracts
+snippets of the spectrogram around the chirp times, vertical noise bands and
+other randomly chosen areas. Snippets are saved into the training data path
+specified in the conf.yml. Snippets are preprocessed as they are later 
+processed in the detection loop (standardized, resized, ...).
+"""
+
 import pathlib
 import uuid
 

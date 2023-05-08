@@ -1,4 +1,10 @@
 #!/usr/bin/env python3
+
+"""
+Uses data saved in the training data path specified in the conf.yml to train 
+the convolutional neural network to detect chirps.
+"""
+
 import matplotlib.pyplot as plt
 import numpy as np
 import torch

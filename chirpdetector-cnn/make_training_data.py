@@ -1,5 +1,11 @@
 #!/usr/bin/env python3
 
+"""
+Use the fake_recording module to generate a full training dataset entirely
+consisting of fake recordings. Since hybrid simulations are
+implemented, this is not particularly useful anymore.
+"""
+
 import detect_chirps as detect_chirps
 import extract_training_data
 import train_model as train_model

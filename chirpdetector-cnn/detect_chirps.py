@@ -1,5 +1,11 @@
 #!/usr/bin/env python3
 
+"""
+Detect chirps on a single given dataset that containts a raw file and the wavetracker 
+files. The raw file is used to compute a spectrogram and the wavetracker files are used
+to slide the detector across the tracks of a single fish.
+"""
+
 import argparse
 import pathlib
 import time

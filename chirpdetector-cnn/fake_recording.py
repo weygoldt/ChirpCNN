@@ -2,7 +2,9 @@
 
 """
 Generate a simulated recording with chirps, rises, amplitude drops,
-motion envelope and noise.
+motion envelope and noise. All parameters are bounded by settings in 
+config.yml and are randomly chosen from a uniform distribution 
+for each recording. 
 """
 
 # TODO: Implement undershoot after chirp in thunderfish and here

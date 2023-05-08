@@ -1,3 +1,9 @@
+#!/usr/bin/env python3
+
+"""
+Iterate over all recordings that are usable and detect chirps in them.
+"""
+
 import os
 import pathlib
 from pprint import pprint

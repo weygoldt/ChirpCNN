@@ -1,4 +1,9 @@
-#outpath!/usr/bin/env python3
+#!/usr/bin/env python3
+
+"""
+Generates a simulated recording of Aleptos with chirps, rises and noise.
+All parameters used can be tuned in the conf.yml file. This 
+"""
 
 import argparse
 import pathlib
