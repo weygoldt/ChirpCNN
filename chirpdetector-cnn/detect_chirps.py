@@ -541,7 +541,7 @@ class Detector:
                     )
             ax.set_ylim(0, 1200)
             plt.savefig(
-                f"{conf.testing_data_path}/{str(self.data.path)}_{i}.png"
+                f"{conf.testing_data_path}/{str(self.data.path.name)}_{i}.png"
             )
             plt.cla()
             plt.clf()
