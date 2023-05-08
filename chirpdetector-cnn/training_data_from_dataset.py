@@ -12,7 +12,6 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
-import torch
 from extract_training_data import main as extract_data
 from fake_recording import (
     add_noise,
