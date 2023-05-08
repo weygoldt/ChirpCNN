@@ -102,12 +102,12 @@ To see what is going on there are two plotting snippets that are commented out i
 - [x] Add more variation to the dataset
 - [x] Retrain and test the classifier
 - [ ] Explore how parameters change performance
-  - [ ] CNN parameters (training rate, batch size, ...)
-  - [ ] Image processing, cropping, ...
-  - [ ] Implement image transforms the generalize further 
+  - [x] CNN parameters (training rate, batch size, ...)
+  - [x] Image processing, cropping, ...
+  - [ ] Implement image transforms and augmentation to generalize further 
   - [ ] Look into the ray-tune system for painless hyperparameter optimization
 - [x] Add real data to the classifier
-- [ ] Retrain and test 
+- [x] Retrain and test 
 - [x] Implement window-sliding 
   - [x] Sliding windows + detection in RAM
   - [x] Change sliding window to on-the-fly detection to support larger datasets. Currently it does batch detection
@@ -121,23 +121,23 @@ To see what is going on there are two plotting snippets that are commented out i
   - [x] Currently I use frequency tracks sampled in the same rate as the original signal. Implement, that I can utilize the frequency tracks form the wavetracker instead.
 - [ ] Output validation on real data & simulated grid datasets 
 - [ ] In the animation plotting routine, redo the colors and add the real chirps onto the track of the sliding window
-- [ ] Add a line plot with the estimated probability to the detector
-- [ ] Understand the training loss, etc. Implement a training loss plot that shows how training went. This is absolutely urgent to prevent overfitting!
-- [ ] Implement norm. Until now, each snippet is min-max normed before entering the network. This removes information that could be used during detection.
-  - [ ] Standardize dataset before feeding it to the network and remove min max norm in data simulation script.
-  - [ ] Try batch norming the output of the convolution layers.
-- [ ] Get natural values for the chirp contrast. It from the spectrogram inversion experiment, it seems that natural contrasts are much stronger and could show on a spectrogram. This could be useful for the convnet detection.
-- [ ] Try drastically increase the batch size, e.g. to 100
+- [x] Understand the training loss, etc. Implement a training loss plot that shows how training went. This is absolutely urgent to prevent overfitting!
+- [x] Implement norm. Until now, each snippet is min-max normed before entering the network. This removes information that could be used during detection.
+  - [x] Standardize dataset before feeding it to the network and remove min max norm in data simulation script.
+  - [x] Try batch norming the output of the convolution layers.
+- [x] Get natural values for the chirp contrast. It from the spectrogram inversion experiment, it seems that natural contrasts are much stronger and could show on a spectrogram. This could be useful for the convnet detection.
+- [x] Try drastically increase the batch size, e.g. to 100
 - [x] Implement tensor-based detection on gpu instead of numpy.
-- [ ] Implement the ability to load much larger spectograms without having to load it into ram
+- [x] Implement the ability to load much larger spectograms without having to load it into ram
+  - NOTE: This is not favourable and I switched to on-the-fly spectrogram computation.
 - [x] Implement the creation of large spectrograms on the GPU according to the detection parameters in the config file.
 - [x] Buid a universal dataclass that the detector uses to load data. It should load the minimum amount of data necessary to run the detector and it should be able to load NIX datasets and wavetracker datasets. I am not sure how to implement this yet. Maybe built a seperate class for each and then have a factory that returns the correct class depending on the files in the input folder.
-- [ ] Understand how I can get the probabilities from the cross entropy loss function directly instead of adding a softmax.
+- [x] Understand how I can get the probabilities from the cross entropy loss function directly instead of adding a softmax.
 - [ ] Understand why training dataset spec computation fails on GPU. Implement generalized spec function that uses rolling windows automatically if array size becomes too large.
-- [ ] Instead of the peak prob use the probs to weight the timestamps and compute the mean of that. This should be more accurate. This should also further alleviate the problem of multiple detections of the same chirp.
-- [ ] Move hard coded time tolerance to config and clean and restructure config.
-- [ ] Currently noise is a large problem. I already added a bandpass filter around the frequency that is relevant in the recording. I should also compute the amplitude of the tracks in the recording by indexing the spectrogram matrix and threshold according to that value in the current snippet. That will not remove all but at least some noise that is left in the relevant frequency band.
-- [ ] Currently the start indices for the detection windows start at the beginning of a spectrogram instead of the track on that spectrogram. So if the track only starts in the middle of the current spectrogram, detection will still run before the track starts. This is bad. Change this so that the start indices are always at the beginning of a track if the track does not start at the beginning of the spectrogram.
+- [x] Instead of the peak prob use the probs to weight the timestamps and compute the mean of that. This should be more accurate. This should also further alleviate the problem of multiple detections of the same chirp.
+- [x] Move hard coded time tolerance to config and clean and restructure config.
+- [x] Currently noise is a large problem. I already added a bandpass filter around the frequency that is relevant in the recording. I should also compute the amplitude of the tracks in the recording by indexing the spectrogram matrix and threshold according to that value in the current snippet. That will not remove all but at least some noise that is left in the relevant frequency band.
+- [x] Currently the start indices for the detection windows start at the beginning of a spectrogram instead of the track on that spectrogram. So if the track only starts in the middle of the current spectrogram, detection will still run before the track starts. This is bad. Change this so that the start indices are always at the beginning of a track if the track does not start at the beginning of the spectrogram.
 - [ ] Add a proper terminal interface that provides the most common actions such as training dataset generation, training and detection.
 - [ ] Implement a proper logging system that logs the most important parameters and results to a file.
 - [ ] Implement a proper performance metric for the full detector, not just the CNN. 
@@ -145,14 +145,16 @@ To see what is going on there are two plotting snippets that are commented out i
   - Incorporate theses kinds of artifacts into the training dataset. This is probably the most elegant solution.
   - Increase the vertical window height so that all chirps fit the window and artifacts (which are always larger than the window) are discarded.
   - Check if the detected chirps have an amplitude trough on the filtered baseline. If not, discard them. This is probably the least elegant but fastest solution.
-- [ ] Implement skipping areas where the amplitude of the frequency band is too low. This should remove some of the false positives.
-- [ ] Implement the sliding window starting at the start of the track instead of the start of the current spectrogram window. This should remove some of the false positives as well.
-- [ ] In the current training dataset are just either frequency bands with a chirp on them or without a chirp on them. But sometimes, the tracks that are used to slide across the frequency bands do not match perfectly, e.g. during a rise. In these cases, the detector often falsely finds chirps. Add windows in which there is no chirp and a misaligned track to the training dataset to prevent this. [This](assets/track_mismatch.png) shows a visualization of the issue.
-- [ ] Remove chirps in lower power area after the track_id loop in the detector function.
-- [ ] Train network on chirps with lower power but higher contrast.
-- [ ] Add cuda to training dataset generation.
-- [ ] Follow [this](https://machinelearningmastery.com/building-a-binary-classification-model-in-pytorch/) tutorial for ROC and k-fold crossvalidation
+- [x] Implement skipping areas where the amplitude of the frequency band is too low. This should remove some of the false positives.
+- [x] Implement the sliding window starting at the start of the track instead of the start of the current spectrogram window. This should remove some of the false positives as well.
+  - NOTE: I currently fix this by skipping each window that is not completely covered by a track.
+- [x] In the current training dataset are just either frequency bands with a chirp on them or without a chirp on them. But sometimes, the tracks that are used to slide across the frequency bands do not match perfectly, e.g. during a rise. In these cases, the detector often falsely finds chirps. Add windows in which there is no chirp and a misaligned track to the training dataset to prevent this. [This](assets/track_mismatch.png) shows a visualization of the issue.
+- [x] Remove chirps in lower power area after the track_id loop in the detector function.
+- [x] Train network on chirps with lower power but higher contrast.
+- [x] Add cuda to training dataset generation.
+- [x] Follow [this](https://machinelearningmastery.com/building-a-binary-classification-model-in-pytorch/) tutorial for ROC and k-fold crossvalidation
 - [ ] Also try out a ResNet in future like so: https://medium.com/@hasithsura/audio-classification-d37a82d6715 or like so https://towardsdatascience.com/audio-classification-with-deep-learning-in-python-cf752b22ba07
+- [ ] Explicitly add centered vertical noise bands to the training dataset. This should help the network to learn to distinguish noise from chirps.
 
 ## Project log 
 
