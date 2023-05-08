@@ -621,8 +621,8 @@ def main(path):
         f"Detected {len(chirp_times)} chirps in {np.unique(chirp_ids)} fish."
     )
     logger.info(f"Saving detected chirps to {datapath}...")
-    np.save(datapath / "chirp_times.npy", chirp_times)
-    np.save(datapath / "chirp_ids.npy", chirp_ids)
+    np.save(datapath / "chirp_times_cnn.npy", chirp_times)
+    np.save(datapath / "chirp_ids_cnn.npy", chirp_ids)
 
 
 if __name__ == "__main__":
