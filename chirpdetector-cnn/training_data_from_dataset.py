@@ -14,6 +14,7 @@ import torch
 from extract_training_data import main as extract_data
 from fake_recording import (
     add_noise,
+    add_vertical_noise_bands,
     make_chirp_times,
     make_chirps,
     make_eod,
@@ -49,6 +50,7 @@ class FakeRec:
     track_times: np.ndarray
     chirp_times: np.ndarray
     chirp_ids: np.ndarray
+    noise_times: np.ndarray
 
 
 @dataclass
@@ -112,6 +114,42 @@ def get_free_freqs(freq_range, snippet):
         ]
 
     return freq_range
+
+
+def add_vertical_noise_bands(time, free_time, recording):
+    num_bands = np.random.randint(
+        conf.vertical_noise_bands[0], conf.vertical_noise_bands[1]
+    )
+    band_widths = np.random.uniform(
+        conf.chirp_durations[0],
+        conf.chirp_durations[1],
+        size=num_bands,
+    )
+    band_stds = np.random.uniform(
+        conf.vertical_noise_band_stds[0],
+        conf.vertical_noise_band_stds[1],
+        size=num_bands,
+    )
+    band_starts = np.random.choice(free_time, size=num_bands, replace=False)
+
+    band_centers = band_starts + band_widths / 2
+    for i in range(len(band_starts)):
+        start = band_starts[i]
+        end = start + band_widths[i]
+        std = band_stds[i]
+        size = len(time[(time >= start) & (time < end)])
+
+        # make noise
+        noise = np.random.normal(0, std, size=size)
+
+        # add amplitude modulated
+        ampmod = np.linspace(0, 1, len(noise))[::-1]
+
+        noise *= ampmod
+
+        recording[(time >= start) & (time < end)] += noise
+
+    return recording, band_centers
 
 
 def to_spectrogram(recording):
@@ -190,15 +228,23 @@ def fake_fish(eodfs, duration, samplerate, stats):
         else:
             recording += eod
 
-    # scale recording to match real mean and std
-    recording = natural_scale(recording, stats)
-
     # reshape the collected data lists to arrays
     traces = np.concatenate(traces)
     trace_ids = np.concatenate(trace_ids)
     trace_indices = np.concatenate(trace_indices)
     chirp_times = np.concatenate(chirp_times)
     chirp_ids = np.concatenate(chirp_ids)
+
+    # get time outside chirps where we can add noise
+    time_outside_chirps = time[~np.isin(time, chirp_times)]
+
+    # add the vertical noise bands
+    recording, noise_time = add_vertical_noise_bands(
+        time, time_outside_chirps, recording
+    )
+
+    # scale recording to match real mean and std
+    recording = natural_scale(recording, stats)
 
     fake = FakeRec(
         recording=recording,
@@ -208,6 +254,7 @@ def fake_fish(eodfs, duration, samplerate, stats):
         track_times=time,
         chirp_times=chirp_times,
         chirp_ids=chirp_ids,
+        noise_times=noise_time,
     )
 
     return fake
@@ -321,6 +368,9 @@ def parse_dataset(datapath):
 
         # crop frequency tracks to match spectrogram time axis
         hybrid = crop_tracks(hybrid)
+
+        embed()
+        exit()
 
         # save and plot
         path = Path(conf.testing_data_path)

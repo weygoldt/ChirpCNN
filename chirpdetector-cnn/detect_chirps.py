@@ -203,7 +203,11 @@ def detect_chirps(
         for i, window_start in enumerate(window_starts):
             # check again if there is data in this window
             if time[0] > spec_times[window_start + window_size]:
-                logger.info("No data in window, skipping classification")
+                logger.info("First track time after window end, skipping")
+                continue
+
+            if time[-1] < spec_times[window_start]:
+                logger.info("Last track time before window start, skipping")
                 continue
 
             # if skip if current window touches a blacklisted noise band
@@ -234,6 +238,10 @@ def detect_chirps(
             snippet = spec[
                 min_freq_idx:max_freq_idx, min_time_index:max_time_index
             ]
+
+            if snippet.shape[-1] == 0:
+                logger.info("Reached the end of the spectrogram, skipping")
+                continue
 
             # this became redundant after scaling to 0 mean and 1 std
             # normalize snippet
@@ -532,7 +540,9 @@ class Detector:
                         ha="center",
                     )
             ax.set_ylim(0, 1200)
-            plt.savefig(f"{conf.testing_data_path}/chirp_detection_{i}.png")
+            plt.savefig(
+                f"{conf.testing_data_path}/{str(self.dataset.path)}_{i}.png"
+            )
             plt.cla()
             plt.clf()
             plt.close("all")

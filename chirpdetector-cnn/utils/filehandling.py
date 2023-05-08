@@ -110,6 +110,7 @@ def load_data(path: pathlib.Path, ext="npy"):
 class DataSubset:
     def __init__(self, data, start, stop):
         self.samplerate = data.samplerate
+        self.path = data.path
         self.raw = data.raw[start:stop, :]
         start_t = start / self.samplerate
         stop_t = stop / self.samplerate
