@@ -30,7 +30,12 @@ def viz(dataloader, classes, save=False, path="dataset.png"):
     )
     for ax in axs.flat:
         spectrogram, label = next(iter(dataloader))
-        ax.imshow(spectrogram[0, 0, :, :], origin="lower", interpolation="none")
+        ax.imshow(
+            spectrogram[0, 0, :, :],
+            origin="lower",
+            interpolation="none",
+            aspect="equal",
+        )
         ax.set_title(classes[label[0]], loc="center", fontsize=10)
         ax.axis("off")
     if save:
