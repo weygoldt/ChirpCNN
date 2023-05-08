@@ -78,6 +78,7 @@ class ChirpExtractor:
             chirp_times = self.data.correct_chirp_times[
                 self.data.correct_chirp_time_ids == track_id
             ]
+            noise_times = self.data.noise_times
             snippets = []
             center_t = []
 
@@ -134,22 +135,33 @@ class ChirpExtractor:
             spec_chirp_idx = np.asarray(
                 [find_on_time(center_t, t, limit=False) for t in chirp_times]
             )
+            spec_noise_idx = np.asarray(
+                [find_on_time(center_t, t, limit=False) for t in noise_times]
+            )
 
             snippets = np.asarray(snippets)
 
+            # setup path to save snippets
             chirppath = pathlib.Path(f"{conf.training_data_path}/chirp")
             chirppath.mkdir(parents=True, exist_ok=True)
+            nochirppath = pathlib.Path(f"{conf.training_data_path}/nochirp")
+            nochirppath.mkdir(parents=True, exist_ok=True)
 
+            # save chirps
             for snip in snippets[spec_chirp_idx]:
                 np.save(chirppath / str(uuid.uuid1()), snip)
             logger.info(f"Saved {len(spec_chirp_idx)} chirps")
 
-            # Remove the chirps from the snippets
-            snippets = np.delete(snippets, spec_chirp_idx, axis=0)
+            # save noise bands
+            for snip in snippets[spec_noise_idx]:
+                np.save(nochirppath / str(uuid.uuid1()), snip)
+            logger.info(f"Saved {len(spec_noise_idx)} vertical noise bands")
 
-            nochirppath = pathlib.Path(f"{conf.training_data_path}/nochirp")
-            nochirppath.mkdir(parents=True, exist_ok=True)
+            # Remove the chirps and noise from the snippets
+            delete_idx = np.concatenate((spec_chirp_idx, spec_noise_idx))
+            snippets = np.delete(snippets, delete_idx, axis=0)
 
+            # save random snippets as no chirps
             number_of_nochirps = (
                 len(spec_chirp_idx) * conf.training_dataset_bias
             )

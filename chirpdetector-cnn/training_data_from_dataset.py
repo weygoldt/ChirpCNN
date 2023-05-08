@@ -70,10 +70,12 @@ class HybridRec(FakeRec):
         np.save(path / "times.npy", self.track_times)
         np.save(path / "correct_chirp_times.npy", self.chirp_times)
         np.save(path / "correct_chirp_time_ids.npy", self.chirp_ids)
+        np.save(path / "noise_times.npy", self.noise_times)
         logger.info(f"Saved hybrid recording to {path}")
 
     def plot(self, path):
         fig, ax = plt.subplots(figsize=(20, 10), constrained_layout=True)
+        ylims = conf.eodfs[0] - 100, conf.eodfs[1] + 100
         specshow(
             self.spec,
             self.spec_times,
@@ -82,6 +84,13 @@ class HybridRec(FakeRec):
             aspect="auto",
             origin="lower",
         )
+        ax.scatter(
+            self.noise_times,
+            np.ones_like(self.noise_times) * ylims[0] + 100,
+            color="white",
+            marker="|",
+        )
+
         for track_id in np.unique(self.track_idents):
             t = self.track_times[
                 self.track_indices[self.track_idents == track_id]
@@ -91,7 +100,7 @@ class HybridRec(FakeRec):
             chirpt = self.chirp_times[self.chirp_ids == track_id]
             ax.scatter(chirpt, np.ones_like(chirpt) * f[0], color="red", s=10)
 
-        ax.set_ylim(conf.eodfs[0] - 100, conf.eodfs[1] + 100)
+        ax.set_ylim(*ylims)
         plt.savefig(path)
         logger.info(f"Saved hybrid recording plot to {path}")
 
@@ -368,9 +377,6 @@ def parse_dataset(datapath):
 
         # crop frequency tracks to match spectrogram time axis
         hybrid = crop_tracks(hybrid)
-
-        embed()
-        exit()
 
         # save and plot
         path = Path(conf.testing_data_path)

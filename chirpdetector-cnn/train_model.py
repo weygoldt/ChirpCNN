@@ -77,13 +77,12 @@ def main():
         test_loader = DataLoader(
             dataset, batch_size=batch_size, sampler=test_sampler
         )
-        if fold == 0:
-            viz(
-                train_loader,
-                classes,
-                save=True,
-                path=conf.plot_dir + "/dataset.png",
-            )
+        viz(
+            train_loader,
+            classes,
+            save=True,
+            path=conf.plot_dir + f"/fold_{fold}.png",
+        )
 
         model = AudioClassifier().to(device)
 
@@ -206,7 +205,7 @@ def main():
             )
         )
     # Plot losses
-    fig, ax = plt.subplots(1, 2, figsize=(30, 20))
+    fig, ax = plt.subplots(1, 2, figsize=(20, 10), contstrained_layout=True)
     ax[0].semilogy(diz_ep["train_loss_ep"], label="Train")
     ax[0].semilogy(diz_ep["test_loss_ep"], label="Test")
     ax[0].set_xlabel("Epoch")
