@@ -76,7 +76,9 @@ class HybridRec(FakeRec):
         logger.info(f"Saved hybrid recording to {path}")
 
     def plot(self, path):
-        fig, ax = plt.subplots(figsize=(20, 10), constrained_layout=True)
+        fig, ax = plt.subplots(
+            figsize=(30 * ps.cm, 20 * ps.cm), constrained_layout=True
+        )
         ylims = conf.eodfs[0] - 100, conf.eodfs[1] + 100
         specshow(
             self.spec,
@@ -98,9 +100,15 @@ class HybridRec(FakeRec):
                 self.track_indices[self.track_idents == track_id]
             ]
             f = self.track_freqs[self.track_idents == track_id]
-            ax.plot(t, f, "black", linewidth=1)
+            ax.plot(t, f, ps.black, linewidth=1)
             chirpt = self.chirp_times[self.chirp_ids == track_id]
-            ax.scatter(chirpt, np.ones_like(chirpt) * f[0], color="red", s=10)
+            ax.scatter(
+                chirpt,
+                np.ones_like(chirpt) * f[0],
+                color=ps.black,
+                s=10,
+                zorder=10,
+            )
 
         ax.set_ylim(*ylims)
         plt.savefig(path)
