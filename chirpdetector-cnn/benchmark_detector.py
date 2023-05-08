@@ -7,7 +7,6 @@ for each id with the ground truth.
 
 from pathlib import Path
 
-import matplotlib.pyplot as plt
 import numpy as np
 from detect_chirps import Detector
 from utils.filehandling import ConfLoader, NumpyDataset, NumpyLoader

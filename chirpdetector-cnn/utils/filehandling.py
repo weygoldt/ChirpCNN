@@ -1,11 +1,8 @@
-import copy
 import os
 import pathlib
 
-import nixio as nio
 import numpy as np
 import yaml
-from IPython import embed
 from thunderfish.dataloader import DataLoader
 
 
@@ -95,14 +92,6 @@ def load_data(path: pathlib.Path, ext="npy"):
     if not path.is_dir():
         raise NotADirectoryError(f"{path} is not a directory")
 
-    if ext in ("nix", ".nix"):
-        files = [file for file in path.glob("*") if file.suffix in ext]
-        if len(files) > 1:
-            raise ValueError(
-                "Multiple nix files found in directory! Aborting ..."
-            )
-        return NixDataset(files[0])
-
     if ext in ("npy", ".npy"):
         return NumpyDataset(path)
 
@@ -116,32 +105,27 @@ class DataSubset:
         stop_t = stop / self.samplerate
         self.n_electrodes = data.n_electrodes
         tracks = []
-        # powers = []
         indices = []
         idents = []
         for track_id in np.unique(
             data.track_idents[~np.isnan(data.track_idents)]
         ):
             track = data.track_freqs[data.track_idents == track_id]
-            # power = data.track_powers[data.track_idents == track_id, :]
             time = data.track_times[
                 data.track_indices[data.track_idents == track_id]
             ]
             index = data.track_indices[data.track_idents == track_id]
 
             track = track[(time >= start_t) & (time <= stop_t)]
-            # power = power[(time >= start_t) & (time <= stop_t), :]
             index = index[(time >= start_t) & (time <= stop_t)]
             ident = np.repeat(track_id, len(track))
 
             tracks.append(track)
-            # powers.append(power)
             indices.append(index)
             idents.append(ident)
 
         # convert to numpy arrays
         tracks = np.concatenate(tracks)
-        # powers = np.concatenate(powers)
         indices = np.concatenate(indices)
         idents = np.concatenate(idents)
         time = data.track_times[
@@ -154,7 +138,6 @@ class DataSubset:
             indices -= indices[0]
 
         self.track_freqs = tracks
-        # self.track_powers = powers
         self.track_idents = idents
         self.track_indices = indices
         self.track_times = time
@@ -183,42 +166,9 @@ class NumpyDataset:
         self.track_freqs = np.load(datapath / "fund_v.npy", allow_pickle=True)
         self.track_indices = np.load(datapath / "idx_v.npy", allow_pickle=True)
         self.track_idents = np.load(datapath / "ident_v.npy", allow_pickle=True)
-        # self.track_powers = np.load(datapath / "sign_v.npy", allow_pickle=True)
-
-        # if len(self.track_powers) != len(self.track_freqs):
-        #     raise ValueError(
-        #         "Number of tracks and number of powers do not match! Fix dataset!"
-        #     )
 
     def __repr__(self) -> str:
         return f"NumpyDataset({self.file})"
 
     def __str__(self) -> str:
         return f"NumpyDataset({self.file})"
-
-
-class NixDataset:
-    def __init__(self, path: pathlib.Path):
-        self.path = path
-        nixfile = nio.File.open(str(path), nio.FileMode.ReadOnly)
-
-        if len(nixfile.blocks) > 1:
-            print("File contains more than one block. Using first block only.")
-
-        file = os.path.join(path / "traces-grid1.raw")
-        self.raw = DataLoader(file, 60.0, 0, channel=-1)
-
-        block = nixfile.blocks[0]
-        self.track_freqs = np.asarray(block.data_arrays["track_freqs"][:])
-        self.track_times = np.asarray(block.data_arrays["track_times"][:])
-        self.track_idents = np.asarray(block.data_arrays["track_idents"][:])
-        self.track_indices = np.asarray(block.data_arrays["track_indices"][:])
-        # self.spec = block.data_arrays["spec"]
-        # self.spec_freqs = block.data_arrays["spec_freq"][:]
-        # self.spec_times = np.asarray(block.data_arrays["spec_time"][:])
-
-    def __repr__(self) -> str:
-        return f"NixDataset({self.path})"
-
-    def __str__(self) -> str:
-        return f"NixDataset({self.path})"

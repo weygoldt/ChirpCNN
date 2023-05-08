@@ -26,7 +26,6 @@ from utils.datahandling import (
     resize_tensor_image,
 )
 from utils.filehandling import ConfLoader, DataSubset, load_data
-from utils.filters import bandpass_filter
 from utils.logger import make_logger
 from utils.plotstyle import PlotStyle
 from utils.spectrogram import (
