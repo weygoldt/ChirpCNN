@@ -604,10 +604,10 @@ def main(path):
 
     # for trial of code
     # good chirp times for data: 2022-06-02-10_00
-    start = (3 * 60 * 60 + 6 * 60 + 20) * conf.samplerate
-    stop = start + 600 * conf.samplerate
-    data = DataSubset(data, start, stop)
-    data.track_times -= data.track_times[0]
+    # start = (3 * 60 * 60 + 6 * 60 + 20) * conf.samplerate
+    # stop = start + 600 * conf.samplerate
+    # data = DataSubset(data, start, stop)
+    # data.track_times -= data.track_times[0]
 
     data = interpolate(data)
     det = Detector(modelpath, data)
