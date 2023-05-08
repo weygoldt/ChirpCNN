@@ -5,13 +5,11 @@ Detect chirps on a benchmark dataset and compare the detected chrip times
 for each id with the ground truth.
 """
 
-from dataclasses import dataclass
 from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
 from detect_chirps import Detector
-from IPython import embed
 from utils.filehandling import ConfLoader, NumpyDataset, NumpyLoader
 from utils.logger import make_logger
 from utils.plotstyle import PlotStyle
