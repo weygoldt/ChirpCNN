@@ -1,5 +1,14 @@
 #!/usr/bin/env python3
 
+"""
+Generate a simulated recording with chirps, rises, amplitude drops,
+motion envelope and noise. All parameters are bounded by settings in 
+config.yml and are randomly chosen from a uniform distribution 
+for each recording. 
+"""
+
+# TODO: Implement undershoot after chirp in thunderfish and here
+
 import pathlib
 
 import matplotlib.pyplot as plt
@@ -57,7 +66,11 @@ def zero_envelope(time):
     num_zeros = np.random.randint(conf.num_zeros[0], conf.num_zeros[1])
     zero_times = np.random.uniform(0, time[-1], size=num_zeros)
     zero_durations = np.random.uniform(
-        conf.chirp_durations[0], conf.chirp_durations[1] * 20, size=num_zeros
+        conf.zero_durations[0], conf.zero_durations[1], size=num_zeros
+    )
+
+    zero_modulation = 1 - np.random.uniform(
+        conf.zero_modulations[0], conf.zero_modulations[1], size=num_zeros
     )
     _, zero_envelope = chirps(
         0,
@@ -69,7 +82,7 @@ def zero_envelope(time):
         np.random.uniform(
             conf.chirp_kurtoses[0], conf.chirp_kurtoses[1], size=num_zeros
         ),
-        np.ones_like(zero_times),
+        zero_modulation,
     )
     blacklist = np.ones_like(time, dtype=bool)
     blacklist[zero_envelope < 1] = False
@@ -205,12 +218,17 @@ def add_background_noise(recording):
     return recording
 
 
-def natural_scale(recording):
-    mu = 0
-    std = np.random.uniform(
-        conf.natural_std_range[0], conf.natural_std_range[1]
-    )
-    recording = scale(recording, mu, std)
+def natural_scale(recording, stats=None):
+    if stats is None:
+        mu = 0
+        std = np.random.uniform(
+            conf.natural_std_range[0], conf.natural_std_range[1]
+        )
+        recording = scale(recording, mu, std)
+    else:
+        mu = stats["mu"]
+        std = stats["std"]
+        recording = scale(recording, mu, std)
 
     return recording
 
@@ -341,6 +359,9 @@ def fake_recording():
     np.save(outpath / "correct_chirp_time_ids.npy", correct_chirp_time_ids)
 
     # TODO: Maybe add the vertical noise bands to blacklisted times?
+    # TODO: Randomly downmodulate the overall amplitude of some tracks
+    # TODO: Add multielectrode simulation
+    # TODO: Blacklist areas around the chirp for negative training
 
 
 def main():

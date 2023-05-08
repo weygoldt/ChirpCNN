@@ -1,18 +1,22 @@
 #!/usr/bin/env python3
 
-# import argparse
-import pathlib
+"""
+Takes an artificial or already labeled dataset that must contain chirp times 
+for each fish locations of the critical vertical noise bands and extracts
+snippets of the spectrogram around the chirp times, vertical noise bands and
+other randomly chosen areas. Snippets are saved into the training data path
+specified in the conf.yml. Snippets are preprocessed as they are later 
+processed in the detection loop (standardized, resized, ...).
+"""
 
-# import shutil
+import pathlib
 import uuid
 
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
 from IPython import embed
-from matplotlib.patches import Rectangle
-from models.modelhandling import check_device, load_model
-from torch.utils.data import DataLoader, TensorDataset
+from models.modelhandling import check_device
 from utils.datahandling import find_on_time, norm_tensor, resize_tensor_image
 from utils.filehandling import ConfLoader, NumpyLoader
 from utils.logger import make_logger
@@ -23,6 +27,8 @@ conf = ConfLoader("config.yml")
 ps = PlotStyle()
 device = check_device()
 logger.info(f"Using device {device}")
+
+# TODO: Rewrite data extraction to use the same 10 s steps as the detection loop
 
 
 class ChirpExtractor:
@@ -59,6 +65,21 @@ class ChirpExtractor:
             first_index, last_index - self.window_size, self.stride, dtype=int
         )
 
+        # get spectrogram mean and std for normalization
+        # mu, std = self.data.fill_spec.mean(), self.data.fill_spec.std()
+
+        # cut off unused frequencies
+        self.data.fill_spec = self.data.fill_spec[
+            self.data.fill_freqs <= conf.upper_spectrum_limit, :
+        ]
+        self.data.fill_freqs = self.data.fill_freqs[
+            self.data.fill_freqs <= conf.upper_spectrum_limit
+        ]
+
+        # normalize spectrogram
+        mu, std = self.data.fill_spec.mean(), self.data.fill_spec.std()
+        self.data.fill_spec = (self.data.fill_spec - mu) / std
+
         for track_id in np.unique(self.data.ident_v):
             logger.info(f"Processing track {track_id}...")
             track = self.data.fund_v[self.data.ident_v == track_id]
@@ -66,6 +87,7 @@ class ChirpExtractor:
             chirp_times = self.data.correct_chirp_times[
                 self.data.correct_chirp_time_ids == track_id
             ]
+            noise_times = self.data.noise_times
             snippets = []
             center_t = []
 
@@ -100,7 +122,8 @@ class ChirpExtractor:
                 snippet = torch.from_numpy(snippet)
 
                 # Normalize snippet
-                snippet = norm_tensor(snippet)
+                # snippet = norm_tensor(snippet)
+                # snippet = (snippet - mu) / std
 
                 # Resize snippet
                 snippet = resize_tensor_image(snippet, conf.img_size_px)
@@ -121,27 +144,43 @@ class ChirpExtractor:
             spec_chirp_idx = np.asarray(
                 [find_on_time(center_t, t, limit=False) for t in chirp_times]
             )
+            spec_noise_idx = np.asarray(
+                [find_on_time(center_t, t, limit=False) for t in noise_times]
+            )
 
             snippets = np.asarray(snippets)
 
+            # setup path to save snippets
             chirppath = pathlib.Path(f"{conf.training_data_path}/chirp")
             chirppath.mkdir(parents=True, exist_ok=True)
+            nochirppath = pathlib.Path(f"{conf.training_data_path}/nochirp")
+            nochirppath.mkdir(parents=True, exist_ok=True)
 
+            # save chirps
             for snip in snippets[spec_chirp_idx]:
                 np.save(chirppath / str(uuid.uuid1()), snip)
             logger.info(f"Saved {len(spec_chirp_idx)} chirps")
 
-            # Remove the chirps from the snippets
-            snippets = np.delete(snippets, spec_chirp_idx, axis=0)
+            # save noise bands
+            for snip in snippets[spec_noise_idx]:
+                np.save(nochirppath / str(uuid.uuid1()), snip)
+            logger.info(f"Saved {len(spec_noise_idx)} vertical noise bands")
 
-            nochirppath = pathlib.Path(f"{conf.training_data_path}/nochirp")
-            nochirppath.mkdir(parents=True, exist_ok=True)
+            # Remove the chirps and noise from the snippets
+            delete_idx = np.concatenate((spec_chirp_idx, spec_noise_idx))
+            snippets = np.delete(snippets, delete_idx, axis=0)
 
+            # save random snippets as no chirps
+            number_of_nochirps = (
+                len(spec_chirp_idx) * conf.training_dataset_bias
+            )
             for snip in snippets[
-                np.random.choice(len(snippets), len(spec_chirp_idx))
+                np.random.choice(
+                    len(snippets), number_of_nochirps, replace=False
+                )
             ]:
                 np.save(nochirppath / str(uuid.uuid1()), snip)
-            logger.info(f"Saved {len(spec_chirp_idx)} non chirps")
+            logger.info(f"Saved {number_of_nochirps} non chirps")
 
 
 def main():

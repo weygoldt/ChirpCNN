@@ -1,5 +1,11 @@
 #!/usr/bin/env python3
 
+"""
+Detect chirps on a single given dataset that containts a raw file and the wavetracker 
+files. The raw file is used to compute a spectrogram and the wavetracker files are used
+to slide the detector across the tracks of a single fish.
+"""
+
 import argparse
 import pathlib
 import time
@@ -9,7 +15,8 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 from IPython import embed
-from models.modelhandling import ChirpNet, check_device, load_model
+from models.audioclassifier import AudioClassifier
+from models.modelhandling import check_device, load_model
 from scipy.interpolate import interp1d
 from utils.datahandling import (
     cluster_peaks,
@@ -19,7 +26,6 @@ from utils.datahandling import (
     resize_tensor_image,
 )
 from utils.filehandling import ConfLoader, DataSubset, load_data
-from utils.filters import bandpass_filter
 from utils.logger import make_logger
 from utils.plotstyle import PlotStyle
 from utils.spectrogram import (
@@ -34,7 +40,7 @@ from utils.spectrogram import (
 logger = make_logger(__name__)
 conf = ConfLoader("config.yml")
 device = check_device()
-model = ChirpNet
+model = AudioClassifier
 ps = PlotStyle()
 
 
@@ -76,6 +82,9 @@ def select_highest_prob_chirp(grouped_chirps):
 
 
 def interpolate(data):
+    """
+    Interpolate the tracked frequencies to a regular sampling
+    """
     track_freqs = []
     track_idents = []
     track_indices = []
@@ -122,8 +131,10 @@ def interpolate(data):
 
 
 def classify(model, img):
+    """
+    Classify a spectrogram image
+    """
     with torch.no_grad():
-        # img = torch.from_numpy(img).to(device)
         outputs = model(img)
         probs = F.softmax(outputs, dim=1)
         _, preds = torch.max(outputs, dim=1)
@@ -152,17 +163,12 @@ def detect_chirps(
     iter = 0
 
     # make blacklisted areas where vertical noise bands are too strong
-    threshold = conf.vertical_noise_band_power_threshold
-    noise_subset = spec[
-        spec_freqs < conf.vertical_noise_band_upper_freq_limit, :
-    ]
+    threshold = spec.std().cpu().numpy()
+    noise_subset = spec[spec_freqs < 300]
     noise_profile = torch.mean(noise_subset, axis=0)
     noise_profile = noise_profile.cpu().numpy()
     noise_index = np.zeros_like(noise_profile, dtype=bool)
     noise_index[noise_profile > threshold] = True
-    lowamp_index = np.zeros_like(noise_profile, dtype=bool)
-
-    embed()
 
     for track_id in np.unique(track_idents):
         logger.info(f"Detecting chirps for track {track_id}")
@@ -181,10 +187,32 @@ def detect_chirps(
         center_times = []
         center_freqs = []
 
+        """ I am trying to vectorize this for loop so I can scale instead of norm
+        and it will run faster
+
+        window_ranges = window_starts[:, np.newaxis] + np.arange(window_size)
+        center_time_indices = window_ranges[:, int(window_size / 2)]
+        center_times = spec_times[center_time_indices]
+
+        window_center_track = np.asarray(
+            [find_on_time(time, t, False) for t in center_times]
+        )
+
+        window_center_freq = track[window_center_track]
+
+        window_center_freq_on_spec = np.asarray(
+            [find_on_time(spec_freqs, f) for f in window_center_freq]
+        )
+        """
+
         for i, window_start in enumerate(window_starts):
             # check again if there is data in this window
             if time[0] > spec_times[window_start + window_size]:
-                logger.info("No data in window, skipping classification")
+                logger.info("First track time after window end, skipping")
+                continue
+
+            if time[-1] < spec_times[window_start]:
+                logger.info("Last track time before window start, skipping")
                 continue
 
             # if skip if current window touches a blacklisted noise band
@@ -215,24 +243,15 @@ def detect_chirps(
             snippet = spec[
                 min_freq_idx:max_freq_idx, min_time_index:max_time_index
             ]
-            snippet_freqs = spec_freqs[min_freq_idx:max_freq_idx]
 
-            # compute the mean power around the center frequency
-            upper_idx = find_on_time(snippet_freqs, window_center_freq + 5)
-            lower_idx = find_on_time(snippet_freqs, window_center_freq - 5)
-            mean = torch.mean(snippet[lower_idx:upper_idx, :])
+            if snippet.shape[-1] == 0:
+                logger.info("Reached the end of the spectrogram, skipping")
+                continue
 
-            # skip to next iteration if the power on the spectrogram that lies
-            # underneath the track is too low
-            if mean < conf.power_on_track_threshold:
-                logger.info(
-                    f"Power on track too low ({mean}), skipping classification"
-                )
-                lowamp_index[window_start : window_start + window_size] = True
-
+            # this became redundant after scaling to 0 mean and 1 std
             # normalize snippet
             # still a tensor
-            snippet = norm_tensor(snippet)
+            # snippet = norm_tensor(snippet)
 
             # rezise to square as tensor
             snippet = resize_tensor_image(snippet, conf.img_size_px)
@@ -242,16 +261,17 @@ def detect_chirps(
 
             # predict the label and probability of the snippet
             prob, label = classify(model, snippet)
+            prob = 1 - prob
 
             # plot the snippet
-            fig, ax = plt.subplots()
-            ax.imshow(snippet[0][0].cpu().numpy(), origin="lower")
-            ax.text(0.5, 0.5, f"{prob:.2f}", color="white", fontsize=20)
-            plt.savefig(f"../anim_plots/{outer_iter}_{iter}.png")
-            plt.cla()
-            plt.clf()
-            plt.close("all")
-            plt.close(fig)
+            # fig, ax = plt.subplots()
+            # ax.imshow(snippet[0][0].cpu().numpy(), origin="lower")
+            # ax.text(0.5, 0.5, f"{prob:.2f}", color="white", fontsize=20)
+            # plt.savefig(f"../anim_plots/{outer_iter}_{iter}.png")
+            # plt.cla()
+            # plt.clf()
+            # plt.close("all")
+            # plt.close(fig)
 
             # save the predictions and the center time and frequency
             pred_labels.append(label)
@@ -307,7 +327,8 @@ def detect_chirps(
 
     # if there are no chirps, return an empty list
     if len(detect_chirps) == 0:
-        return [], [], []
+        return [], noise_index
+    # [], []
 
     detected_chirps = detected_chirps[detected_chirps[:, 0].argsort()]
 
@@ -324,7 +345,10 @@ def detect_chirps(
 
     logger.info(f"{len(chirps)} survived the sorting process")
 
-    return chirps, noise_index, lowamp_index
+    return chirps, noise_index
+
+
+# noise_index, lowamp_index
 
 
 class Detector:
@@ -355,7 +379,7 @@ class Detector:
 
         # load the dataset
         self.data = dataset
-        self.n_electrodes = self.data.raw.shape[1]
+        self.n_electrodes = self.data.n_electrodes
 
         # create parameters for the detector
         spec_samplerate = conf.samplerate / self.hop_len
@@ -379,6 +403,8 @@ class Detector:
     def detect(self):
         # number of chunks needed to process the whole dataset
         n_chunks = np.ceil(self.data.raw.shape[0] / self.chunksize).astype(int)
+
+        # TODO: Mask high amplitude vertical noise bands again
 
         chirps = []
         for i in range(n_chunks):
@@ -410,21 +436,23 @@ class Detector:
                 np.arange(0, self.nfft / 2 + 1) * self.samplingrate / self.nfft
             )
 
+            # skip if the chunk is before the first track
             if first_chunk_time < first_track_time:
                 continue
 
             chunk = DataSubset(self.data, idx1, idx2)
+
+            # check if the chunk has data
             if chunk.hasdata is False:
                 logger.info("No data in chunk, skipping...")
                 continue
 
             # compute the spectrogram for all electrodes
-            print(self.n_electrodes)
             for el in range(self.n_electrodes):
+                # get the signal for the current electrode
                 sig = chunk.raw[:, el]
-                # sig = bandpass_filter(
-                #     chunk.raw[:, el], self.samplingrate, *self.passband
-                # )
+
+                # compute the spectrogram for the current electrode
                 chunk_spec, _, _ = spectrogram(
                     sig.copy(),
                     self.samplingrate,
@@ -447,6 +475,15 @@ class Detector:
             # .. still a tensor
             spec = decibel(spec)
 
+            # cut off everything outside the upper frequency limit
+            # the spec is still a tensor
+            spec = spec[spec_freqs <= conf.upper_spectrum_limit, :]
+            spec_freqs = spec_freqs[spec_freqs <= conf.upper_spectrum_limit]
+
+            # normalize the spectrogram to zero mean and unit variance
+            # the spec is still a tensor
+            spec = (spec - spec.mean()) / spec.std()
+
             # make a detection data dict
             # the spec is still a tensor!
             detection_data = {
@@ -461,7 +498,7 @@ class Detector:
             }
 
             # detect the chirps for the current chunk
-            chunk_chirps, noise, lowamp = detect_chirps(
+            chunk_chirps, noise_index = detect_chirps(
                 **detection_data, **self.detection_parameters
             )
 
@@ -469,28 +506,26 @@ class Detector:
             chirps.extend(chunk_chirps)
 
             # plot
-            fig, ax = plt.subplots(1, 1, figsize=(20, 10))
-            specshow(
-                spec.cpu().numpy(),
-                spec_times,
-                spec_freqs,
-                ax,
-                aspect="auto",
-                origin="lower",
-            )
             if len(chunk_chirps) > 0:
-                ax.plot(
-                    spec_times,
-                    (noise * 1000) + 100,
-                    color=ps.gblue1,
-                    linewidth=2,
+                fig, ax = plt.subplots(
+                    1, 1, figsize=(20, 10), constrained_layout=True
                 )
-                ax.plot(
+                specshow(
+                    spec.cpu().numpy(),
                     spec_times,
-                    (lowamp * 1000) + 100,
-                    color=ps.gblue3,
-                    linewidth=2,
+                    spec_freqs,
+                    ax,
+                    aspect="auto",
+                    origin="lower",
                 )
+                if len(noise_index) > 0:
+                    ax.fill_between(
+                        spec_times,
+                        np.zeros(spec_times.shape),
+                        noise_index * 2000,
+                        color=ps.black,
+                        alpha=0.6,
+                    )
                 for chirp in chunk_chirps:
                     ax.scatter(
                         chirp[0],
@@ -509,18 +544,23 @@ class Detector:
                         va="bottom",
                         ha="center",
                     )
-            ax.set_ylim(0, 1200)
-            plt.savefig(f"{conf.testing_data_path}/chirp_detection_{i}.png")
-            plt.cla()
-            plt.clf()
-            plt.close("all")
-            plt.close(fig)
+                ax.set_ylim(0, 2000)
+                plt.savefig(
+                    f"{conf.testing_data_path}/{str(self.data.path.name)}_{i}.png"
+                )
+                plt.cla()
+                plt.clf()
+                plt.close("all")
+                plt.close(fig)
 
             del detection_data
             del spec
 
         # reformat the detected chirps
         chirps = np.array(chirps)
+        if len(chirps) == 0:
+            return None, None
+
         chirp_times = chirps[:, 0]
         chirp_ids = chirps[:, -1]
 
@@ -568,6 +608,7 @@ def main(path):
     modelpath = conf.save_dir
 
     # for trial of code
+    # good chirp times for data: 2022-06-02-10_00
     # start = (3 * 60 * 60 + 6 * 60 + 20) * conf.samplerate
     # stop = start + 600 * conf.samplerate
     # data = DataSubset(data, start, stop)
@@ -577,12 +618,16 @@ def main(path):
     det = Detector(modelpath, data)
     chirp_times, chirp_ids = det.detect()
 
+    if chirp_times is None:
+        logger.info("No chirps detected.")
+        return
+
     logger.info(
         f"Detected {len(chirp_times)} chirps in {np.unique(chirp_ids)} fish."
     )
     logger.info(f"Saving detected chirps to {datapath}...")
-    np.save(datapath / "chirp_times.npy", chirp_times)
-    np.save(datapath / "chirp_ids.npy", chirp_ids)
+    np.save(datapath / "chirp_times_cnn.npy", chirp_times)
+    np.save(datapath / "chirp_ids_cnn.npy", chirp_ids)
 
 
 if __name__ == "__main__":

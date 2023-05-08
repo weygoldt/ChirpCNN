@@ -1,3 +1,5 @@
+random_seed: 42 # random seed for reproducibility
+
 # SYNTHETIC DATASETS ------
 training_data_path: "../training_data" # were the training data will be stored
 testing_data_path: "../testing_data" # were a single dataset for testing will be stored
@@ -7,24 +9,27 @@ samplerate: 20000 # sampling rate of the simulated and real data
 # The following parameters are boundaries for the random generation of the
 # simulated data. The actual values will be sampled from a uniform distribution
 # between the lower and upper bound. 
-num_fish: [5, 15] # how many fish will be simulated 
-num_chirps: [10, 30] # how many chirps will be simulated
+num_fish: [5, 12] # how many fish will be simulated 
+num_chirps: [20, 30] # how many chirps will be simulated
 num_rises: [0, 3] # how many rises will be simulated
 noise_stds: [0, 0.02] # standard deviation of the noise
 num_electrodes: 11 # how many electrodes will be simulated
-eodfs: [300, 1500] # range of the simulated eodfs
-chirp_sizes: [80, 200] # range of the simulated chirp sizes in Hz
-chirp_durations: [0.005, 0.2] # range of the simulated chirp durations in s
+eodfs: [400, 1500] # range of the simulated eodfs
+chirp_sizes: [60, 200] # range of the simulated chirp sizes in Hz
+chirp_durations: [0.005, 0.1] # range of the simulated chirp durations in s
 chirp_kurtoses: [0.6, 1.4] # range of the simulated chirp kurtoses (peak shape)
 chirp_contrasts: [0.0, 1.0] # range of the simulated chirp contrasts (amplitude trough)
 rise_sizes: [10, 100] # range of the simulated rise sizes in Hz
-rise_rise_taus: [0.1, 1.5] # range of the simulated rise rise taus in s (how fast the rise starts)
-rise_decay_taus: [2, 15] # range of the simulated rise decay taus in s (how fast the rise ends)
-num_zeros: [0, 3] # how many times the amplitude can randomly drop to zero
-motion_envelope_f: [0.001, 0.01] # frequency of the motion envelope in Hz
-motion_envelope_a: [0.01, 0.2] # amplitude decrease of the motion envelope in Hz
+rise_rise_taus: [0.005, 0.1] # range of the simulated rise rise taus in s (how fast the rise starts)
+rise_decay_taus: [1, 15] # range of the simulated rise decay taus in s (how fast the rise ends)
+num_zeros: [10, 35] # how many times the amplitude can randomly drop to zero
+zero_durations: [0.005, 5] # range of the simulated zero durations in s
+zero_modulations: [0, 0.4] # range of the simulated amplitude drops
+amp_scale: [0.4, 1] # how much the amplitude can randomly scales
+motion_envelope_f: [0.05, 0.01] # frequency of the motion envelope in Hz, I use a sinusoidal for the motion envelope
+motion_envelope_a: [0.01, 0.3] # amplitude decrease of the motion envelope in Hz, i.e. amp of sin
 vertical_noise_bands: [1, 5] # how many vertical noise bands will be simulated
-vertical_noise_band_widths: [0.01, 8] # range of the simulated vertical noise band widths in seconds 
+vertical_noise_band_widths: [0.005, 8] # range of the simulated vertical noise band widths in seconds 
 vertical_noise_band_stds: [0.1, 3] # range of the simulated vertical noise band standard deviations in Hz
 background_noise_stds: [0.01, 0.5] # range of the simulated background noise standard deviations in Hz
 natural_std_range: [0.0001, 0.001] # to scale the signal to a natural range
@@ -35,19 +40,22 @@ overlap_fraction: 0.99  # hanning window overlap
  
 # ROI EXTRACTION ------
 time_pad: 0.11 # window size before and after chirp
-freq_pad: [-50, 200] # window size below and above the chirp
+freq_pad: [-50, 250] # window size below and above the chirp. Must be larger than the max chirp size
 img_size_px: 128 # size of the extracted image in pixels. The image will must be square
 
 # CNN MODEL ------
-num_epochs: 10 # how many epochs to train the model
-batch_size: 10 # how many images to train on at once
+num_epochs: 20 # how many epochs to train the model
+batch_size: 500 # how many images to train on at once
+kfolds: 5 # how many folds to use for cross validation
 learning_rate: 0.001 # learning rate of the optimizer
 train_size: 0.8 # fraction of the training data to use for training
 save_dir: "models/model.pt" # where to save the trained model
 plot_dir: "../assets" # where to save the training plots
 
-# TRAINING DATASET ------
-generations: 30 # how often to generate a new training dataset and extract chirps
+# TRAINING ------
+generations: 30 # how often to generate a new simulated training dataset and extract chirps
+windows_per_recording: 5 # how many windows to extract from each recording for a hybrid dataset
+training_dataset_bias: 1 # how many times more nochirp windows than chirp windows to use for training
 
 # DETECTOR CONFIGURATION ------
 detection_data_path: "../testing_data" # where the testing data will be stored
@@ -55,9 +63,12 @@ stride: 0.01 # step size of the detector on the spectrogram in s
 min_chirp_dt: 0.04 # minimum time between chirps in s
 buffersize: 10 # how large the buffer is in s
 spectrogram_overlap: 1 # how much to overlap the spectrograms in the buffer
-power_on_track_threshold: -75 # the minimum power on the frequency track of a window in dB to be allowed to enter the classifier
+# power_on_track_threshold: -75 # the minimum power on the frequency track of a window in dB to be allowed to enter the classifier
 # blacklist_vertical_noise_bands: True # whether to blacklist vertical noise bands
-vertical_noise_band_upper_freq_limit: 400 # vertical noise bands are evaluated below this frequency in Hz
-vertical_noise_band_time_padding: 0.2 # how much time padding to add to the vertical noise band in s
-vertical_noise_band_power_threshold: -80 # the minimum power of a vertical noise band in dB to be classified as a vertical noise band
-min_chirp_prob: 0.65 # minimum probability of a chirp to be classified as a chirp
+# vertical_noise_band_upper_freq_limit: 400 # vertical noise bands are evaluated below this frequency in Hz
+# vertical_noise_band_time_padding: 0.2 # how much time padding to add to the vertical noise band in s
+# vertical_noise_band_power_threshold: -80 # the minimum power of a vertical noise band in dB to be classified as a vertical noise band
+min_chirp_prob: 0.9 # minimum probability of a chirp to be classified as a chirp
+
+
+upper_spectrum_limit: 2000 # upper frequency limit of the spectrogram in Hz

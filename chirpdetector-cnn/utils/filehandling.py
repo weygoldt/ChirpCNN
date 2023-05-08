@@ -1,11 +1,8 @@
-import copy
 import os
 import pathlib
 
-import nixio as nio
 import numpy as np
 import yaml
-from IPython import embed
 from thunderfish.dataloader import DataLoader
 
 
@@ -95,14 +92,6 @@ def load_data(path: pathlib.Path, ext="npy"):
     if not path.is_dir():
         raise NotADirectoryError(f"{path} is not a directory")
 
-    if ext in ("nix", ".nix"):
-        files = [file for file in path.glob("*") if file.suffix in ext]
-        if len(files) > 1:
-            raise ValueError(
-                "Multiple nix files found in directory! Aborting ..."
-            )
-        return NixDataset(files[0])
-
     if ext in ("npy", ".npy"):
         return NumpyDataset(path)
 
@@ -110,13 +99,17 @@ def load_data(path: pathlib.Path, ext="npy"):
 class DataSubset:
     def __init__(self, data, start, stop):
         self.samplerate = data.samplerate
+        self.path = data.path
         self.raw = data.raw[start:stop, :]
         start_t = start / self.samplerate
         stop_t = stop / self.samplerate
+        self.n_electrodes = data.n_electrodes
         tracks = []
         indices = []
         idents = []
-        for track_id in np.unique(data.track_idents):
+        for track_id in np.unique(
+            data.track_idents[~np.isnan(data.track_idents)]
+        ):
             track = data.track_freqs[data.track_idents == track_id]
             time = data.track_times[
                 data.track_indices[data.track_idents == track_id]
@@ -153,13 +146,21 @@ class DataSubset:
 class NumpyDataset:
     def __init__(self, datapath: pathlib.Path) -> None:
         self.path = datapath
+
+        # load raw file for simulated and real data
         file = os.path.join(datapath / "traces-grid1.raw")
         if os.path.exists(file):
             self.raw = DataLoader(file, 60.0, 0, channel=-1)
             self.samplerate = self.raw.samplerate
+            self.n_electrodes = self.raw.shape[1]
         else:
             self.raw = np.load(datapath / "raw.npy", allow_pickle=True)
             self.samplerate = 20000.0
+            if len(np.shape(self.raw)) > 1:
+                self.n_electrodes = self.raw.shape[1]
+            else:
+                self.n_electrodes = 1
+                self.raw = self.raw[:, np.newaxis]
 
         self.track_times = np.load(datapath / "times.npy", allow_pickle=True)
         self.track_freqs = np.load(datapath / "fund_v.npy", allow_pickle=True)
@@ -171,30 +172,3 @@ class NumpyDataset:
 
     def __str__(self) -> str:
         return f"NumpyDataset({self.file})"
-
-
-class NixDataset:
-    def __init__(self, path: pathlib.Path):
-        self.path = path
-        nixfile = nio.File.open(str(path), nio.FileMode.ReadOnly)
-
-        if len(nixfile.blocks) > 1:
-            print("File contains more than one block. Using first block only.")
-
-        file = os.path.join(path / "traces-grid1.raw")
-        self.raw = DataLoader(file, 60.0, 0, channel=-1)
-
-        block = nixfile.blocks[0]
-        self.track_freqs = np.asarray(block.data_arrays["track_freqs"][:])
-        self.track_times = np.asarray(block.data_arrays["track_times"][:])
-        self.track_idents = np.asarray(block.data_arrays["track_idents"][:])
-        self.track_indices = np.asarray(block.data_arrays["track_indices"][:])
-        # self.spec = block.data_arrays["spec"]
-        # self.spec_freqs = block.data_arrays["spec_freq"][:]
-        # self.spec_times = np.asarray(block.data_arrays["spec_time"][:])
-
-    def __repr__(self) -> str:
-        return f"NixDataset({self.path})"
-
-    def __str__(self) -> str:
-        return f"NixDataset({self.path})"

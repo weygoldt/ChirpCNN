@@ -1,6 +1,5 @@
 import math
 
-
 import numpy as np
 import torch
 from IPython import embed
@@ -176,5 +175,5 @@ def decibel(spec, trycuda=True):
     else:
         device = torch.device("cpu")
 
-    decibel_of = AmplitudeToDB(stype="power", top_db=50).to(device)
+    decibel_of = AmplitudeToDB(stype="power", top_db=60).to(device)
     return decibel_of(spec)
