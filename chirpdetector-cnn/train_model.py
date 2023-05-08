@@ -215,7 +215,7 @@ def main():
         )
     # Plot losses
     fig, ax = plt.subplots(
-        1, 3, figsize=(30 * ps.cm, 10 * ps.cm), contstrained_layout=True
+        1, 3, figsize=(30 * ps.cm, 10 * ps.cm), constrained_layout=True
     )
     ax[0].semilogy(diz_ep["train_loss_ep"], label="Train")
     ax[0].semilogy(diz_ep["test_loss_ep"], label="Test")
