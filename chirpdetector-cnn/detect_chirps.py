@@ -507,7 +507,7 @@ class Detector:
             # plot
             if len(chunk_chirps) > 0:
                 fig, ax = plt.subplots(
-                    figsize=(30 * ps.cm, 10 * ps.cm),
+                    figsize=(30 * ps.cm, 20 * ps.cm),
                     constrained_layout=True,
                 )
                 specshow(
