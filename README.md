@@ -155,8 +155,12 @@ To see what is going on there are two plotting snippets that are commented out i
 - [x] Follow [this](https://machinelearningmastery.com/building-a-binary-classification-model-in-pytorch/) tutorial for ROC and k-fold crossvalidation
 - [ ] Also try out a ResNet in future like so: https://medium.com/@hasithsura/audio-classification-d37a82d6715 or like so https://towardsdatascience.com/audio-classification-with-deep-learning-in-python-cf752b22ba07
 - [x] Explicitly add fast vertical white noise bands to the training dataset. This should help the network to learn to distinguish this specific type of noise from chirps.
+- [ ] Add unit tests
+- [ ] Implement post-chirp undershoot in frequency and add pull request to thunderfish. Currently, real chirps with  strong downward smear in the spectrum are often falsely assigned. I suspect that the lack of a frequency undershoot after a chirp might be the cause for th downward smear. This is not implemented in thunderfish yet. I should implement it and then test if it helps.
 
 ## Project log 
+
+- 2023/05/09: Added performance metrics to the detector and created a benchmark dataset. Reach 90% precision and 85% recall. 
 
 - 2023/05/08: Succesfull tests with training on large hybrid dataset. New dataset combined with better data normalization alleviated issues with detections during amplitude drops. Vertical white noise bands with the same duration as chirps are still a problem. Explicitly added them to the training dataset now. Awaiting how this changes performance.
 
