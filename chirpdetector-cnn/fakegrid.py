@@ -85,14 +85,12 @@ class Recording:
             tmax = duration  # duration in seconds
             origin = [0, 0]  # starting point
             boundaries = [(-2, 2), (-2, 2)]  # boundaries of the arena
-            mov = FishMovement(
-                tmax, self.samplerate, origin, boundaries
-            )  # movement object
+            mov = FishMovement(tmax, self.samplerate, origin, boundaries)
 
             x, y = mov.x, mov.y  # get the position data
-            traj_v = np.array(
-                [np.cos(mov.trajectories), np.sin(mov.trajectories)]
-            ).T
+            # traj_v = np.array(
+            #     [np.cos(mov.trajectories), np.sin(mov.trajectories)]
+            # ).T
             # tail_bend = 0
             # size = np.random.randint(minsize, maxsize)
 
