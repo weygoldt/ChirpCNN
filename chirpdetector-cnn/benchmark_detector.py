@@ -31,6 +31,8 @@ def main():
 
     precs = []
     recs = []
+    accs = []
+    errs = []
     for fish_id in np.unique(gt.correct_chirp_time_ids):
         real_chirps = gt.correct_chirp_times[
             gt.correct_chirp_time_ids == fish_id
@@ -49,19 +51,25 @@ def main():
             if not any(np.abs(dc - real_chirps) < tolerance):
                 fp_counter += 1
 
-        # compute precision and recall
+        # compute precision, recall, accuracy, error
         precs.append(len(real_chirps) / (len(real_chirps) + fp_counter))
         recs.append(len(detected_chirps) / (len(detected_chirps) + fn_counter))
 
+    print("")
+    print("------------------------------------")
     print(
         f"Found {np.round(len(chirp_times)/len(gt.correct_chirp_times) * 100,2)} % of total chirps"
     )
     print(
-        f"Proportion of detections that are correct (Precision): {np.round(np.mean(precs)*100, 2)} %"
+        f"Proportion of detections that are correct (Precision): {np.round(np.mean(precs)*100, 4)} %"
     )
     print(
-        f"Proportion of existing chirps that are detected (Recall): {np.round(np.mean(recs)*100, 2)} %"
+        f"Proportion of existing chirps that are detected (Recall): {np.round(np.mean(recs)*100, 4)} %"
     )
+    print(
+        f"F1 score: {np.round(2*np.mean(precs)*np.mean(recs)/(np.mean(precs)+np.mean(recs))*100, 4)}"
+    )
+    print("------------------------------------")
 
 
 if __name__ == "__main__":
