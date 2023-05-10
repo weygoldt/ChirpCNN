@@ -18,7 +18,7 @@ logger = make_logger(__name__)
 ps = PlotStyle()
 
 
-def main():
+def benchmark():
     path = Path(conf.testing_data_path)
     modelpath = conf.save_dir
 
@@ -57,6 +57,7 @@ def main():
 
     print("")
     print("------------------------------------")
+    print("Results:")
     print(
         f"Found {np.round(len(chirp_times)/len(gt.correct_chirp_times) * 100,2)} % of total chirps"
     )
@@ -70,6 +71,11 @@ def main():
         f"F1 score: {np.round(2*np.mean(precs)*np.mean(recs)/(np.mean(precs)+np.mean(recs))*100, 4)}"
     )
     print("------------------------------------")
+    return precs, recs
+
+
+def main():
+    precs, recs = benchmark()
 
 
 if __name__ == "__main__":
