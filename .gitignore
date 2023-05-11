@@ -5,6 +5,7 @@ anim_plots
 test
 data
 chirpdetector-cnn/models/model.pt
+plots
 .vscode
 .python-version
 
