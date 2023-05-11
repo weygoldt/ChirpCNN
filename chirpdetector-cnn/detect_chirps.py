@@ -519,13 +519,16 @@ class Detector:
                     origin="lower",
                 )
                 if len(noise_index) > 0:
-                    ax.fill_between(
-                        spec_times,
-                        np.zeros(spec_times.shape),
-                        noise_index * 2000,
-                        color=ps.black,
-                        alpha=0.6,
-                    )
+                    try:
+                        ax.fill_between(
+                            spec_times,
+                            np.zeros(spec_times.shape),
+                            noise_index * 2000,
+                            color=ps.black,
+                            alpha=0.6,
+                        )
+                    except:
+                        embed()
                 for chirp in chunk_chirps:
                     ax.scatter(
                         chirp[0],
