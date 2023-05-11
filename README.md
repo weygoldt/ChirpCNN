@@ -165,7 +165,7 @@ To see what is going on there are two plotting snippets that are commented out i
 
 ## Project log 
 
-- 2023/05/09: Added performance metrics to the detector and created a benchmark dataset. Reach 90% precision and 85% recall. Depending on the complexity of the simulated benchmark dataset, the F1 score reaches up to 91 percent. 
+- 2023/05/09: Added performance metrics to the detector and created a benchmark dataset. Reach 90% precision and 85% recall. Depending on the complexity of the simulated benchmark dataset, the F1 score reaches up to 91 percent. But we can still improve upon that by fine tuning the chirp simulations and creating a more diverse training dataset for the no-chirp class.
 
 - 2023/05/08: Succesfull tests with training on large hybrid dataset. New dataset combined with better data normalization alleviated issues with detections during amplitude drops. Vertical white noise bands with the same duration as chirps are still a problem. Explicitly added them to the training dataset now. Awaiting how this changes performance.
 
