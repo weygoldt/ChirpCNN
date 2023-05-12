@@ -17,6 +17,8 @@ import torch.nn.functional as F
 from IPython import embed
 from models.audioclassifier import AudioClassifier
 from models.modelhandling import check_device, load_model
+from rich import pretty, print
+from rich.progress import track
 from scipy.interpolate import interp1d
 from utils.datahandling import (
     cluster_peaks,
@@ -41,6 +43,7 @@ conf = ConfLoader("config.yml")
 device = check_device()
 model = AudioClassifier
 ps = PlotStyle()
+pretty.install()
 
 
 def group_close_chirps(chirps, time_tolerance=0.02):
@@ -216,7 +219,7 @@ def detect_chirps(
 
             # if skip if current window touches a blacklisted noise band
             if True in noise_index[window_start : window_start + window_size]:
-                logger.info("Noise band in window, skipping classification")
+                logger.debug("Noise band in window, skipping classification")
                 continue
 
             # time axis indices
@@ -406,7 +409,7 @@ class Detector:
         # TODO: Mask high amplitude vertical noise bands again
 
         chirps = []
-        for i in range(n_chunks):
+        for i in track(range(n_chunks), description=f"{self.data.path.name}"):
             logger.info(f"Processing chunk {i + 1} of {n_chunks}...")
 
             # get start and stop indices for the current chunk
@@ -626,8 +629,12 @@ def main(path):
         return
 
     logger.info(
-        f"Detected {len(chirp_times)} chirps in {np.unique(chirp_ids)} fish."
+        f"Detected {len(chirp_times)} chirps in {len(np.unique(chirp_ids))} fish."
     )
+    print(
+        f"Detected {len(chirp_times)} chirps in {len(np.unique(chirp_ids))} fish."
+    )
+
     logger.info(f"Saving detected chirps to {datapath}...")
     np.save(datapath / "chirp_times_cnn.npy", chirp_times)
     np.save(datapath / "chirp_ids_cnn.npy", chirp_ids)

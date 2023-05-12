@@ -8,6 +8,7 @@ chirpdetector-cnn/models/model.pt
 plots
 .vscode
 .python-version
+*.log
 
 # Created by https://www.toptal.com/developers/gitignore/api/python,latex
 # Edit at https://www.toptal.com/developers/gitignore?templates=python,latex

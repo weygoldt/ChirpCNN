@@ -9,6 +9,8 @@ from pathlib import Path
 
 import numpy as np
 from detect_chirps import Detector
+from rich import pretty
+from rich.progress import track
 from utils.filehandling import ConfLoader, NumpyDataset, NumpyLoader
 from utils.logger import make_logger
 from utils.plotstyle import PlotStyle
@@ -16,6 +18,7 @@ from utils.plotstyle import PlotStyle
 conf = ConfLoader("config.yml")
 logger = make_logger(__name__)
 ps = PlotStyle()
+pretty.install()
 
 
 def benchmark():
@@ -33,7 +36,9 @@ def benchmark():
     recs = []
     accs = []
     errs = []
-    for fish_id in np.unique(gt.correct_chirp_time_ids):
+    for fish_id in track(
+        np.unique(gt.correct_chirp_time_ids), description="Benchmarking ..."
+    ):
         real_chirps = gt.correct_chirp_times[
             gt.correct_chirp_time_ids == fish_id
         ]

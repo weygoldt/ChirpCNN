@@ -15,9 +15,14 @@ def make_logger(name: str):
     console_handler.setFormatter(console_formatter)
     console_handler.setLevel(logging.INFO)
 
+    # create stream handler for file output
+    file_handler = logging.FileHandler("logfile.log")
+    file_handler.setFormatter(file_formatter)
+    file_handler.setLevel(logging.INFO)
+
     # create script specific logger
     logger = logging.getLogger(name)
-    logger.addHandler(console_handler)
+    logger.addHandler(file_handler)
     logger.setLevel(logging.INFO)
 
     return logger
