@@ -508,56 +508,56 @@ class Detector:
             chirps.extend(chunk_chirps)
 
             # plot
-            if len(chunk_chirps) > 0:
-                fig, ax = plt.subplots(
-                    figsize=(30 * ps.cm, 20 * ps.cm),
-                    constrained_layout=True,
-                )
-                specshow(
-                    spec.cpu().numpy(),
-                    spec_times,
-                    spec_freqs,
-                    ax,
-                    aspect="auto",
-                    origin="lower",
-                )
-                if len(noise_index) > 0:
-                    try:
-                        ax.fill_between(
-                            spec_times,
-                            np.zeros(spec_times.shape),
-                            noise_index * 2000,
-                            color=ps.black,
-                            alpha=0.6,
-                        )
-                    except:
-                        embed()
-                for chirp in chunk_chirps:
-                    ax.scatter(
-                        chirp[0],
-                        chirp[1],
-                        facecolors="white",
-                        edgecolors="black",
-                        s=50,
-                    )
-                    ax.text(
-                        chirp[0],
-                        chirp[1] + 50,
-                        np.round(chirp[2], 2),
-                        fontsize=14,
-                        color="white",
-                        rotation="vertical",
-                        va="bottom",
-                        ha="center",
-                    )
-                ax.set_ylim(0, 2000)
-                plt.savefig(
-                    f"{conf.testing_data_path}/{str(self.data.path.name)}_{i}.png"
-                )
-                plt.cla()
-                plt.clf()
-                plt.close("all")
-                plt.close(fig)
+            # if len(chunk_chirps) > 0:
+            #     fig, ax = plt.subplots(
+            #         figsize=(30 * ps.cm, 20 * ps.cm),
+            #         constrained_layout=True,
+            #     )
+            #     specshow(
+            #         spec.cpu().numpy(),
+            #         spec_times,
+            #         spec_freqs,
+            #         ax,
+            #         aspect="auto",
+            #         origin="lower",
+            #     )
+            #     if len(noise_index) > 0:
+            #         try:
+            #             ax.fill_between(
+            #                 spec_times,
+            #                 np.zeros(spec_times.shape),
+            #                 noise_index * 2000,
+            #                 color=ps.black,
+            #                 alpha=0.6,
+            #             )
+            #         except:
+            #             embed()
+            #     for chirp in chunk_chirps:
+            #         ax.scatter(
+            #             chirp[0],
+            #             chirp[1],
+            #             facecolors="white",
+            #             edgecolors="black",
+            #             s=50,
+            #         )
+            #         ax.text(
+            #             chirp[0],
+            #             chirp[1] + 50,
+            #             np.round(chirp[2], 2),
+            #             fontsize=14,
+            #             color="white",
+            #             rotation="vertical",
+            #             va="bottom",
+            #             ha="center",
+            #         )
+            #     ax.set_ylim(0, 2000)
+            #     plt.savefig(
+            #         f"{conf.testing_data_path}/{str(self.data.path.name)}_{i}.png"
+            #     )
+            #     plt.cla()
+            #     plt.clf()
+            #     plt.close("all")
+            #     plt.close(fig)
 
             del detection_data
             del spec
