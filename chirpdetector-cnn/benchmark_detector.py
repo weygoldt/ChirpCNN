@@ -9,7 +9,7 @@ from pathlib import Path
 
 import numpy as np
 from detect_chirps import Detector
-from rich import pretty
+from rich import pretty, print
 from rich.progress import track
 from utils.filehandling import ConfLoader, NumpyDataset, NumpyLoader
 from utils.logger import make_logger
