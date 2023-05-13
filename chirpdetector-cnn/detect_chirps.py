@@ -108,7 +108,16 @@ def interpolate(data):
         times_sampled = data.track_times[
             data.track_indices[data.track_idents == track_id]
         ]
+        times_sampled = np.append(times_sampled, times_sampled[-1])
         freqs_sampled = data.track_freqs[data.track_idents == track_id]
+        freqs_sampled = np.append(freqs_sampled, freqs_sampled[-1])
+
+        # remove duplocates on the time array
+        times_sampled, index = np.unique(times_sampled, return_index=True)
+
+        # remove the same value on the freq array
+        freqs_sampled = freqs_sampled[index]
+
         f = interp1d(times_sampled, freqs_sampled, kind="cubic")
         freqs_interp = f(times_full)
 
