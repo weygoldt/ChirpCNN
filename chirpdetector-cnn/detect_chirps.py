@@ -231,7 +231,9 @@ def detect_chirps(
             # frequency axis indices
             window_center_track = find_on_time(time, center_time, True)
             if window_center_track is np.nan:
-                print(np.min(time), np.max(time), center_time)
+                logger.warning(
+                    f"Overshooting array ends: {np.min(time), np.max(time), center_time}"
+                )
                 window_center_track = find_on_time(time, center_time, False)
 
             window_center_freq = track[window_center_track]
