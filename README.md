@@ -162,6 +162,8 @@ To see what is going on there are two plotting snippets that are commented out i
   - [ ] Tracks that are not on the frequency band anymore
   - [ ] More classes: Chirp, no chirp, no track, vertical noise
 - [ ] Build a full simulation pipeline for a better benchmark dataset
+- [ ] Remove blacklisting noise bands
+- [ ] Tweak time tolerance grouping, lots of chirps are currently missed when rates are high
 
 ## Project log 
 
