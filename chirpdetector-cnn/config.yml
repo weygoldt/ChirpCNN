@@ -40,7 +40,7 @@ overlap_fraction: 0.99  # hanning window overlap
  
 # ROI EXTRACTION ------
 time_pad: 0.11 # window size before and after chirp
-freq_pad: [-50, 250] # window size below and above the chirp. Must be larger than the max chirp size
+freq_pad: [50, 250] # window size below and above the chirp. Must be larger than the max chirp size
 img_size_px: 128 # size of the extracted image in pixels. The image will must be square
 
 # CNN MODEL ------

@@ -27,6 +27,7 @@ from utils.datahandling import (
     resize_tensor_image,
 )
 from utils.filehandling import ConfLoader, DataSubset, load_data
+from utils.filters import lowpass_filter
 from utils.logger import make_logger
 from utils.plotstyle import PlotStyle
 from utils.spectrogram import (
@@ -311,6 +312,10 @@ def detect_chirps(
         pred_probs = 1 - probs.cpu().numpy()[:, 0]
         pred_labels = preds.cpu().numpy()
 
+        # lowpass filter the probabilities
+        fs = 1 / stride
+        pred_probs = lowpass_filter(pred_probs, fs, fs / 10)
+
         # get chirp clusters from the predictions
         cluster_indices = cluster_peaks(pred_probs, conf.min_chirp_prob)
 
@@ -434,7 +439,7 @@ class Detector:
         chirps = []
         for i in track(
             range(n_chunks),
-            description=f"Detecting chirps in {self.data.path.name}",
+            description=f"Detecting chirps for {self.data.path.name}",
         ):
             logger.info(f"Processing chunk {i + 1} of {n_chunks}...")
 
