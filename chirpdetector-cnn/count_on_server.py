@@ -33,9 +33,12 @@ def main():
 
     counter = 0
     for i, rec in enumerate(recs):
-        logger.info(f"Processing recording {i+1}/{len(recs)+1}")
-        chirps = np.load(rec / "chirp_times_cnn.npy")
-        counter += len(chirps)
+        try:
+            chirps = np.load(rec / "chirp_times_cnn.npy")
+            counter += len(chirps)
+            print(f"Processing recording {i+1}/{len(recs)+1}")
+        except:
+            print("Nothing here yet!")
 
     print(f"We have {counter} chirps now!")
 
