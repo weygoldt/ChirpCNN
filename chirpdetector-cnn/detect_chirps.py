@@ -594,7 +594,7 @@ class Detector:
                         va="bottom",
                         ha="center",
                     )
-                ax.set_ylim(400, 1000)
+                ax.set_ylim(300, 1200)
                 plt.savefig(
                     f"{self.plotpath}/{str(self.data.path.name)}_{i}.png"
                 )
