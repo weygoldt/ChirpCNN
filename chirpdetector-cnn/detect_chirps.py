@@ -321,9 +321,9 @@ def detect_chirps(
         pred_probs = lowpass_filter(pred_probs, fs, fs / 10)
 
         # normalize to 0 and 1 again (lowpass adds artefacts)
-        pred_probs = (pred_probs - np.min(pred_probs)) / (
-            pred_probs.max() - pred_probs.min()
-        )
+        # pred_probs = (pred_probs - np.min(pred_probs)) / (
+        #     pred_probs.max() - pred_probs.min()
+        # )
 
         # get chirp clusters from the predictions
         cluster_indices = cluster_peaks(pred_probs, conf.min_chirp_prob)
@@ -551,7 +551,7 @@ class Detector:
             plot = True
             if (len(chunk_chirps) > 0) and plot:
                 fig, ax = plt.subplots(
-                    figsize=(30 * ps.cm, 20 * ps.cm),
+                    figsize=(60 * ps.cm, 20 * ps.cm),
                     constrained_layout=True,
                 )
                 specshow(
@@ -594,7 +594,7 @@ class Detector:
                         va="bottom",
                         ha="center",
                     )
-                ax.set_ylim(0, 2000)
+                ax.set_ylim(400, 1000)
                 plt.savefig(
                     f"{self.plotpath}/{str(self.data.path.name)}_{i}.png"
                 )
