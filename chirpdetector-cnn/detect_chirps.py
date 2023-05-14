@@ -316,6 +316,11 @@ def detect_chirps(
         fs = 1 / stride
         pred_probs = lowpass_filter(pred_probs, fs, fs / 10)
 
+        # normalize to 0 and 1 again (lowpass adds artefacts)
+        pred_probs = (pred_probs - np.min(pred_probs)) / (
+            pred_probs.max() - pred_probs.min()
+        )
+
         # get chirp clusters from the predictions
         cluster_indices = cluster_peaks(pred_probs, conf.min_chirp_prob)
 
