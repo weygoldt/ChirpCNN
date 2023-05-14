@@ -578,13 +578,13 @@ class Detector:
                         chirp[1],
                         facecolors="white",
                         edgecolors="black",
-                        s=50,
+                        s=20,
                     )
                     ax.text(
                         chirp[0],
                         chirp[1] + 50,
                         np.round(chirp[2], 2),
-                        fontsize=14,
+                        fontsize=10,
                         color="white",
                         rotation="vertical",
                         va="bottom",
