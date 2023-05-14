@@ -545,7 +545,10 @@ class Detector:
                             alpha=0.6,
                         )
                     except:
-                        embed()
+                        logger.warning(
+                            f"Could not plot noise index. Shape of noise index: {noise_index.shape}. Shape of spec_times: {spec_times.shape}."
+                        )
+
                 for chirp in chunk_chirps:
                     ax.scatter(
                         chirp[0],
