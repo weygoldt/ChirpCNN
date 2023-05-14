@@ -46,6 +46,34 @@ ps = PlotStyle()
 pretty.install()
 
 
+def get_closest_indices(array, values):
+    # make sure array is a numpy array
+    array = np.array(array)
+
+    # check if values are sorted
+    sorter = None
+    if np.any(np.diff(array) < 0):
+        # if not, sort them
+        sorter = np.argsort(array)
+        array = array[sorter]
+
+    # get insert positions
+    idxs = np.searchsorted(array, values, side="left")
+
+    # resort to original order
+    if sorter is not None:
+        idxs = sorter[np.argsort(idxs)]
+
+    # find indexes where previous index is closer
+    prev_idx_is_less = (idxs == len(array)) | (
+        np.fabs(values - array[np.maximum(idxs - 1, 0)])
+        < np.fabs(values - array[np.minimum(idxs, len(array) - 1)])
+    )
+    idxs[prev_idx_is_less] -= 1
+
+    return idxs
+
+
 def group_close_chirps(chirps, time_tolerance=0.02):
     """
     Group close chirps into one chirp
@@ -198,23 +226,76 @@ def detect_chirps(
         center_times = []
         center_freqs = []
 
-        """ I am trying to vectorize this for loop so I can scale instead of norm
-        and it will run faster
-
+        # Find the time starts and stops of the windows on the spectrogram
         window_ranges = window_starts[:, np.newaxis] + np.arange(window_size)
         center_time_indices = window_ranges[:, int(window_size / 2)]
         center_times = spec_times[center_time_indices]
 
+        # Find the center time from the spec on the frequency track
         window_center_track = np.asarray(
-            [find_on_time(time, t, False) for t in center_times]
+            [find_on_time(time, t, True) for t in center_times]
         )
 
+        # If the frequency track has not data, remove the windows so that
+        # the classification is not run on them
+        center_times = center_times[~np.isnan(window_center_track)]
+        time_ranges = window_ranges[~np.isnan(window_center_track)]
+        window_center_track = window_center_track[
+            ~np.isnan(window_center_track)
+        ]
+
+        if len(center_times) == 0:
+            logger.info("No data in this window, skipping")
+            continue
+
+        # Get the frequencies from the track corresponding to the times
+        # on the track
         window_center_freq = track[window_center_track]
 
-        window_center_freq_on_spec = np.asarray(
-            [find_on_time(spec_freqs, f) for f in window_center_freq]
+        # get the frequencies from the spectrogram corresponding to the
+        # frequencies on the track
+        window_center_freq_index = get_closest_indices(
+            spec_freqs, window_center_freq
         )
-        """
+
+        # convert the frequency padding from the conf to indices on the spec_freqs
+        pads = conf.freq_pad[0], conf.freq_pad[1]
+        pad_indices = get_closest_indices(spec_freqs, pads)
+
+        # add the indices to the indices of the center frequencies
+        freq_ranges = window_center_freq_index[:, np.newaxis] + np.arange(
+            -pad_indices[0], pad_indices[1]
+        )
+
+        # index helpers
+        n_windows = len(center_times)
+        n_freqs = len(spec_freqs)
+        n_freq_subset = len(freq_ranges[0])
+        n_times = len(time_ranges[0])
+
+        # cut out the 2d areas from the spectrogram tensor bounded by the
+        # time and frequency ranges
+        time_tensor = spec[:, time_ranges].permute(1, 0, 2)
+
+        # make a mask of the same shape as the spectrogram tensor
+        mask = np.zeros((n_windows, n_freqs, n_times), dtype=bool)
+        mask[
+            np.arange(n_windows)[:, None, None], freq_ranges[:, :, None], :
+        ] = True
+
+        # convert the mask to a tensor
+        mask = torch.tensor(mask).to(device)
+
+        # apply the mask to extract the desired frequencies for each window
+        snippets = torch.tensor(time_tensor)[mask].view(
+            n_windows, n_freq_subset, n_times
+        )
+
+        # do nessesary transformations to the snippets before classification
+        snippets = snippets.to(torch.float32)
+
+        embed()
+        exit()
 
         for i, window_start in enumerate(window_starts):
             # check again if there is data in this window
@@ -423,7 +504,7 @@ class Detector:
         # TODO: Mask high amplitude vertical noise bands again
 
         chirps = []
-        for i in track(range(n_chunks), description=f"{self.data.path.name}"):
+        for i in range(n_chunks):
             logger.info(f"Processing chunk {i + 1} of {n_chunks}...")
 
             # get start and stop indices for the current chunk
