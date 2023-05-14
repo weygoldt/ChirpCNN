@@ -207,7 +207,7 @@ def detect_chirps(
     noise_profile = torch.mean(noise_subset, axis=0)
     noise_profile = noise_profile.cpu().numpy()
     noise_index = np.zeros_like(noise_profile, dtype=bool)
-    noise_index[noise_profile > threshold] = True
+    # noise_index[noise_profile > threshold] = True
 
     for track_id in np.unique(track_idents):
         logger.info(f"Detecting chirps for track {track_id}")
@@ -311,91 +311,6 @@ def detect_chirps(
         pred_probs = 1 - probs.cpu().numpy()[:, 0]
         pred_labels = preds.cpu().numpy()
 
-        # for i, window_start in enumerate(window_starts):
-        #     # check again if there is data in this window
-        #     if time[0] > spec_times[window_start + window_size]:
-        #         logger.info("First track time after window end, skipping")
-        #         continue
-
-        #     if time[-1] < spec_times[window_start]:
-        #         logger.info("Last track time before window start, skipping")
-        #         continue
-
-        #     # if skip if current window touches a blacklisted noise band
-        #     # if True in noise_index[window_start : window_start + window_size]:
-        #     #     logger.debug("Noise band in window, skipping classification")
-        #     #     continue
-
-        #     # time axis indices
-        #     min_time_index = window_start
-        #     max_time_index = window_start + window_size
-        #     center_time_index = int(window_start + window_size / 2)
-        #     center_time = spec_times[center_time_index]
-
-        #     # frequency axis indices
-        #     window_center_track = find_on_time(time, center_time, True)
-        #     if window_center_track is np.nan:
-        #         logger.warning(
-        #             f"Overshooting array ends: {np.min(time), np.max(time), center_time}"
-        #         )
-        #         window_center_track = find_on_time(time, center_time, False)
-
-        #     window_center_freq = track[window_center_track]
-        #     min_freq = window_center_freq + conf.freq_pad[0]
-        #     max_freq = window_center_freq + conf.freq_pad[1]
-        #     min_freq_idx = find_on_time(spec_freqs, min_freq)
-        #     max_freq_idx = find_on_time(spec_freqs, max_freq)
-
-        #     # get window area
-        #     # spec is still a tensor
-        #     snippet = spec[
-        #         min_freq_idx:max_freq_idx, min_time_index:max_time_index
-        #     ]
-
-        #     if snippet.shape[-1] == 0:
-        #         logger.info("Reached the end of the spectrogram, skipping")
-        #         continue
-
-        #     # this became redundant after scaling to 0 mean and 1 std
-        #     # normalize snippet
-        #     # still a tensor
-        #     # snippet = norm_tensor(snippet)
-
-        #     # rezise to square as tensor
-        #     snippet = resize_tensor_image(snippet, conf.img_size_px)
-
-        #     # convert to float32 because the model expects that
-        #     snippet = snippet.to(torch.float32)
-
-        #     # predict the label and probability of the snippet
-        #     prob, label = classify(model, snippet)
-        #     prob = 1 - prob
-        #     embed()
-        #     exit()
-
-        #     # plot the snippet
-        #     # fig, ax = plt.subplots()
-        #     # ax.imshow(snippet[0][0].cpu().numpy(), origin="lower")
-        #     # ax.text(0.5, 0.5, f"{prob:.2f}", color="white", fontsize=20)
-        #     # plt.savefig(f"../anim_plots/{outer_iter}_{iter}.png")
-        #     # plt.cla()
-        #     # plt.clf()
-        #     # plt.close("all")
-        #     # plt.close(fig)
-
-        #     # save the predictions and the center time and frequency
-        #     pred_labels.append(label)
-        #     pred_probs.append(prob)
-        #     center_times.append(center_time)
-        #     center_freqs.append(window_center_freq)
-        #     iter += 1
-
-        # convert to numpy arrays
-        pred_labels = np.asarray(pred_labels)
-        pred_probs = np.asarray(pred_probs)
-        center_times = np.asarray(center_times)
-        center_freqs = np.asarray(center_freqs)
-
         # get chirp clusters from the predictions
         cluster_indices = cluster_peaks(pred_probs, conf.min_chirp_prob)
 
@@ -456,9 +371,6 @@ def detect_chirps(
     logger.info(f"{len(chirps)} survived the sorting process")
 
     return chirps, noise_index
-
-
-# noise_index, lowamp_index
 
 
 class Detector:
