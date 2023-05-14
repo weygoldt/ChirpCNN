@@ -432,7 +432,10 @@ class Detector:
         # TODO: Mask high amplitude vertical noise bands again
 
         chirps = []
-        for i in track(range(n_chunks), description="Processing chunks..."):
+        for i in track(
+            range(n_chunks),
+            description=f"Detecting chirps in {self.data.path.name}",
+        ):
             logger.info(f"Processing chunk {i + 1} of {n_chunks}...")
 
             # get start and stop indices for the current chunk
@@ -531,7 +534,8 @@ class Detector:
             chirps.extend(chunk_chirps)
 
             # plot
-            if len(chunk_chirps) > 0:
+            plot = True
+            if (len(chunk_chirps) > 0) and plot:
                 fig, ax = plt.subplots(
                     figsize=(30 * ps.cm, 20 * ps.cm),
                     constrained_layout=True,

@@ -61,7 +61,7 @@ training_dataset_bias: 1 # how many times more nochirp windows than chirp window
 detection_data_path: "../testing_data" # where the testing data will be stored
 stride: 0.01 # step size of the detector on the spectrogram in s
 min_chirp_dt: 0.03 # minimum time between chirps in s
-buffersize: 10 # how large the buffer is in s
+buffersize: 20 # how large the buffer is in s
 spectrogram_overlap: 1 # how much to overlap the spectrograms in the buffer
 # power_on_track_threshold: -75 # the minimum power on the frequency track of a window in dB to be allowed to enter the classifier
 # blacklist_vertical_noise_bands: True # whether to blacklist vertical noise bands
