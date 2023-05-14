@@ -243,7 +243,7 @@ def detect_chirps(
         time_ranges = window_ranges[~np.isnan(window_center_track)]
         window_center_track = window_center_track[
             ~np.isnan(window_center_track)
-        ]
+        ].astype(int)
 
         if len(window_center_track) == 0:
             logger.info("No data in this window, skipping")
