@@ -578,7 +578,7 @@ class Detector:
                         chirp[1],
                         facecolors="white",
                         edgecolors="black",
-                        s=20,
+                        s=15,
                     )
                     ax.text(
                         chirp[0],
