@@ -245,7 +245,7 @@ def detect_chirps(
             ~np.isnan(window_center_track)
         ]
 
-        if isinstance(window_center_track, int):
+        if len(window_center_track) == 0:
             logger.info("No data in this window, skipping")
             continue
 
