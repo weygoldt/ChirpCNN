@@ -227,9 +227,9 @@ def detect_chirps(
                 continue
 
             # if skip if current window touches a blacklisted noise band
-            if True in noise_index[window_start : window_start + window_size]:
-                logger.debug("Noise band in window, skipping classification")
-                continue
+            # if True in noise_index[window_start : window_start + window_size]:
+            #     logger.debug("Noise band in window, skipping classification")
+            #     continue
 
             # time axis indices
             min_time_index = window_start
