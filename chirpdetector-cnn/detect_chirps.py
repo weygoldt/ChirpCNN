@@ -221,10 +221,10 @@ def detect_chirps(
         # make blacklisted areas where low amplitude is too low below
         # the frequency track
 
-        pred_labels = []
-        pred_probs = []
-        center_times = []
-        center_freqs = []
+        # pred_labels = []
+        # pred_probs = []
+        # center_times = []
+        # center_freqs = []
 
         # Find the time starts and stops of the windows on the spectrogram
         window_ranges = window_starts[:, np.newaxis] + np.arange(window_size)
@@ -258,6 +258,8 @@ def detect_chirps(
             spec_freqs, window_center_freq
         )
 
+        center_freqs = spec_freqs[window_center_freq_index]
+
         # convert the frequency padding from the conf to indices on the spec_freqs
         pads = conf.freq_pad[0], conf.freq_pad[1]
         pad_indices = get_closest_indices(spec_freqs, pads)
@@ -287,92 +289,106 @@ def detect_chirps(
         mask = torch.tensor(mask).to(device)
 
         # apply the mask to extract the desired frequencies for each window
-        snippets = torch.tensor(time_tensor)[mask].view(
-            n_windows, n_freq_subset, n_times
-        )
+        snippets = time_tensor[mask].view(n_windows, n_freq_subset, n_times)
+
+        # add channel dimension size image data is expected and classically has
+        # channels
+        snippets = snippets[:, None, :, :]
+
+        # interpolate, this step will be removed in the future
+        snippets = F.interpolate(snippets, size=(128, 128), mode="area")
 
         # do nessesary transformations to the snippets before classification
         snippets = snippets.to(torch.float32)
 
-        embed()
-        exit()
+        # classify the snippets
+        with torch.no_grad():
+            outputs = model(snippets)
+            probs = F.softmax(outputs, dim=1)
+            _, preds = torch.max(outputs, dim=1)
 
-        for i, window_start in enumerate(window_starts):
-            # check again if there is data in this window
-            if time[0] > spec_times[window_start + window_size]:
-                logger.info("First track time after window end, skipping")
-                continue
+        # convert the outputs to numpy arrays
+        pred_probs = 1 - probs.cpu().numpy()[:, 0]
+        pred_labels = preds.cpu().numpy()
 
-            if time[-1] < spec_times[window_start]:
-                logger.info("Last track time before window start, skipping")
-                continue
+        # for i, window_start in enumerate(window_starts):
+        #     # check again if there is data in this window
+        #     if time[0] > spec_times[window_start + window_size]:
+        #         logger.info("First track time after window end, skipping")
+        #         continue
 
-            # if skip if current window touches a blacklisted noise band
-            # if True in noise_index[window_start : window_start + window_size]:
-            #     logger.debug("Noise band in window, skipping classification")
-            #     continue
+        #     if time[-1] < spec_times[window_start]:
+        #         logger.info("Last track time before window start, skipping")
+        #         continue
 
-            # time axis indices
-            min_time_index = window_start
-            max_time_index = window_start + window_size
-            center_time_index = int(window_start + window_size / 2)
-            center_time = spec_times[center_time_index]
+        #     # if skip if current window touches a blacklisted noise band
+        #     # if True in noise_index[window_start : window_start + window_size]:
+        #     #     logger.debug("Noise band in window, skipping classification")
+        #     #     continue
 
-            # frequency axis indices
-            window_center_track = find_on_time(time, center_time, True)
-            if window_center_track is np.nan:
-                logger.warning(
-                    f"Overshooting array ends: {np.min(time), np.max(time), center_time}"
-                )
-                window_center_track = find_on_time(time, center_time, False)
+        #     # time axis indices
+        #     min_time_index = window_start
+        #     max_time_index = window_start + window_size
+        #     center_time_index = int(window_start + window_size / 2)
+        #     center_time = spec_times[center_time_index]
 
-            window_center_freq = track[window_center_track]
-            min_freq = window_center_freq + conf.freq_pad[0]
-            max_freq = window_center_freq + conf.freq_pad[1]
-            min_freq_idx = find_on_time(spec_freqs, min_freq)
-            max_freq_idx = find_on_time(spec_freqs, max_freq)
+        #     # frequency axis indices
+        #     window_center_track = find_on_time(time, center_time, True)
+        #     if window_center_track is np.nan:
+        #         logger.warning(
+        #             f"Overshooting array ends: {np.min(time), np.max(time), center_time}"
+        #         )
+        #         window_center_track = find_on_time(time, center_time, False)
 
-            # get window area
-            # spec is still a tensor
-            snippet = spec[
-                min_freq_idx:max_freq_idx, min_time_index:max_time_index
-            ]
+        #     window_center_freq = track[window_center_track]
+        #     min_freq = window_center_freq + conf.freq_pad[0]
+        #     max_freq = window_center_freq + conf.freq_pad[1]
+        #     min_freq_idx = find_on_time(spec_freqs, min_freq)
+        #     max_freq_idx = find_on_time(spec_freqs, max_freq)
 
-            if snippet.shape[-1] == 0:
-                logger.info("Reached the end of the spectrogram, skipping")
-                continue
+        #     # get window area
+        #     # spec is still a tensor
+        #     snippet = spec[
+        #         min_freq_idx:max_freq_idx, min_time_index:max_time_index
+        #     ]
 
-            # this became redundant after scaling to 0 mean and 1 std
-            # normalize snippet
-            # still a tensor
-            # snippet = norm_tensor(snippet)
+        #     if snippet.shape[-1] == 0:
+        #         logger.info("Reached the end of the spectrogram, skipping")
+        #         continue
 
-            # rezise to square as tensor
-            snippet = resize_tensor_image(snippet, conf.img_size_px)
+        #     # this became redundant after scaling to 0 mean and 1 std
+        #     # normalize snippet
+        #     # still a tensor
+        #     # snippet = norm_tensor(snippet)
 
-            # convert to float32 because the model expects that
-            snippet = snippet.to(torch.float32)
+        #     # rezise to square as tensor
+        #     snippet = resize_tensor_image(snippet, conf.img_size_px)
 
-            # predict the label and probability of the snippet
-            prob, label = classify(model, snippet)
-            prob = 1 - prob
+        #     # convert to float32 because the model expects that
+        #     snippet = snippet.to(torch.float32)
 
-            # plot the snippet
-            # fig, ax = plt.subplots()
-            # ax.imshow(snippet[0][0].cpu().numpy(), origin="lower")
-            # ax.text(0.5, 0.5, f"{prob:.2f}", color="white", fontsize=20)
-            # plt.savefig(f"../anim_plots/{outer_iter}_{iter}.png")
-            # plt.cla()
-            # plt.clf()
-            # plt.close("all")
-            # plt.close(fig)
+        #     # predict the label and probability of the snippet
+        #     prob, label = classify(model, snippet)
+        #     prob = 1 - prob
+        #     embed()
+        #     exit()
 
-            # save the predictions and the center time and frequency
-            pred_labels.append(label)
-            pred_probs.append(prob)
-            center_times.append(center_time)
-            center_freqs.append(window_center_freq)
-            iter += 1
+        #     # plot the snippet
+        #     # fig, ax = plt.subplots()
+        #     # ax.imshow(snippet[0][0].cpu().numpy(), origin="lower")
+        #     # ax.text(0.5, 0.5, f"{prob:.2f}", color="white", fontsize=20)
+        #     # plt.savefig(f"../anim_plots/{outer_iter}_{iter}.png")
+        #     # plt.cla()
+        #     # plt.clf()
+        #     # plt.close("all")
+        #     # plt.close(fig)
+
+        #     # save the predictions and the center time and frequency
+        #     pred_labels.append(label)
+        #     pred_probs.append(prob)
+        #     center_times.append(center_time)
+        #     center_freqs.append(window_center_freq)
+        #     iter += 1
 
         # convert to numpy arrays
         pred_labels = np.asarray(pred_labels)
@@ -504,7 +520,7 @@ class Detector:
         # TODO: Mask high amplitude vertical noise bands again
 
         chirps = []
-        for i in range(n_chunks):
+        for i in track(range(n_chunks), description="Processing chunks..."):
             logger.info(f"Processing chunk {i + 1} of {n_chunks}...")
 
             # get start and stop indices for the current chunk
