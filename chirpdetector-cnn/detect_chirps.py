@@ -318,7 +318,7 @@ def detect_chirps(
 
         # lowpass filter the probabilities
         fs = 1 / stride
-        pred_probs = lowpass_filter(pred_probs, fs, fs / 5)
+        pred_probs = lowpass_filter(pred_probs, fs, fs / 8)
 
         # normalize to 0 and 1 again (lowpass adds artefacts)
         # pred_probs = (pred_probs - np.min(pred_probs)) / (
