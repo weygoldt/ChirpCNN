@@ -36,7 +36,7 @@ def main():
         try:
             chirps = np.load(rec / "chirp_times_cnn.npy")
             counter += len(chirps)
-            print(f"Processing recording {i+1}/{len(recs)+1}")
+            print(f"Processing recording {i+1}/{len(recs)}")
         except:
             print("Nothing here yet!")
 

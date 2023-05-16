@@ -31,7 +31,8 @@ def main():
     # and strip the FUCKING QUOTATION MARKS
     recs = [datapath / p.strip("“”") for p in meta.recording.values]
 
-    recs = recs[7:]
+    recs = recs[18:]
+
     for i, rec in enumerate(recs):
         logger.info(f"Processing recording {i+1}/{len(recs)+1}")
         chirpdetector(rec)

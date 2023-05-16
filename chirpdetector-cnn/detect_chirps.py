@@ -10,6 +10,9 @@ import argparse
 import pathlib
 import time
 
+import matplotlib
+
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
@@ -119,9 +122,7 @@ def interpolate(data):
     track_freqs = []
     track_idents = []
     track_indices = []
-    new_times = np.arange(
-        data.track_times[0], data.track_times[-1], conf.stride
-    )
+    new_times = np.arange(data.track_times[0], data.track_times[-1], conf.stride)
     index_helper = np.arange(len(new_times))
     ids = np.unique(data.track_idents[~np.isnan(data.track_idents)])
     for track_id in ids:
@@ -131,9 +132,7 @@ def interpolate(data):
         stop_time = data.track_times[
             data.track_indices[data.track_idents == track_id][-1]
         ]
-        times_full = new_times[
-            (new_times >= start_time) & (new_times <= stop_time)
-        ]
+        times_full = new_times[(new_times >= start_time) & (new_times <= stop_time)]
         times_sampled = data.track_times[
             data.track_indices[data.track_idents == track_id]
         ]
@@ -150,9 +149,7 @@ def interpolate(data):
         f = interp1d(times_sampled, freqs_sampled, kind="cubic")
         freqs_interp = f(times_full)
 
-        index_interp = index_helper[
-            (new_times >= start_time) & (new_times <= stop_time)
-        ]
+        index_interp = index_helper[(new_times >= start_time) & (new_times <= stop_time)]
         ident_interp = np.ones(len(freqs_interp)) * track_id
 
         track_idents.append(ident_interp)
@@ -196,9 +193,7 @@ def detect_chirps(
     track_indices,
     track_idents,
 ):
-    window_starts = np.arange(
-        0, len(spec_times) - window_size, stride, dtype=int
-    )
+    window_starts = np.arange(0, len(spec_times) - window_size, stride, dtype=int)
     detect_chirps = []
     iter = 0
 
@@ -241,9 +236,9 @@ def detect_chirps(
         # the classification is not run on them
         center_times = center_times[~np.isnan(window_center_track)]
         time_ranges = window_ranges[~np.isnan(window_center_track)]
-        window_center_track = window_center_track[
-            ~np.isnan(window_center_track)
-        ].astype(int)
+        window_center_track = window_center_track[~np.isnan(window_center_track)].astype(
+            int
+        )
 
         if len(window_center_track) == 0:
             logger.info("No data in this window, skipping")
@@ -259,9 +254,7 @@ def detect_chirps(
 
         # get the frequencies from the spectrogram corresponding to the
         # frequencies on the track
-        window_center_freq_index = get_closest_indices(
-            spec_freqs, window_center_freq
-        )
+        window_center_freq_index = get_closest_indices(spec_freqs, window_center_freq)
 
         center_freqs = spec_freqs[window_center_freq_index]
 
@@ -286,9 +279,7 @@ def detect_chirps(
 
         # make a mask of the same shape as the spectrogram tensor
         mask = np.zeros((n_windows, n_freqs, n_times), dtype=bool)
-        mask[
-            np.arange(n_windows)[:, None, None], freq_ranges[:, :, None], :
-        ] = True
+        mask[np.arange(n_windows)[:, None, None], freq_ranges[:, :, None], :] = True
 
         # convert the mask to a tensor
         mask = torch.tensor(mask).to(device)
@@ -352,9 +343,7 @@ def detect_chirps(
         logger.info(f"Found {len(weighted_times)} chirps")
 
         # put into touples for comparison across tracks
-        current_chirps = list(
-            zip(weighted_times, weighted_freqs, max_probs, chirp_id)
-        )
+        current_chirps = list(zip(weighted_times, weighted_freqs, max_probs, chirp_id))
 
         # append to the list of chirps
         detect_chirps.extend(current_chirps)
@@ -471,12 +460,8 @@ class Detector:
             first_track_time = self.data.track_times[0]
 
             # compute the time of the spectrogram
-            spec_times = (
-                np.arange(idx1, idx2 + 1, self.hop_len) / self.samplingrate
-            )
-            spec_freqs = (
-                np.arange(0, self.nfft / 2 + 1) * self.samplingrate / self.nfft
-            )
+            spec_times = np.arange(idx1, idx2 + 1, self.hop_len) / self.samplingrate
+            spec_freqs = np.arange(0, self.nfft / 2 + 1) * self.samplingrate / self.nfft
 
             # skip if the chunk is before the first track
             if first_chunk_time < first_track_time:
@@ -487,6 +472,7 @@ class Detector:
             # check if the chunk has data
             if chunk.hasdata is False:
                 logger.info("No data in chunk, skipping...")
+                del chunk
                 continue
 
             # compute the spectrogram for all electrodes
@@ -595,9 +581,7 @@ class Detector:
                         ha="center",
                     )
                 ax.set_ylim(300, 1200)
-                plt.savefig(
-                    f"{self.plotpath}/{str(self.data.path.name)}_{i}.png"
-                )
+                plt.savefig(f"{self.plotpath}/{str(self.data.path.name)}_{i}.png")
                 plt.cla()
                 plt.clf()
                 plt.close("all")
@@ -605,6 +589,7 @@ class Detector:
 
             del detection_data
             del spec
+            torch.cuda.empty_cache()
 
         # reformat the detected chirps
         chirps = np.array(chirps)
@@ -638,9 +623,7 @@ class Detector:
 
 
 def interface():
-    parser = argparse.ArgumentParser(
-        description="Detects chirps on spectrograms."
-    )
+    parser = argparse.ArgumentParser(description="Detects chirps on spectrograms.")
     parser.add_argument(
         "--path",
         "-p",
@@ -675,9 +658,7 @@ def main(path):
     logger.info(
         f"Detected {len(chirp_times)} chirps in {len(np.unique(chirp_ids))} fish."
     )
-    print(
-        f"Detected {len(chirp_times)} chirps in {len(np.unique(chirp_ids))} fish."
-    )
+    print(f"Detected {len(chirp_times)} chirps in {len(np.unique(chirp_ids))} fish.")
 
     logger.info(f"Saving detected chirps to {datapath}...")
     np.save(datapath / "chirp_times_cnn.npy", chirp_times)
