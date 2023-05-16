@@ -6,6 +6,7 @@ test
 data
 chirpdetector-cnn/models/model.pt
 plots
+chirpcnn
 .vscode
 .python-version
 *.log
