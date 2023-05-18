@@ -2,10 +2,67 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 from IPython import embed
+from scipy.interpolate import interp1d
 
 from .logger import make_logger
 
 logger = make_logger(__name__)
+
+
+def interpolate(data, stride):
+    """
+    Interpolate the tracked frequencies to a regular sampling
+    """
+    track_freqs = []
+    track_idents = []
+    track_indices = []
+    new_times = np.arange(data.track_times[0], data.track_times[-1], stride)
+    index_helper = np.arange(len(new_times))
+    ids = np.unique(data.track_idents[~np.isnan(data.track_idents)])
+    for track_id in ids:
+        start_time = data.track_times[
+            data.track_indices[data.track_idents == track_id][0]
+        ]
+        stop_time = data.track_times[
+            data.track_indices[data.track_idents == track_id][-1]
+        ]
+        times_full = new_times[
+            (new_times >= start_time) & (new_times <= stop_time)
+        ]
+        times_sampled = data.track_times[
+            data.track_indices[data.track_idents == track_id]
+        ]
+        times_sampled = np.append(times_sampled, times_sampled[-1])
+        freqs_sampled = data.track_freqs[data.track_idents == track_id]
+        freqs_sampled = np.append(freqs_sampled, freqs_sampled[-1])
+
+        # remove duplocates on the time array
+        times_sampled, index = np.unique(times_sampled, return_index=True)
+
+        # remove the same value on the freq array
+        freqs_sampled = freqs_sampled[index]
+
+        f = interp1d(times_sampled, freqs_sampled, kind="cubic")
+        freqs_interp = f(times_full)
+
+        index_interp = index_helper[
+            (new_times >= start_time) & (new_times <= stop_time)
+        ]
+        ident_interp = np.ones(len(freqs_interp)) * track_id
+
+        track_idents.append(ident_interp)
+        track_indices.append(index_interp)
+        track_freqs.append(freqs_interp)
+
+    track_idents = np.concatenate(track_idents)
+    track_freqs = np.concatenate(track_freqs)
+    track_indices = np.concatenate(track_indices)
+
+    data.track_idents = track_idents
+    data.track_indices = track_indices
+    data.track_freqs = track_freqs
+    data.track_times = new_times
+    return data
 
 
 def resize_tensor_image(image, length):
@@ -41,11 +98,6 @@ def resize_tensor_image(image, length):
         embed()
 
     return resized_image
-
-
-# def resize_image(image, length):
-#     image = cv2.resize(image, (length, length), interpolation=cv2.INTER_AREA)
-#     return image
 
 
 def find_on_time(array, target, limit=True):

@@ -1,9 +1,104 @@
 import os
 import pathlib
+from typing import Union
 
 import numpy as np
 import yaml
+from rich import print
 from thunderfish.dataloader import DataLoader
+
+
+def todict(obj, classkey=None):
+    """Recursively convert an object into a dictionary.
+
+    Parameters
+    ----------
+    obj : _object_
+        Some object to convert into a dictionary.
+    classkey : str, optional
+        The key to that should be converted. If None,
+        converts everything in the object. By default None
+
+    Returns
+    -------
+    dict
+        The converted dictionary.
+    """
+    if isinstance(obj, dict):
+        data = {}
+        for k, v in obj.items():
+            data[k] = todict(v, classkey)
+        return data
+    elif hasattr(obj, "_ast"):
+        return todict(obj._ast())
+    elif hasattr(obj, "__iter__") and not isinstance(obj, str):
+        return [todict(v, classkey) for v in obj]
+    elif hasattr(obj, "__dict__"):
+        data = dict(
+            [
+                (key, todict(value, classkey))
+                for key, value in obj.__dict__.items()
+                if not callable(value) and not key.startswith("_")
+            ]
+        )
+        if classkey is not None and hasattr(obj, "__class__"):
+            data[classkey] = obj.__class__.__name__
+        return data
+    else:
+        return obj
+
+
+class Config:
+    """
+    Class to recursively load a YAML file and access its contents using
+    dot notation.
+
+    Parameters
+    ----------
+    config_file : str
+        The path to the YAML file to load.
+
+    Attributes
+    ----------
+    <key> : Any
+        The value associated with the specified key in the loaded YAML file. If the value is
+        a dictionary, it will be recursively converted to another `Config` object and accessible
+        as a subclass attribute.
+    """
+
+    def __init__(self, config_file: Union[str, pathlib.Path, dict]) -> None:
+        """
+        Load the YAML file and convert its keys to class attributes.
+        """
+
+        if isinstance(config_file, dict):
+            config_dict = config_file
+        else:
+            with open(config_file, "r") as f:
+                config_dict = yaml.safe_load(f)
+        for key, value in config_dict.items():
+            if isinstance(value, dict):
+                setattr(self, key, Config(value))
+            else:
+                setattr(self, key, value)
+
+    def __repr__(self) -> str:
+        """
+        Return a string representation of the `Config` object.
+        """
+        return f"Config({vars(self)})"
+
+    def __str__(self) -> str:
+        """
+        Return a human-readable string representation of the `Config` object.
+        """
+        return str(vars(self))
+
+    def pprint(self) -> None:
+        """
+        Pretty print the `Config` object.
+        """
+        print(todict(self))
 
 
 class ConfLoader:
@@ -172,3 +267,152 @@ class NumpyDataset:
 
     def __str__(self) -> str:
         return f"NumpyDataset({self.file})"
+
+
+class WaveTrackerDataset:
+    def __init__(self, datapath: pathlib.Path) -> None:
+        if not datapath.is_dir():
+            raise NotADirectoryError(f"{datapath} is not a directory")
+
+        self.path = datapath
+        self.date = datapath.name
+
+        if pathlib.Path(datapath / "raw.npy").exists():
+            self.raw = np.load(datapath / "raw.npy", allow_pickle=True)
+            self.samplerate = 20000.0
+        elif pathlib.Path(datapath / "traces-grid1.raw").exists():
+            self.raw = DataLoader(
+                datapath / "traces-grid1.raw", 60.0, 0, channel=-1
+            )
+            self.samplerate = self.raw.samplerate
+        else:
+            raise FileNotFoundError(
+                f"Could not find raw data file in {datapath}"
+            )
+
+        self.n_electrodes = self.raw.shape[1]
+
+        self.track_times = np.load(datapath / "times.npy", allow_pickle=True)
+        self.track_freqs = np.load(datapath / "fund_v.npy", allow_pickle=True)
+        self.track_indices = np.load(datapath / "idx_v.npy", allow_pickle=True)
+        self.track_idents = np.load(datapath / "ident_v.npy", allow_pickle=True)
+        self.track_powers = np.load(datapath / "sign_v.npy", allow_pickle=True)
+        self.ids = np.unique(self.track_idents[~np.isnan(self.track_idents)])
+
+    def __repr__(self) -> str:
+        return f"WaveTrackerDataset({self.file})"
+
+    def __str__(self) -> str:
+        return f"WaveTrackerDataset({self.file})"
+
+
+class WaveTrackerDataSubset:
+    def __init__(
+        self,
+        dataset: WaveTrackerDataset,
+        start: Union[int, float],
+        stop: Union[int, float],
+        on: str = "index",
+    ) -> None:
+        assert on in ("index", "time"), "on must be either 'index' or 'time'"
+
+        self.samplerate = dataset.samplerate
+        self.path = dataset.path
+        self.date = dataset.date
+        self.n_electrodes = dataset.n_electrodes
+
+        if on == "index":
+            assert (
+                start < stop
+            ), "start must be smaller than stop when on='index'"
+            assert start >= 0, "start must be larger than 0 when on='index'"
+            assert (
+                stop <= dataset.raw.shape[0]
+            ), "stop must be smaller than the number of samples in the dataset"
+            assert isinstance(
+                start, int
+            ), "start must be an integer when on='index'"
+            assert isinstance(
+                stop, int
+            ), "stop must be an integer when on='index'"
+            start_idx = start
+            stop_idx = stop
+            start_t = start_idx / self.samplerate
+            stop_t = stop_idx / self.samplerate
+        if on == "time":
+            assert (
+                start < stop
+            ), "start must be smaller than stop when on='time'"
+            assert start >= 0, "start must be larger than 0"
+            assert (
+                stop <= dataset.raw.shape[0] / self.samplerate
+            ), "stop must be smaller than the end time of the dataset"
+            assert isinstance(
+                start, (int, float)
+            ), "start must be an integer or float."
+            assert isinstance(
+                stop, (int, float)
+            ), "stop must be an integer or float."
+
+            start_t = start
+            stop_t = stop
+            start_idx = int(np.round(start_t * self.samplerate))
+            stop_idx = int(np.round(stop_t * self.samplerate))
+
+        self.raw = dataset.raw[start_idx:stop_idx, :]
+
+        self.track_freqs = []
+        self.track_indices = []
+        self.track_idents = []
+        self.track_powers = []
+        for track_id in dataset.ids:
+            i = dataset.track_indices[dataset.track_idents == track_id]
+            f = dataset.track_freqs[dataset.track_idents == track_id]
+            p = dataset.track_powers[dataset.track_idents == track_id]
+            t = dataset.track_times[i]
+
+            f = f[(t >= start_t) & (t <= stop_t)]
+            p = p[(t >= start_t) & (t <= stop_t)]
+            i = i[(t >= start_t) & (t <= stop_t)] - start_idx
+            t = t[(t >= start_t) & (t <= stop_t)]
+            ids = np.ones_like(t) * track_id
+
+            self.track_freqs.append(f)
+            self.track_indices.append(i)
+            self.track_idents.append(ids)
+            self.track_powers.append(p)
+
+        self.track_times = dataset.track_times[
+            (dataset.track_times >= start_t) & (dataset.track_times <= stop_t)
+        ]
+
+        self.track_freqs = np.concatenate(self.track_freqs)
+        self.track_indices = np.concatenate(self.track_indices)
+        self.track_idents = np.concatenate(self.track_idents)
+        self.track_powers = np.concatenate(self.track_powers)
+        self.ids = np.unique(self.track_idents[~np.isnan(self.track_idents)])
+
+    def __repr__(self) -> str:
+        return f"WaveTrackerDataSubset({self.path})"
+
+    def __str__(self) -> str:
+        return f"WaveTrackerDataSubset({self.path})"
+
+
+class ChirpDataset(WaveTrackerDataset):
+    def __init__(self, datapath: pathlib.Path) -> None:
+        super().__init__(datapath)
+
+        if pathlib.Path(datapath / "chirp_times_cnn.npy").exists() == False:
+            raise FileNotFoundError(
+                f"Could not find chirp data file in {datapath}"
+            )
+
+        self.chirp_times = np.load(datapath / "chirp_times_cnn.npy")
+        self.chirp_ids = np.load(datapath / "chirp_ids_cnn.npy")
+
+    def __repr__(self) -> str:
+        return f"ChirpDataset({self.file})"
+
+    def __str__(self) -> str:
+        return f"ChirpDataset({self.file})"

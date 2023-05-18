@@ -61,14 +61,21 @@ training_dataset_bias: 1 # how many times more nochirp windows than chirp window
 detection_data_path: "../testing_data" # where the testing data will be stored
 stride: 0.01 # step size of the detector on the spectrogram in s
 min_chirp_dt: 0.04 # minimum time between chirps in s
-buffersize: 90 # how large the buffer is in s
+buffersize: 10 # how large the buffer is in s
 spectrogram_overlap: 1 # how much to overlap the spectrograms in the buffer
 # power_on_track_threshold: -75 # the minimum power on the frequency track of a window in dB to be allowed to enter the classifier
 # blacklist_vertical_noise_bands: True # whether to blacklist vertical noise bands
 # vertical_noise_band_upper_freq_limit: 400 # vertical noise bands are evaluated below this frequency in Hz
 # vertical_noise_band_time_padding: 0.2 # how much time padding to add to the vertical noise band in s
 # vertical_noise_band_power_threshold: -80 # the minimum power of a vertical noise band in dB to be classified as a vertical noise band
-min_chirp_prob: 0.9 # minimum probability of a chirp to be classified as a chirp
+min_chirp_prob: 0.8 # minimum probability of a chirp to be classified as a chirp
 
 
 upper_spectrum_limit: 2000 # upper frequency limit of the spectrogram in Hz
+
+
+assign:
+  freq_range: 2
+  time_range: 1
+  env_cutoff: 25
+  time_tolerance: 0.04

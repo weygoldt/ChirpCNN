@@ -5,30 +5,35 @@ Detect chirps on a benchmark dataset and compare the detected chrip times
 for each id with the ground truth.
 """
 
-from pathlib import Path
+import argparse
+import pathlib
 
 import numpy as np
+from assign_chirps import assign_chirps
 from detect_chirps import Detector
 from rich import pretty, print
 from rich.progress import track
-from utils.filehandling import ConfLoader, NumpyDataset, NumpyLoader
+from utils.filehandling import (
+    ChirpDataset,
+    ConfLoader,
+    NumpyDataset,
+    NumpyLoader,
+)
 from utils.logger import make_logger
 from utils.plotstyle import PlotStyle
 
 conf = ConfLoader("config.yml")
 logger = make_logger(__name__)
 ps = PlotStyle()
-pretty.install()
 
 
-def benchmark():
-    path = Path(conf.testing_data_path)
+def benchmark(path):
     modelpath = conf.save_dir
-
     gt = NumpyLoader(path)
     d = NumpyDataset(path)
-    det = Detector(modelpath, d)
-    chirp_times, chirp_idents = det.detect()
+    chirp_times = np.load(path / "chirp_times_cnn.npy")
+    chirp_idents = np.load(path / "chirp_ids_cnn.npy")
+    cd = ChirpDataset(path)
 
     tolerance = 0.04
 
@@ -37,11 +42,9 @@ def benchmark():
     accs = []
     errs = []
     for fish_id in track(
-        np.unique(gt.correct_chirp_time_ids), description="Benchmarking ..."
+        np.unique(gt.chirp_ids), description="Benchmarking ..."
     ):
-        real_chirps = gt.correct_chirp_times[
-            gt.correct_chirp_time_ids == fish_id
-        ]
+        real_chirps = gt.chirp_times[gt.chirp_ids == fish_id]
         detected_chirps = chirp_times[chirp_idents == fish_id]
 
         # check for false negatives
@@ -64,7 +67,7 @@ def benchmark():
     print("------------------------------------")
     print("Results:")
     print(
-        f"Found {np.round(len(chirp_times)/len(gt.correct_chirp_times) * 100,2)} % of total chirps"
+        f"Found {np.round(len(chirp_times)/len(gt.chirp_times) * 100,2)} % of total chirps"
     )
     print(
         f"Proportion of detections that are correct (Precision): {np.round(np.mean(precs)*100, 4)} %"
@@ -79,8 +82,18 @@ def benchmark():
     return precs, recs
 
 
+def interface():
+    parser = argparse.ArgumentParser(description="Benchmark chirp detector")
+    parser.add_argument(
+        "--path", "-p", type=pathlib.Path, help="Path to dataset"
+    )
+    args = parser.parse_args()
+    return args
+
+
 def main():
-    precs, recs = benchmark()
+    args = interface()
+    precs, recs = benchmark(args.path)
 
 
 if __name__ == "__main__":
