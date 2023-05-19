@@ -303,8 +303,23 @@ def detect_chirps(
             zip(weighted_times, weighted_freqs, max_probs, chirp_id)
         )
 
+        # remove duplicates, i.e. chirps that are close in time
+        grouped_chirps = group_close_chirps(
+            current_chirps, conf.min_chirp_dt / 2
+        )
+        new_chirps = []
+        for group in grouped_chirps:
+            times = [chirp[0] for chirp in group]
+            probs = [chirp[2] for chirp in group]
+            freqs = [chirp[1] for chirp in group]
+
+            wtimes = np.average(times, weights=probs)
+            wfreqs = np.average(freqs, weights=probs)
+            wprobs = np.max(probs)
+            new_chirps.append((wtimes, wfreqs, wprobs, track_id))
+
         # append to the list of chirps
-        detect_chirps.extend(current_chirps)
+        detect_chirps.extend(new_chirps)
 
     logger.info("Sorting chirps...")
 
@@ -567,23 +582,23 @@ class Detector:
 
         # now iterate through the chirps of each track
         # and remove the duplicates
-        new_chirps = []
-        new_ids = []
-        for track_id in np.unique(chirp_ids):
-            track_chirps = chirp_times[chirp_ids == track_id]
-            if len(track_chirps) == 0:
-                continue
+        # new_chirps = []
+        # new_ids = []
+        # for track_id in np.unique(chirp_ids):
+        #     track_chirps = chirp_times[chirp_ids == track_id]
+        #     if len(track_chirps) == 0:
+        #         continue
 
-            track_chirps = np.sort(track_chirps)
+        #     track_chirps = np.sort(track_chirps)
 
-            track_chirps = merge_duplicates(track_chirps, conf.min_chirp_dt / 2)
-            new_chirps.extend(track_chirps)
-            new_ids.extend([track_id] * len(track_chirps))
+        #     track_chirps = merge_duplicates(track_chirps, conf.min_chirp_dt / 2)
+        #     new_chirps.extend(track_chirps)
+        #     new_ids.extend([track_id] * len(track_chirps))
 
-        # now we have a list of chirp times and a list of track ids
-        # that are ready to save
-        chirp_times = np.array(new_chirps)
-        chirp_ids = np.array(new_ids)
+        # # now we have a list of chirp times and a list of track ids
+        # # that are ready to save
+        # chirp_times = np.array(new_chirps)
+        # chirp_ids = np.array(new_ids)
 
         return chirp_times, chirp_ids
 

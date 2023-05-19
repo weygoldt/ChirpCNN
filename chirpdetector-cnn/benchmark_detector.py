@@ -11,6 +11,7 @@ import pathlib
 import numpy as np
 from assign_chirps import assign_chirps
 from detect_chirps import Detector
+from IPython import embed
 from rich import pretty, print
 from rich.progress import track
 from utils.filehandling import (
@@ -41,10 +42,8 @@ def benchmark(path):
     recs = []
     accs = []
     errs = []
-    for fish_id in track(
-        np.unique(gt.chirp_ids), description="Benchmarking ..."
-    ):
-        real_chirps = gt.chirp_times[gt.chirp_ids == fish_id]
+    for fish_id in track(np.unique(gt.ident_v), description="Benchmarking ..."):
+        real_chirps = gt.chirp_times_gt[gt.chirp_ids_gt == fish_id]
         detected_chirps = chirp_times[chirp_idents == fish_id]
 
         # check for false negatives
@@ -67,7 +66,7 @@ def benchmark(path):
     print("------------------------------------")
     print("Results:")
     print(
-        f"Found {np.round(len(chirp_times)/len(gt.chirp_times) * 100,2)} % of total chirps"
+        f"Found {np.round(len(chirp_times)/len(gt.chirp_times_gt) * 100,2)} % of total chirps"
     )
     print(
         f"Proportion of detections that are correct (Precision): {np.round(np.mean(precs)*100, 4)} %"

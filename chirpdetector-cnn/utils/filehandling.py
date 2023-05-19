@@ -4,6 +4,7 @@ from typing import Union
 
 import numpy as np
 import yaml
+from IPython import embed
 from rich import print
 from thunderfish.dataloader import DataLoader
 
@@ -299,6 +300,23 @@ class WaveTrackerDataset:
         self.track_powers = np.load(datapath / "sign_v.npy", allow_pickle=True)
         self.ids = np.unique(self.track_idents[~np.isnan(self.track_idents)])
 
+    def save(self, path: pathlib.Path | None = None):
+        if path is None:
+            path = self.path
+        if not path.is_dir():
+            try:
+                path.mkdir(parents=True)
+                print(f"Created directory {path}")
+            except FileExistsError:
+                print(f"{path} already exists, aborting save")
+
+        np.save(path / "raw.npy", self.raw)
+        np.save(path / "times.npy", self.track_times)
+        np.save(path / "fund_v.npy", self.track_freqs)
+        np.save(path / "idx_v.npy", self.track_indices)
+        np.save(path / "ident_v.npy", self.track_idents)
+        np.save(path / "sign_v.npy", self.track_powers)
+
     def __repr__(self) -> str:
         return f"WaveTrackerDataset({self.file})"
 
@@ -335,10 +353,10 @@ class WaveTrackerDataSubset:
             assert isinstance(
                 stop, int
             ), "stop must be an integer when on='index'"
-            start_idx = start
-            stop_idx = stop
-            start_t = start_idx / self.samplerate
-            stop_t = stop_idx / self.samplerate
+            self.start_idx = start
+            self.stop_idx = stop
+            self.start_t = self.start_idx / self.samplerate
+            self.stop_t = self.fstop_idx / self.samplerate
         if on == "time":
             assert (
                 start < stop
@@ -354,27 +372,30 @@ class WaveTrackerDataSubset:
                 stop, (int, float)
             ), "stop must be an integer or float."
 
-            start_t = start
-            stop_t = stop
-            start_idx = int(np.round(start_t * self.samplerate))
-            stop_idx = int(np.round(stop_t * self.samplerate))
+            self.start_t = start
+            self.stop_t = stop
+            self.start_idx = int(np.round(self.start_t * self.samplerate))
+            self.stop_idx = int(np.round(self.stop_t * self.samplerate))
 
-        self.raw = dataset.raw[start_idx:stop_idx, :]
+        self.raw = dataset.raw[self.start_idx : self.stop_idx, :]
 
         self.track_freqs = []
         self.track_indices = []
         self.track_idents = []
         self.track_powers = []
+        track_start_idx = np.arange(len(dataset.track_times))[
+            dataset.track_times >= self.start_t
+        ][0]
         for track_id in dataset.ids:
             i = dataset.track_indices[dataset.track_idents == track_id]
             f = dataset.track_freqs[dataset.track_idents == track_id]
             p = dataset.track_powers[dataset.track_idents == track_id]
             t = dataset.track_times[i]
 
-            f = f[(t >= start_t) & (t <= stop_t)]
-            p = p[(t >= start_t) & (t <= stop_t)]
-            i = i[(t >= start_t) & (t <= stop_t)] - start_idx
-            t = t[(t >= start_t) & (t <= stop_t)]
+            f = f[(t >= self.start_t) & (t <= self.stop_t)]
+            p = p[(t >= self.start_t) & (t <= self.stop_t)]
+            i = i[(t >= self.start_t) & (t <= self.stop_t)] - track_start_idx
+            t = t[(t >= self.start_t) & (t <= self.stop_t)] - self.start_t
             ids = np.ones_like(t) * track_id
 
             self.track_freqs.append(f)
@@ -382,15 +403,36 @@ class WaveTrackerDataSubset:
             self.track_idents.append(ids)
             self.track_powers.append(p)
 
-        self.track_times = dataset.track_times[
-            (dataset.track_times >= start_t) & (dataset.track_times <= stop_t)
-        ]
+        self.track_times = (
+            dataset.track_times[
+                (dataset.track_times >= self.start_t)
+                & (dataset.track_times <= self.stop_t)
+            ]
+            - self.start_t
+        )
 
         self.track_freqs = np.concatenate(self.track_freqs)
         self.track_indices = np.concatenate(self.track_indices)
         self.track_idents = np.concatenate(self.track_idents)
         self.track_powers = np.concatenate(self.track_powers)
         self.ids = np.unique(self.track_idents[~np.isnan(self.track_idents)])
+
+    def save(self, path: pathlib.Path | None = None):
+        if path is None:
+            path = self.path
+        if not path.is_dir():
+            try:
+                path.mkdir()
+                print('Created directory "{path}"')
+            except FileExistsError:
+                print(f"{path} already exists, skipping save.")
+
+        np.save(path / "raw.npy", self.raw)
+        np.save(path / "times.npy", self.track_times)
+        np.save(path / "fund_v.npy", self.track_freqs)
+        np.save(path / "idx_v.npy", self.track_indices)
+        np.save(path / "ident_v.npy", self.track_idents)
+        np.save(path / "sign_v.npy", self.track_powers)
 
     def __repr__(self) -> str:
         return f"WaveTrackerDataSubset({self.path})"
@@ -411,8 +453,63 @@ class ChirpDataset(WaveTrackerDataset):
         self.chirp_times = np.load(datapath / "chirp_times_cnn.npy")
         self.chirp_ids = np.load(datapath / "chirp_ids_cnn.npy")
 
+    def save(self, path: pathlib.Path | None):
+        if path is None:
+            path = self.path
+        if not path.is_dir():
+            try:
+                path.mkdir(parents=True)
+                print(f"Created directory {path}")
+            except FileExistsError:
+                print(f"{path} already exists, aborting save")
+
+        super.save(path)
+        np.save(path / "chirp_times_cnn.npy", self.chirp_times)
+        np.save(path / "chirp_ids_cnn.npy", self.chirp_ids)
+
     def __repr__(self) -> str:
         return f"ChirpDataset({self.file})"
 
     def __str__(self) -> str:
         return f"ChirpDataset({self.file})"
+
+
+class ChirpDataSubset(WaveTrackerDataSubset):
+    def __init__(
+        self,
+        dataset: ChirpDataset,
+        start: int | float,
+        stop: int | float,
+        on: str = "index",
+    ) -> None:
+        super().__init__(dataset, start, stop, on)
+
+        self.chirp_ids = dataset.chirp_ids[
+            (dataset.chirp_times >= self.start_t)
+            & (dataset.chirp_times <= self.stop_t)
+        ]
+        self.chirp_times = dataset.chirp_times[
+            (dataset.chirp_times >= self.start_t)
+            & (dataset.chirp_times <= self.stop_t)
+        ]
+        self.chirp_times -= self.start_t
+
+    def save(self, path: pathlib.Path | None = None):
+        if path is None:
+            path = self.path
+        if not path.is_dir():
+            try:
+                path.mkdir(parents=True)
+                print(f"Created directory {path}")
+            except FileExistsError:
+                print(f"{path} already exists, aborting save")
+
+        super().save(path)
+        np.save(path / "chirp_times_cnn.npy", self.chirp_times)
+        np.save(path / "chirp_ids_cnn.npy", self.chirp_ids)
+
+    def __repr__(self) -> str:
+        return f"ChirpDataSubset({self.path})"
+
+    def __str__(self) -> str:
+        return f"ChirpDataSubset({self.path})"

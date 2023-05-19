@@ -68,7 +68,7 @@ spectrogram_overlap: 1 # how much to overlap the spectrograms in the buffer
 # vertical_noise_band_upper_freq_limit: 400 # vertical noise bands are evaluated below this frequency in Hz
 # vertical_noise_band_time_padding: 0.2 # how much time padding to add to the vertical noise band in s
 # vertical_noise_band_power_threshold: -80 # the minimum power of a vertical noise band in dB to be classified as a vertical noise band
-min_chirp_prob: 0.8 # minimum probability of a chirp to be classified as a chirp
+min_chirp_prob: 0.7 # minimum probability of a chirp to be classified as a chirp
 
 
 upper_spectrum_limit: 2000 # upper frequency limit of the spectrogram in Hz
