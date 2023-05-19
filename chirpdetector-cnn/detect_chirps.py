@@ -582,23 +582,23 @@ class Detector:
 
         # now iterate through the chirps of each track
         # and remove the duplicates
-        # new_chirps = []
-        # new_ids = []
-        # for track_id in np.unique(chirp_ids):
-        #     track_chirps = chirp_times[chirp_ids == track_id]
-        #     if len(track_chirps) == 0:
-        #         continue
+        new_chirps = []
+        new_ids = []
+        for track_id in np.unique(chirp_ids):
+            track_chirps = chirp_times[chirp_ids == track_id]
+            if len(track_chirps) == 0:
+                continue
 
-        #     track_chirps = np.sort(track_chirps)
+            track_chirps = np.sort(track_chirps)
 
-        #     track_chirps = merge_duplicates(track_chirps, conf.min_chirp_dt / 2)
-        #     new_chirps.extend(track_chirps)
-        #     new_ids.extend([track_id] * len(track_chirps))
+            track_chirps = merge_duplicates(track_chirps, conf.min_chirp_dt)
+            new_chirps.extend(track_chirps)
+            new_ids.extend([track_id] * len(track_chirps))
 
-        # # now we have a list of chirp times and a list of track ids
-        # # that are ready to save
-        # chirp_times = np.array(new_chirps)
-        # chirp_ids = np.array(new_ids)
+        # now we have a list of chirp times and a list of track ids
+        # that are ready to save
+        chirp_times = np.array(new_chirps)
+        chirp_ids = np.array(new_ids)
 
         return chirp_times, chirp_ids
 

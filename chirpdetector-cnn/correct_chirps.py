@@ -102,7 +102,6 @@ def interactive_plot(plot_data, dataset):
                 dataset.track_indices[dataset.track_idents == track_id]
             ]
 
-            print(t[0], t[-1], point_t)
             if point_t < t[0] or point_t > t[-1]:
                 continue
 
