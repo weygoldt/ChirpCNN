@@ -9,6 +9,34 @@ from .logger import make_logger
 logger = make_logger(__name__)
 
 
+def get_closest_indices(array, values):
+    # make sure array is a numpy array
+    array = np.array(array)
+
+    # check if values are sorted
+    sorter = None
+    if np.any(np.diff(array) < 0):
+        # if not, sort them
+        sorter = np.argsort(array)
+        array = array[sorter]
+
+    # get insert positions
+    idxs = np.searchsorted(array, values, side="left")
+
+    # resort to original order
+    if sorter is not None:
+        idxs = sorter[np.argsort(idxs)]
+
+    # find indexes where previous index is closer
+    prev_idx_is_less = (idxs == len(array)) | (
+        np.fabs(values - array[np.maximum(idxs - 1, 0)])
+        < np.fabs(values - array[np.minimum(idxs, len(array) - 1)])
+    )
+    idxs[prev_idx_is_less] -= 1
+
+    return idxs
+
+
 def interpolate(data, stride):
     """
     Interpolate the tracked frequencies to a regular sampling

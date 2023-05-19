@@ -3,6 +3,7 @@ random_seed: 42 # random seed for reproducibility
 # SYNTHETIC DATASETS ------
 training_data_path: "../training_data" # were the training data will be stored
 testing_data_path: "../testing_data" # were a single dataset for testing will be stored
+plot_path: "../plots"
 simulation_duration_rec: 240 # how long a single simulated dataset will be
 samplerate: 20000 # sampling rate of the simulated and real data
 

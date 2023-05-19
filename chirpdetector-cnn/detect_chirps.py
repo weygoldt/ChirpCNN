@@ -355,7 +355,7 @@ class Detector:
     def __init__(self, modelpath, dataset):
         logger.info("Initializing detector...")
 
-        self.plotpath = pathlib.Path(conf.testing_data_path) / dataset.path.name
+        self.plotpath = dataset.path / "chirpdetector_spectrograms"
         self.plotpath.mkdir(parents=True, exist_ok=True)
 
         # how many seconds of signal to process at a time
@@ -512,61 +512,66 @@ class Detector:
             # add the detected chirps to the list of all chirps
             chirps.extend(chunk_chirps)
 
-            # plot
+            # export the spectrogram for plotting later on
             plot = True
             if (len(chunk_chirps) > 0) and plot:
-                fig, ax = plt.subplots(
-                    figsize=(60 * ps.cm, 30 * ps.cm),
-                    constrained_layout=True,
-                )
-                specshow(
-                    spec.cpu().numpy(),
-                    spec_times,
-                    spec_freqs,
-                    ax,
-                    aspect="auto",
-                    origin="lower",
-                )
-                if len(noise_index) > 0:
-                    try:
-                        ax.fill_between(
-                            spec_times,
-                            np.zeros(spec_times.shape),
-                            noise_index * 2000,
-                            color=ps.black,
-                            alpha=0.6,
-                        )
-                    except:
-                        logger.warning(
-                            f"Could not plot noise index. Shape of noise index: {noise_index.shape}. Shape of spec_times: {spec_times.shape}."
-                        )
+                spec = spec.detach().cpu().numpy()
+                np.save(self.plotpath / f"spec_powers_{i}.npy", spec)
+                np.save(self.plotpath / f"spec_freqs_{i}.npy", spec_freqs)
+                np.save(self.plotpath / f"spec_times_{i}.npy", spec_times)
 
-                for chirp in chunk_chirps:
-                    ax.scatter(
-                        chirp[0],
-                        chirp[1],
-                        facecolors="white",
-                        edgecolors="black",
-                        s=15,
-                    )
-                    ax.text(
-                        chirp[0],
-                        chirp[1] + 50,
-                        np.round(chirp[2], 2),
-                        fontsize=10,
-                        color="white",
-                        rotation="vertical",
-                        va="bottom",
-                        ha="center",
-                    )
-                ax.set_ylim(0, 2000)
-                plt.savefig(
-                    f"{self.plotpath}/{str(self.data.path.name)}_{i}.png"
-                )
-                plt.cla()
-                plt.clf()
-                plt.close("all")
-                plt.close(fig)
+                # fig, ax = plt.subplots(
+                #     figsize=(60 * ps.cm, 30 * ps.cm),
+                #     constrained_layout=True,
+                # )
+                # specshow(
+                #     spec.cpu().numpy(),
+                #     spec_times,
+                #     spec_freqs,
+                #     ax,
+                #     aspect="auto",
+                #     origin="lower",
+                # )
+                # if len(noise_index) > 0:
+                #     try:
+                #         ax.fill_between(
+                #             spec_times,
+                #             np.zeros(spec_times.shape),
+                #             noise_index * 2000,
+                #             color=ps.black,
+                #             alpha=0.6,
+                #         )
+                #     except:
+                #         logger.warning(
+                #             f"Could not plot noise index. Shape of noise index: {noise_index.shape}. Shape of spec_times: {spec_times.shape}."
+                #         )
+
+                # for chirp in chunk_chirps:
+                #     ax.scatter(
+                #         chirp[0],
+                #         chirp[1],
+                #         facecolors="white",
+                #         edgecolors="black",
+                #         s=15,
+                #     )
+                #     ax.text(
+                #         chirp[0],
+                #         chirp[1] + 50,
+                #         np.round(chirp[2], 2),
+                #         fontsize=10,
+                #         color="white",
+                #         rotation="vertical",
+                #         va="bottom",
+                #         ha="center",
+                #     )
+                # ax.set_ylim(0, 2000)
+                # plt.savefig(
+                #     f"{self.plotpath}/{str(self.data.path.name)}_{i}.png"
+                # )
+                # plt.cla()
+                # plt.clf()
+                # plt.close("all")
+                # plt.close(fig)
 
             del detection_data
             del spec
