@@ -26,6 +26,7 @@ from scipy.interpolate import interp1d
 from utils.datahandling import (
     cluster_peaks,
     find_on_time,
+    get_closest_indices,
     interpolate,
     merge_duplicates,
 )
@@ -48,34 +49,6 @@ device = check_device()
 model = AudioClassifier
 ps = PlotStyle()
 pretty.install()
-
-
-def get_closest_indices(array, values):
-    # make sure array is a numpy array
-    array = np.array(array)
-
-    # check if values are sorted
-    sorter = None
-    if np.any(np.diff(array) < 0):
-        # if not, sort them
-        sorter = np.argsort(array)
-        array = array[sorter]
-
-    # get insert positions
-    idxs = np.searchsorted(array, values, side="left")
-
-    # resort to original order
-    if sorter is not None:
-        idxs = sorter[np.argsort(idxs)]
-
-    # find indexes where previous index is closer
-    prev_idx_is_less = (idxs == len(array)) | (
-        np.fabs(values - array[np.maximum(idxs - 1, 0)])
-        < np.fabs(values - array[np.minimum(idxs, len(array) - 1)])
-    )
-    idxs[prev_idx_is_less] -= 1
-
-    return idxs
 
 
 def group_close_chirps(chirps, time_tolerance=0.02):
@@ -130,7 +103,7 @@ def classify(model, img):
     return probs, preds
 
 
-def detect_chirps(
+def detect(
     model,
     stride,
     window_size,
@@ -161,6 +134,9 @@ def detect_chirps(
         logger.info(f"Detecting chirps for track {track_id}")
         track = track_freqs[track_idents == track_id]
         time = track_times[track_indices[track_idents == track_id]]
+
+        track = track[np.argsort(time)]
+        time = np.sort(time)
 
         # check if the track has data in this window
         if time[0] > spec_times[-1]:
@@ -410,10 +386,7 @@ class Detector:
         # TODO: Mask high amplitude vertical noise bands again
 
         chirps = []
-        for i in track(
-            range(n_chunks),
-            description=f"Detecting chirps on {self.data.path.name}",
-        ):
+        for i in track(range(n_chunks), description="Detecting chirps"):
             logger.info(f"Processing chunk {i + 1} of {n_chunks}...")
 
             # get start and stop indices for the current chunk
@@ -505,7 +478,7 @@ class Detector:
             }
 
             # detect the chirps for the current chunk
-            chunk_chirps, noise_index = detect_chirps(
+            chunk_chirps, noise_index = detect(
                 **detection_data, **self.detection_parameters
             )
 
@@ -615,7 +588,7 @@ def interface():
     parser.add_argument(
         "--path",
         "-p",
-        type=str,
+        type=pathlib.Path,
         default=conf.testing_data_path,
         help="Path to the dataset to use for detection",
     )
@@ -623,8 +596,8 @@ def interface():
     return args
 
 
-def main(path):
-    datapath = pathlib.Path(path)
+def detect_chirps(path):
+    datapath = path
     data = load_data(datapath)
     modelpath = conf.save_dir
 
@@ -655,9 +628,13 @@ def main(path):
     np.save(datapath / "chirp_ids_cnn.npy", chirp_ids)
 
 
+def main():
+    args = interface()
+    detect_chirps(args.path)
+
+
 if __name__ == "__main__":
     t0 = time.time()
-    args = interface()
-    main(args.path)
+    main()
     t1 = time.time()
     print(f"Time elapsed: {t1 - t0:.2f} s")

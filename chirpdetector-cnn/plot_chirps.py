@@ -13,8 +13,9 @@ import pathlib
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
+from IPython import embed
 from rich.progress import track
-from utils.datahandling import get_closest_indices
+from utils.datahandling import get_closest_indices, interpolate
 from utils.filehandling import ChirpDataset, Config
 from utils.plotstyle import PlotStyle
 
@@ -26,6 +27,8 @@ conf = Config("config.yml")
 
 def plot_chirps(path):
     cd = ChirpDataset(path)
+    cd = interpolate(cd, 0.02)
+
     specpath = path / "chirpdetector_spectrograms"
     plotpath = pathlib.Path(conf.plot_path) / path.name
     plotpath.mkdir(parents=True, exist_ok=True)
@@ -52,7 +55,7 @@ def plot_chirps(path):
         ]
 
         fig, ax = plt.subplots(
-            figsize=(60 * ps.cm, 30 * ps.cm), constrained_layout=True
+            figsize=(30 * ps.cm, 15 * ps.cm), constrained_layout=True
         )
 
         ax.imshow(

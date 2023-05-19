@@ -4,14 +4,12 @@
 Iterate over all recordings that are usable and detect chirps in them.
 """
 
-import os
 import pathlib
-from pprint import pprint
 
-import matplotlib.pyplot as plt
-import numpy as np
 import pandas as pd
-from detect_chirps import main as chirpdetector
+from assign_chirps import assign_chirps
+from detect_chirps import detect_chirps
+from plot_chirps import plot_chirps
 from utils.logger import make_logger
 
 logger = make_logger(__name__)
@@ -29,13 +27,15 @@ def main():
 
     # extract the paths to the recordings
     # and strip the FUCKING QUOTATION MARKS
-    recs = [datapath / p.strip("“”") for p in meta.recording.values]
-
-    recs = recs[18:]
+    recs = [
+        pathlib.Path(datapath / p.strip("“”")) for p in meta.recording.values
+    ]
 
     for i, rec in enumerate(recs):
         logger.info(f"Processing recording {i+1}/{len(recs)+1}")
-        chirpdetector(rec)
+        detect_chirps(rec)
+        assign_chirps(rec)
+        plot_chirps(rec)
 
 
 if __name__ == "__main__":
