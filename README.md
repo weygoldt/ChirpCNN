@@ -2,6 +2,15 @@
 
 The previous [chirp detection algorithm](https://github.com/weygoldt/chirpdetector) was based entirely on manual extraction of multiple features across time and space, where anomalies on a all features at the same time were chirps. **This** approach uses the sum spectrogram across all electrodes on an electrode grid to detect chirps from the spectrogram images. The core of this algoritm is a simple convolutional neural network that is trained to discriminate chirps using a simulated dataset. The detected chirps are then sorted on both the time and frequency dimension according to the models chirp probability.
 
+## Motivation
+
+The previous approach was completely manual. This is elegant but fine tuning the parameters for good detection on one dataset lead to total failure on another dataset. Additionally, if we tuned the parameters to be good at detecting the small chirps, big chirps were not detected and vice versca. This constraint motivated the approach implemented in this repository:
+Using a sliding window on a spectrogram that is fed into a ConvNet to classify if the current window contains a chirp or not. Still, for small chirps, the previous approach yields an F1 score of 78%, which is good, considering that this approach, using a deep neural network, also only reaches 90%. 
+
+## The pitfall
+
+The ConvNet increased the performance - and more importantly - generalisability between datasets. But The variation between chirps is so large, that they do not all fit into the same sliding window. Some chirps are very short, some are very long, some have a very high frequency excursion and some have not. This makes it challenging to train a ConvNet that can detect all of them: Images that fit big chirps are so large that small chirps are hardly visible, and vice versa. To deal with this, I am currently working on an even deeper chirpdetector, that uses the YOLO architecture to detect chirps. 
+
 ## What are chirps?
 
 Chirps are brief (20-200 ms) upward-excursions of the frequency of the electrid organ discharge (EOD) of many wave-type electric fish. The example below shows a simulation of the EODs of multiple fish that each chirp 50 times at random points in time. Every black line is a frequency band of a single fish. Each black tick is the time point a chirp is simulated. The additional frequency bands are harmonics.
