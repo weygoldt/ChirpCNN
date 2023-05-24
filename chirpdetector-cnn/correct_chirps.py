@@ -40,17 +40,31 @@ def interactive_plot(plot_data, dataset):
     )
     detected_points = []
     for track_id in np.unique(dataset.track_idents):
-        t = dataset.track_times[dataset.track_indices[dataset.track_idents == track_id]]
+        t = dataset.track_times[
+            dataset.track_indices[dataset.track_idents == track_id]
+        ]
         f = dataset.track_freqs[dataset.track_idents == track_id]
 
-        f = f[(t >= plot_data["spec_times"][0]) & (t <= plot_data["spec_times"][-1])]
-        t = t[(t >= plot_data["spec_times"][0]) & (t <= plot_data["spec_times"][-1])]
+        f = f[
+            (t >= plot_data["spec_times"][0])
+            & (t <= plot_data["spec_times"][-1])
+        ]
+        t = t[
+            (t >= plot_data["spec_times"][0])
+            & (t <= plot_data["spec_times"][-1])
+        ]
 
         ax.plot(t, f, color="black", linewidth=1)
 
         chirp_x = plot_data["chirps"][plot_data["chirps"][:, 1] == track_id, 0]
-        y_indices = [find_on_time(t, x) for x in chirp_x]
-        chirp_y = f[y_indices]
+        try:
+            y_indices = [find_on_time(t, x, False) for x in chirp_x]
+        except:
+            embed()
+        try:
+            chirp_y = f[y_indices]
+        except:
+            embed()
         detected_points.append(np.asarray([chirp_x, chirp_y]).T)
 
     detected_points = np.concatenate(detected_points, axis=0).tolist()
@@ -70,7 +84,8 @@ def interactive_plot(plot_data, dataset):
         elif event.button == 3:  # Right mouse button to remove a point
             if len(detected_points) > 0:
                 distances = (
-                    (np.array(detected_points) - [event.xdata, event.ydata]) ** 2
+                    (np.array(detected_points) - [event.xdata, event.ydata])
+                    ** 2
                 ).sum(axis=1)
                 closest_index = distances.argmin()
                 detected_points.pop(closest_index)
@@ -87,7 +102,9 @@ def interactive_plot(plot_data, dataset):
         point_f = point[1]
         distances = []
         ids = []
-        for track_id in np.unique(dataset.track_idents[~np.isnan(dataset.track_idents)]):
+        for track_id in np.unique(
+            dataset.track_idents[~np.isnan(dataset.track_idents)]
+        ):
             f = dataset.track_freqs[dataset.track_idents == track_id]
             t = dataset.track_times[
                 dataset.track_indices[dataset.track_idents == track_id]
@@ -116,7 +133,7 @@ def correct_chirps(path):
     hop_len = overlap_to_hoplen(conf.overlap_fraction, nfft)
 
     # group chirps to make chunks that match the snippet size from the config
-    buffersize = conf.buffersize * 3
+    buffersize = conf.buffersize * 1.5
 
     # make chirp groups that last as long as the buffer size
     groups = []
@@ -187,6 +204,8 @@ def correct_chirps(path):
 
         assigned_chirps = interactive_plot(plot_data, cd)
 
+        del spec
+
         chirp_times.append(assigned_chirps[:, 0])
         chirp_ids.append(assigned_chirps[:, 1])
 
@@ -205,7 +224,9 @@ def correct_chirps(path):
 
 def interface():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--path", "-p", type=pathlib.Path, help="Path to the dataset.")
+    parser.add_argument(
+        "--path", "-p", type=pathlib.Path, help="Path to the dataset."
+    )
     args = parser.parse_args()
     return args
 
